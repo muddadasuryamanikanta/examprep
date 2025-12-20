@@ -50,17 +50,17 @@ function App() {
               <SpaceList />
             </RequireAuth>
           } />
-          <Route path="/spaces/:spaceId/library" element={
+          <Route path="/spaces/:spaceSlug/library" element={
             <RequireAuth>
               <SubjectLibrary />
             </RequireAuth>
           } />
-          <Route path="/spaces/:spaceId/:subjectId" element={
+          <Route path="/spaces/:spaceSlug/:subjectSlug" element={
             <RequireAuth>
               <TopicList />
             </RequireAuth>
           } />
-          <Route path="/spaces/:spaceId/:subjectId/:topicId" element={
+          <Route path="/spaces/:spaceSlug/:subjectSlug/:topicSlug" element={
             <RequireAuth>
               <TopicCanvas />
             </RequireAuth>

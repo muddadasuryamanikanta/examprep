@@ -8,7 +8,7 @@ import { Button } from '../components/common/Button';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 
 export default function TopicCanvas() {
-  const { spaceId, subjectId, topicId } = useParams();
+  const { spaceSlug, subjectSlug, topicSlug } = useParams();
   
   // Stores
   const { currentSpace, fetchSpace } = useSpaceStore();
@@ -30,51 +30,51 @@ export default function TopicCanvas() {
   } = useContentStore();
 
   useEffect(() => {
-    if (spaceId && subjectId && topicId) {
-      if (!currentSpace || currentSpace._id !== spaceId) fetchSpace(spaceId);
+    if (spaceSlug && subjectSlug && topicSlug) {
+      if (!currentSpace || currentSpace.slug !== spaceSlug) fetchSpace(spaceSlug);
       
       // Hierarchy resolution
-      if (!currentSubject || currentSubject._id !== subjectId) {
+      if (!currentSubject || currentSubject.slug !== subjectSlug) {
         if (subjects.length > 0) {
-            const found = subjects.find(s => s._id === subjectId);
+          const found = subjects.find(s => s.slug === subjectSlug);
             if (found) setCurrentSubject(found);
-            else fetchSubjects(spaceId); // Fallback fetch
+          else fetchSubjects(spaceSlug); // Fallback fetch
         } else {
-             fetchSubjects(spaceId);
+          fetchSubjects(spaceSlug);
         }
       }
       
-      if (!currentTopic || currentTopic._id !== topicId) {
+      if (!currentTopic || currentTopic.slug !== topicSlug) {
            if (topics.length > 0) {
-               const found = topics.find(t => t._id === topicId);
+             const found = topics.find(t => t.slug === topicSlug);
                if (found) setCurrentTopic(found);
-               else fetchTopics(subjectId);
+               else fetchTopics(subjectSlug);
            } else {
-               fetchTopics(subjectId);
+             fetchTopics(subjectSlug);
            }
       }
 
-      fetchBlocks(topicId);
+      fetchBlocks(topicSlug);
     }
-  }, [spaceId, subjectId, topicId, fetchSpace, fetchSubjects, fetchTopics, fetchBlocks]);
+  }, [spaceSlug, subjectSlug, topicSlug, fetchSpace, fetchSubjects, fetchTopics, fetchBlocks]);
 
   // Update effect to catch hierarchy loads if they were async
   useEffect(() => {
-      if (subjectId && (!currentSubject || currentSubject._id !== subjectId) && subjects.length > 0) {
-          const found = subjects.find(s => s._id === subjectId);
+    if (subjectSlug && (!currentSubject || currentSubject.slug !== subjectSlug) && subjects.length > 0) {
+      const found = subjects.find(s => s.slug === subjectSlug);
           if (found) setCurrentSubject(found);
       }
-      if (topicId && (!currentTopic || currentTopic._id !== topicId) && topics.length > 0) {
-          const found = topics.find(t => t._id === topicId);
+    if (topicSlug && (!currentTopic || currentTopic.slug !== topicSlug) && topics.length > 0) {
+      const found = topics.find(t => t.slug === topicSlug);
           if (found) setCurrentTopic(found);
       }
-  }, [subjects, topics, subjectId, topicId, currentSubject, currentTopic, setCurrentSubject, setCurrentTopic]);
+  }, [subjects, topics, subjectSlug, topicSlug, currentSubject, currentTopic, setCurrentSubject, setCurrentTopic]);
 
 
   const handleAddBlock = async (type: ContentBlockType) => {
-    if (!topicId) return;
+    if (!topicSlug) return;
     try {
-      await addBlock(topicId, type);
+      await addBlock(topicSlug, type);
     } catch (err) {
       console.error(err);
     }
@@ -183,8 +183,8 @@ export default function TopicCanvas() {
       <div className="mb-6">
         <Breadcrumbs
           items={[
-            { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceId}/library` },
-            { label: currentSubject?.title || <div className="h-4 w-32 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceId}/${subjectId}` },
+            { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceSlug}/library` },
+            { label: currentSubject?.title || <div className="h-4 w-32 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceSlug}/${subjectSlug}` },
              { label: currentTopic?.title || <div className="h-4 w-40 bg-muted animate-pulse rounded" /> }
           ]}
         />

@@ -29,6 +29,7 @@ export class SpaceController {
         return;
       }
       res.status(500).json({ message: 'Error creating space', error });
+      console.error('Error creating space:', error);
     }
   }
 

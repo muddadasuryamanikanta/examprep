@@ -7,19 +7,21 @@ export interface BaseEntity {
 export interface Space extends BaseEntity {
   name: string;
   description?: string;
-  // position is not strictly necessary on Space if we just list them, but good for future
+  slug: string;
 }
 
 export interface Subject extends BaseEntity {
   title: string;
   spaceId: string;
   position: number;
+  slug: string;
 }
 
 export interface Topic extends BaseEntity {
   title: string;
   subjectId: string;
   position: number;
+  slug: string;
 }
 
 export type ContentBlockType = 'note' | 'mcq' | 'descriptive' | 'generic';

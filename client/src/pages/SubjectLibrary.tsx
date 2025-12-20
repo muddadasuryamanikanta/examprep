@@ -10,7 +10,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 
 export default function SubjectLibrary() {
-  const { spaceId } = useParams();
+  const { spaceSlug } = useParams();
   const navigate = useNavigate();
   
   // Stores
@@ -25,16 +25,16 @@ export default function SubjectLibrary() {
   const [formData, setFormData] = useState({ title: '' });
 
   useEffect(() => {
-    if (spaceId) {
-      fetchSpace(spaceId);
-      fetchSubjects(spaceId);
+    if (spaceSlug) {
+      fetchSpace(spaceSlug);
+      fetchSubjects(spaceSlug);
     }
-  }, [spaceId, fetchSpace, fetchSubjects]);
+  }, [spaceSlug, fetchSpace, fetchSubjects]);
 
   const handleCreate = async () => {
-    if (!spaceId) return;
+    if (!spaceSlug) return;
     try {
-      await createSubject(spaceId, formData.title);
+      await createSubject(spaceSlug, formData.title);
       closeModals();
     } catch (err) {
       console.error(err);
@@ -88,7 +88,7 @@ export default function SubjectLibrary() {
 
   const handleSubjectClick = (subject: Subject) => {
     setCurrentSubject(subject);
-    navigate(`/spaces/${spaceId}/${subject._id}`);
+    navigate(`/spaces/${spaceSlug}/${subject.slug}`);
   };
 
   if (isLoading && subjects.length === 0) {

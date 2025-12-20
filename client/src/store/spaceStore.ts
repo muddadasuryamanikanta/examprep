@@ -35,7 +35,7 @@ export const useSpaceStore = create<SpaceState>((set, get) => ({
 
   fetchSpace: async (id: string) => {
     // If we already have it in the list, use that first for speed
-    const existing = get().spaces.find(s => s._id === id);
+    const existing = get().spaces.find(s => s._id === id || s.slug === id);
     if (existing) {
       set({ currentSpace: existing });
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { type Space } from '../types/domain';
@@ -19,6 +19,8 @@ export default function SpaceList() {
   
   // Form states
   const [formData, setFormData] = useState({ name: '', description: '' });
+  const createDescriptionRef = useRef<HTMLTextAreaElement>(null);
+  const editDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetchSpaces();
@@ -107,7 +109,7 @@ export default function SpaceList() {
           {spaces.map((space) => (
             <Card
               key={space._id}
-              onClick={() => navigate(`/spaces/${space._id}/library`)}
+              onClick={() => navigate(`/spaces/${space.slug}/library`)}
               className="group relative flex flex-col justify-between h-48 hover:border-primary/50 transition-colors cursor-pointer"
             >
               <div>
@@ -164,16 +166,29 @@ export default function SpaceList() {
               placeholder="e.g. Mathematics"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  createDescriptionRef.current?.focus();
+                }
+              }}
               autoFocus
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
             <textarea
+              ref={createDescriptionRef}
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               placeholder="Optional description..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleCreate();
+                }
+              }}
             />
           </div>
         </div>
@@ -200,14 +215,27 @@ export default function SpaceList() {
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  editDescriptionRef.current?.focus();
+                }
+              }}
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
             <textarea
+              ref={editDescriptionRef}
               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleUpdate();
+                }
+              }}
             />
           </div>
         </div>

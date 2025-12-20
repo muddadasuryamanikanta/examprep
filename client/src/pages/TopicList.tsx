@@ -10,7 +10,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 
 export default function TopicList() {
-  const { spaceId, subjectId } = useParams();
+  const { spaceSlug, subjectSlug } = useParams();
   const navigate = useNavigate();
   
   // Stores
@@ -38,23 +38,23 @@ export default function TopicList() {
 
   // Initial load
   useEffect(() => {
-    if (spaceId && subjectId) {
-      if (!currentSpace || currentSpace._id !== spaceId) fetchSpace(spaceId);
+    if (spaceSlug && subjectSlug) {
+      if (!currentSpace || currentSpace.slug !== spaceSlug) fetchSpace(spaceSlug);
       
       // Fetch specific subject directly
-      if (!currentSubject || currentSubject._id !== subjectId) {
-          fetchSubject(subjectId);
+      if (!currentSubject || currentSubject.slug !== subjectSlug) {
+        fetchSubject(subjectSlug);
       }
       
-      fetchTopics(subjectId);
+      fetchTopics(subjectSlug);
     }
-  }, [spaceId, subjectId, fetchSpace, fetchSubject, fetchTopics, currentSpace, currentSubject]);
+  }, [spaceSlug, subjectSlug, fetchSpace, fetchSubject, fetchTopics, currentSpace, currentSubject]);
 
 
   const handleCreate = async () => {
-    if (!subjectId) return;
+    if (!subjectSlug) return;
     try {
-      await createTopic(subjectId, formData.title);
+      await createTopic(subjectSlug, formData.title);
       closeModals();
     } catch (err) {
       console.error(err);
@@ -108,7 +108,7 @@ export default function TopicList() {
   
   const handleTopicClick = (topic: Topic) => {
     setCurrentTopic(topic);
-    navigate(`/spaces/${spaceId}/${subjectId}/${topic._id}`);
+    navigate(`/spaces/${spaceSlug}/${subjectSlug}/${topic.slug}`);
   };
 
   if (isLoading && topics.length === 0) {
@@ -124,7 +124,7 @@ export default function TopicList() {
       <div className="mb-6">
         <Breadcrumbs
           items={[
-            { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceId}/library` },
+            { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceSlug}/library` },
             { label: currentSubject?.title || <div className="h-4 w-32 bg-muted animate-pulse rounded" /> }
           ]}
         />

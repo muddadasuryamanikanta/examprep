@@ -23,12 +23,12 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 // Rate limiting
-import rateLimit from 'express-rate-limit';
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
+// import rateLimit from 'express-rate-limit';
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per windowMs
+// });
+// app.use(limiter);
 
 // Stateless - no sessions needed for JWT
 // app.use(session(...)) removed
