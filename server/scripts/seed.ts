@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
-import User from '../models/User.ts';
-import Space from '../models/Space.ts';
-import Subject from '../models/Subject.ts';
-import Topic from '../models/Topic.ts';
-import ContentBlock, { ContentBlockType } from '../models/ContentBlock.ts';
+import User from '../src/models/User.ts';
+import Space from '../src/models/Space.ts';
+import Subject from '../src/models/Subject.ts';
+import Topic from '../src/models/Topic.ts';
+import ContentBlock, { ContentBlockType } from '../src/models/ContentBlock.ts';
 
 // Load env vars from the root .env file (assuming server is in server/ and .env is in root or server/.env)
 // Based on previous file explorations, .env is in server/.env
