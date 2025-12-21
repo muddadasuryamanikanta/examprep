@@ -9,6 +9,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
   --radius: 0.5rem;
 }
 
@@ -17,10 +19,16 @@
   --foreground: #09090b; /* Zinc 950 */
   --primary: #18181b;    /* Zinc 900 */
   --secondary: #f4f4f5;  /* Zinc 100 */
-  --accent: #e4e4e7;     /* Zinc 200 - used for subtle highlights */
+  --accent: #e4e4e7;     /* Zinc 200 */
   --border: #e4e4e7;     /* Zinc 200 */
   --input: #e4e4e7;      /* Zinc 200 */
   --ring: #18181b;       /* Zinc 900 */
+  
+  /* Status Colors (Light Mode) */
+  --success: #22c55e;    /* Green 500 */
+  --success-foreground: #ffffff;
+  --destructive: #ef4444; /* Red 500 */
+  --destructive-foreground: #ffffff;
 }
 
 [data-theme='dark'] {
@@ -32,6 +40,12 @@
   --border: #27272a;     /* Zinc 800 */
   --input: #27272a;      /* Zinc 800 */
   --ring: #d4d4d8;       /* Zinc 300 */
+  
+  /* Status Colors (Dark Mode) */
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 }
 
 body {

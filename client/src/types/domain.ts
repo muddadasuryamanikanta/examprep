@@ -24,17 +24,22 @@ export interface Topic extends BaseEntity {
   slug: string;
 }
 
-export type ContentBlockType = 'note' | 'mcq' | 'descriptive' | 'generic';
+export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'descriptive' | 'generic';
 
 export interface BaseContentBlock extends BaseEntity {
   topicId: string;
   position: number;
   kind: ContentBlockType;
+  explanation?: string;
+  notes?: string;
+  tags?: string[];
+  group?: string;
+  hints?: string[];
 }
 
 export interface NoteBlock extends BaseContentBlock {
   kind: 'note';
-  content: string; // Markdown or HTML
+  content: string;
 }
 
 export interface McqOption {
@@ -43,8 +48,14 @@ export interface McqOption {
   isCorrect: boolean;
 }
 
-export interface McqBlock extends BaseContentBlock {
-  kind: 'mcq';
+export interface SingleSelectMcqBlock extends BaseContentBlock {
+  kind: 'single_select_mcq';
+  question: string;
+  options: McqOption[];
+}
+
+export interface MultiSelectMcqBlock extends BaseContentBlock {
+  kind: 'multi_select_mcq';
   question: string;
   options: McqOption[];
 }
@@ -52,12 +63,14 @@ export interface McqBlock extends BaseContentBlock {
 export interface DescriptiveBlock extends BaseContentBlock {
   kind: 'descriptive';
   question: string;
-  answer?: string; // Model answer or notes
+  answer?: string;
 }
 
 export interface GenericBlock extends BaseContentBlock {
   kind: 'generic';
-  data: Record<string, unknown>; // Flexible structure for future use
+  data: Record<string, unknown>;
 }
 
-export type ContentBlock = NoteBlock | McqBlock | DescriptiveBlock | GenericBlock;
+
+
+export type ContentBlock = NoteBlock | SingleSelectMcqBlock | MultiSelectMcqBlock | DescriptiveBlock | GenericBlock;

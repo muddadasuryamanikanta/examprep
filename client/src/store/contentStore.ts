@@ -30,7 +30,7 @@ interface ContentState {
 
   // Blocks
   fetchBlocks: (topicId: string) => Promise<void>;
-  addBlock: (topicId: string, type: ContentBlockType) => Promise<void>;
+  addBlock: (topicId: string, type: ContentBlockType, initialData?: Partial<ContentBlock>) => Promise<ContentBlock>;
   updateBlock: (id: string, updates: Partial<ContentBlock>) => Promise<void>;
   deleteBlock: (id: string) => Promise<void>;
   setBlocks: (blocks: ContentBlock[]) => void; // For optimistic updates
@@ -175,18 +175,25 @@ export const useContentStore = create<ContentState>((set, get) => ({
     }
   },
 
-  addBlock: async (topicId, type) => {
+  addBlock: async (topicId, type, initialData) => {
     try {
-      const newBlock = {
+      const defaultBlock = {
         topicId,
         kind: type,
         content: type === 'note' ? 'New note...' : undefined,
         question: type !== 'note' && type !== 'generic' ? 'New Question' : undefined,
-        options: type === 'mcq' ? [{ id: '1', text: 'Option A', isCorrect: false }] : undefined,
+        options: (type === 'single_select_mcq' || type === 'multi_select_mcq') ? [{ id: '1', text: 'Option A', isCorrect: false }] : undefined,
       };
-      await api.post('/content', newBlock);
-      // Backend returns the created block usually? If not, we refetch.
-      await get().fetchBlocks(topicId);
+      
+      // Override defaults with initialData if provided
+      const payload = { ...defaultBlock, ...initialData };
+
+      const res = await api.post<ContentBlock>('/content', payload);
+      const newBlock = res.data;
+      
+      // Append to local state
+      set(state => ({ blocks: [...state.blocks, newBlock] }));
+      return newBlock;
     } catch (error) {
       console.error('Add block error:', error);
       throw error;

@@ -3,14 +3,21 @@ import type { Request, Response } from 'express';
 import { ContentService } from '../services/content.service.ts';
 import { z } from 'zod';
 import type { IUser } from '../models/User.ts';
+import { ContentBlockType } from '../models/ContentBlock.ts';
 
 // Basic Zod schema for ContentBlock - can be improved with discriminated unions
 const createContentSchema = z.object({
   topicId: z.string().min(1, 'Topic ID is required'),
-  kind: z.enum(['note', 'mcq', 'descriptive', 'generic']),
+  theme: z.string().optional(),
+  kind: z.enum(ContentBlockType),
   content: z.string().optional(),
   question: z.string().optional(),
   answer: z.string().optional(),
+  explanation: z.string().optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  group: z.string().optional(),
+  hints: z.array(z.string()).optional(),
   options: z.array(z.object({
     id: z.string(),
     text: z.string(),
@@ -21,10 +28,15 @@ const createContentSchema = z.object({
 });
 
 const updateContentSchema = z.object({
-  kind: z.enum(['note', 'mcq', 'descriptive', 'generic']).optional(),
+  kind: z.enum(ContentBlockType).optional(),
   content: z.string().optional(),
   question: z.string().optional(),
   answer: z.string().optional(),
+  explanation: z.string().optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  group: z.string().optional(),
+  hints: z.array(z.string()).optional(),
   options: z.array(z.object({
     id: z.string(),
     text: z.string(),
