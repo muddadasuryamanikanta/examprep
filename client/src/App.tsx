@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import SpaceList from './pages/SpaceList';
@@ -11,6 +12,21 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import { AuthSuccess } from './pages/AuthSuccess';
 import { Navbar } from './components/common/Navbar';
 import { useAuthStore } from './store/authStore';
+
+const TitleUpdater = () => {
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (user?.name) {
+      const firstName = user.name.split(' ')[0];
+      document.title = `${firstName} Prep`;
+    } else {
+      document.title = 'ExamPrep';
+    }
+  }, [user]);
+
+  return null;
+};
 
 const RequireAuth = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
@@ -34,6 +50,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
 function App() {
   return (
     <BrowserRouter>
+      <TitleUpdater />
       <div className="min-h-screen bg-background text-foreground font-sans antialiased">
         <Navbar />
         <Routes>

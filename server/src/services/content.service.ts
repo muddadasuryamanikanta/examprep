@@ -37,8 +37,7 @@ export class ContentService {
     if (!topic) {
       throw new Error('Access denied or Topic not found');
     }
-
-    return await ContentBlock.find({ topicId: topic._id }, '_id topicId kind content question options data position').sort({ position: 1 });
+    return await ContentBlock.find({ topicId: topic._id }, '_id topicId kind content question answer explanation notes tags group options data position').sort({ position: 1 });
   }
 
   static async update(userId: string, blockId: string, data: Partial<IContentBlock>): Promise<IContentBlock | null> {
