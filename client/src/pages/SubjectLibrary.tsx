@@ -181,6 +181,12 @@ export default function SubjectLibrary() {
             placeholder="e.g. Algebra"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCreate();
+              }
+            }}
             autoFocus
           />
         </div>
@@ -205,6 +211,12 @@ export default function SubjectLibrary() {
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleUpdate();
+              }
+            }}
           />
         </div>
       </Modal>
