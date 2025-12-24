@@ -70,8 +70,47 @@ export class ContentController {
   static async getAll(req: Request, res: Response): Promise<void> {
     try {
       const user = req.user as IUser;
-      const blocks = await ContentService.findAll((user._id as any).toString(), req.params.topicId as string);
-      res.json(blocks);
+      const { types, tags, search } = req.query;
+      
+      const filterOptions: { types?: string[]; tags?: string[]; search?: string } = {};
+      
+      if (types) {
+        const typeList = (typeof types === 'string' ? types.split(',') : types as string[])
+          .map(t => t.trim())
+          .filter(t => t.length > 0);
+        
+        if (typeList.length > 0) {
+          filterOptions.types = typeList;
+        }
+      }
+      
+      if (tags) {
+         const tagList = (typeof tags === 'string' ? tags.split(',') : tags as string[])
+          .map(t => t.trim())
+          .filter(t => t.length > 0);
+
+         if (tagList.length > 0) {
+           filterOptions.tags = tagList;
+         }
+      }
+      
+      if (search) {
+        filterOptions.search = search as string;
+      }
+      
+      const cursor = req.query.cursor ? (req.query.cursor as string) : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+      const result = await ContentService.findAll(
+        (user._id as any).toString(), 
+        req.params.topicId as string, 
+        { 
+          ...filterOptions, 
+          limit,
+          ...(cursor ? { cursor } : {}) 
+        }
+      );
+      res.json(result);
     } catch (error: any) {
       if (error.message === 'Access denied to topic') {
         res.status(403).json({ message: 'Access denied' });

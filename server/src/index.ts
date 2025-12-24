@@ -11,6 +11,7 @@ import morgan from 'morgan';
 import './config/passport.ts';
 import authRoutes from './routes/auth.routes.ts';
 import contentRoutes from './routes/content.routes.ts';
+import aiRoutes from './routes/ai.routes.ts';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -22,23 +23,13 @@ app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(helmet());
 app.use(morgan('dev'));
 
-// Rate limiting
-// import rateLimit from 'express-rate-limit';
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limit each IP to 100 requests per windowMs
-// });
-// app.use(limiter);
-
-// Stateless - no sessions needed for JWT
-// app.use(session(...)) removed
-
 // Passport
 app.use(passport.initialize());
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', contentRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error Handling
 import { errorHandler } from './middleware/error.middleware.ts';

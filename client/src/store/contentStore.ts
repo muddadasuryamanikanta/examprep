@@ -29,11 +29,17 @@ interface ContentState {
   setCurrentTopic: (topic: Topic | null) => void;
 
   // Blocks
-  fetchBlocks: (topicId: string) => Promise<void>;
+  hasMore: boolean;
+  cursor: string | null;
+  
+  fetchBlocks: (topicId: string, options?: { types?: string[], tags?: string[], search?: string }, isLoadMore?: boolean) => Promise<void>;
   addBlock: (topicId: string, type: ContentBlockType, initialData?: Partial<ContentBlock>) => Promise<ContentBlock>;
   updateBlock: (id: string, updates: Partial<ContentBlock>) => Promise<void>;
   deleteBlock: (id: string) => Promise<void>;
-  setBlocks: (blocks: ContentBlock[]) => void; // For optimistic updates
+  setBlocks: (blocks: ContentBlock[]) => void;
+  
+  // AI
+  generateAIContent: (text: string, type: ContentBlockType | 'bulk') => Promise<any>;
 }
 
 export const useContentStore = create<ContentState>((set, get) => ({
@@ -44,6 +50,8 @@ export const useContentStore = create<ContentState>((set, get) => ({
   currentTopic: null,
   isLoading: false,
   error: null,
+  hasMore: true,
+  cursor: null,
 
   // --- Subjects ---
   fetchSubjects: async (spaceId) => {
@@ -58,15 +66,11 @@ export const useContentStore = create<ContentState>((set, get) => ({
   },
 
   fetchSubject: async (subjectId) => {
-    // If we already have it in list, use it? No, fetch fresh to be safe/simple or if we navigated directly
-    // But we might want to set loading?
-    // Let's just fetch it.
     try {
       const res = await api.get<Subject>(`/subjects/${subjectId}`);
       set({ currentSubject: res.data });
     } catch (error) {
       console.error('Fetch subject error:', error);
-      // Don't necessarily set global error which blanks screen?
     }
   },
 
@@ -83,10 +87,6 @@ export const useContentStore = create<ContentState>((set, get) => ({
   updateSubject: async (id, title) => {
     try {
       await api.put(`/subjects/${id}`, { title });
-      // Optimistic update locally if possible, but simplest is reliable fetch
-      // We need spaceId to refetch... store assumes we work in context. 
-      // Ideally backend returns the updated object. 
-      // For now, let's update local state manually to avoid needing spaceId arg
       set(state => ({
         subjects: state.subjects.map(s => s._id === id ? { ...s, title } : s),
         currentSubject: state.currentSubject?._id === id ? { ...state.currentSubject, title } : state.currentSubject
@@ -163,12 +163,46 @@ export const useContentStore = create<ContentState>((set, get) => ({
   setCurrentTopic: (topic) => set({ currentTopic: topic }),
 
   // --- Blocks ---
-  fetchBlocks: async (topicId) => {
-    // Silent load if we already have some blocks ? No, safe to show loading
-    set({ isLoading: true, error: null });
+  fetchBlocks: async (topicId, options, isLoadMore = false) => {
+    if (!isLoadMore) {
+        set({ isLoading: true, error: null, blocks: [], cursor: null, hasMore: true });
+    } else {
+        if (!get().hasMore) return;
+        set({ isLoading: true, error: null });
+    }
+
     try {
-      const res = await api.get<ContentBlock[]>(`/topics/${topicId}/content`);
-      set({ blocks: res.data, isLoading: false });
+      const params: Record<string, string> = {};
+      
+      const currentCursor = isLoadMore ? get().cursor : null;
+      if (currentCursor) {
+        params.cursor = currentCursor;
+      }
+      
+      params.limit = '20';
+
+      if (options?.types && options.types.length > 0) {
+        params.types = options.types.join(',');
+      }
+      
+      if (options?.tags && options.tags.length > 0) {
+        params.tags = options.tags.join(',');
+      }
+
+      if (options?.search) {
+         params.search = options.search;
+      }
+      
+      console.log('Fetching blocks with params:', params);
+
+      const res = await api.get<{ blocks: ContentBlock[], nextCursor: string | null }>(`/topics/${topicId}/content`, { params });
+      
+      set(state => ({ 
+          blocks: isLoadMore ? [...state.blocks, ...res.data.blocks] : res.data.blocks, 
+          isLoading: false,
+          cursor: res.data.nextCursor,
+          hasMore: !!res.data.nextCursor
+      }));
     } catch (error) {
       console.error('Fetch blocks error:', error);
       set({ error: 'Failed to fetch blocks', isLoading: false });
@@ -228,4 +262,14 @@ export const useContentStore = create<ContentState>((set, get) => ({
   },
   
   setBlocks: (blocks) => set({ blocks }),
+
+  generateAIContent: async (text, type) => {
+    try {
+      const res = await api.post('/ai/generate', { text, type });
+      return res.data;
+    } catch (error) {
+      console.error('AI Generation error:', error);
+      throw error;
+    }
+  },
 }));
