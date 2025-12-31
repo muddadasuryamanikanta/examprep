@@ -31,69 +31,105 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b; /* Zinc 950 */
-  --primary: #18181b;    /* Zinc 900 */
-  --secondary: #f4f4f5;  /* Zinc 100 */
-  --accent: #e4e4e7;     /* Zinc 200 */
-  --border: #e4e4e7;     /* Zinc 200 */
-  --input: #e4e4e7;      /* Zinc 200 */
-  --ring: #18181b;       /* Zinc 900 */
-  
+  --background: #fdfaff;
+  /* Very light indigo tint */
+  --foreground: #1e1b4b;
+  /* Indigo 950 */
+  --primary: #4f46e5;
+  /* Indigo 600 */
+  --secondary: #e0e7ff;
+  /* Indigo 100 */
+  --accent: #eff6ff;
+  /* Blue 50 */
+  --border: #c7d2fe;
+  /* Indigo 200 */
+  --input: #cbd5e1;
+  /* Slate 300 */
+  --ring: #4f46e5;
+  /* Indigo 600 */
+
   /* Status Colors (Light Mode) */
-  --success: #22c55e;    /* Green 500 */
+  --success: #16a34a;
+  /* Green 600 */
   --success-foreground: #ffffff;
-  --destructive: #ef4444; /* Red 500 */
+  --destructive: #dc2626;
+  /* Red 600 */
   --destructive-foreground: #ffffff;
-  
+
   --popover: #ffffff;
-  --popover-foreground: #09090b;
+  --popover-foreground: #1e1b4b;
 
   /* Block Type Colors (Light Mode) */
-  --block-note-bg: #ecfdf5;      /* emerald-50 */
-  --block-note-text: #047857;    /* emerald-700 */
-  --block-note-border: #a7f3d0;  /* emerald-200 */
+  --block-note-bg: #ecfdf5;
+  /* emerald-50 */
+  --block-note-text: #047857;
+  /* emerald-700 */
+  --block-note-border: #a7f3d0;
+  /* emerald-200 */
 
-  --block-mcq-bg: #eff6ff;       /* blue-50 */
-  --block-mcq-text: #1d4ed8;     /* blue-700 */
-  --block-mcq-border: #bfdbfe;   /* blue-200 */
+  --block-mcq-bg: #eff6ff;
+  /* blue-50 */
+  --block-mcq-text: #1d4ed8;
+  /* blue-700 */
+  --block-mcq-border: #bfdbfe;
+  /* blue-200 */
 
-  --block-fact-bg: #f5f3ff;      /* violet-50 */
-  --block-fact-text: #6d28d9;    /* violet-700 */
-  --block-fact-border: #ddd6fe;  /* violet-200 */
+  --block-fact-bg: #f5f3ff;
+  /* violet-50 */
+  --block-fact-text: #6d28d9;
+  /* violet-700 */
+  --block-fact-border: #ddd6fe;
+  /* violet-200 */
 }
 
 [data-theme='dark'] {
-  --background: #09090b; /* Zinc 950 */
-  --foreground: #fafafa; /* Zinc 50 */
-  --primary: #fafafa;    /* Zinc 50 */
-  --secondary: #27272a;  /* Zinc 800 */
-  --accent: #27272a;     /* Zinc 800 */
-  --border: #27272a;     /* Zinc 800 */
-  --input: #27272a;      /* Zinc 800 */
-  --ring: #d4d4d8;       /* Zinc 300 */
-  
+  --background: #0f172a;
+  /* Slate 900 */
+  --foreground: #f8fafc;
+  /* Slate 50 */
+  --primary: #818cf8;
+  /* Indigo 400 */
+  --secondary: #1e1b4b;
+  /* Indigo 950 */
+  --accent: #1e293b;
+  /* Slate 800 */
+  --border: #334155;
+  /* Slate 700 */
+  --input: #334155;
+  /* Slate 700 */
+  --ring: #818cf8;
+  /* Indigo 400 */
+
   /* Status Colors (Dark Mode) */
   --success: #22c55e;
   --success-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
-  --popover: #09090b;
-  --popover-foreground: #fafafa;
+
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
 
   /* Block Type Colors (Dark Mode) */
-  --block-note-bg: #064e3b;      /* emerald-900 */
-  --block-note-text: #ecfdf5;    /* emerald-50 */
-  --block-note-border: #065f46;  /* emerald-800 */
+  --block-note-bg: #064e3b;
+  /* emerald-900 */
+  --block-note-text: #ecfdf5;
+  /* emerald-50 */
+  --block-note-border: #065f46;
+  /* emerald-800 */
 
-  --block-mcq-bg: #1e3a8a;       /* blue-900 */
-  --block-mcq-text: #eff6ff;     /* blue-50 */
-  --block-mcq-border: #1e40af;   /* blue-800 */
+  --block-mcq-bg: #1e3a8a;
+  /* blue-900 */
+  --block-mcq-text: #eff6ff;
+  /* blue-50 */
+  --block-mcq-border: #1e40af;
+  /* blue-800 */
 
-  --block-fact-bg: #4c1d95;      /* violet-900 */
-  --block-fact-text: #f5f3ff;    /* violet-50 */
-  --block-fact-border: #5b21b6;  /* violet-800 */
+  --block-fact-bg: #4c1d95;
+  /* violet-900 */
+  --block-fact-text: #f5f3ff;
+  /* violet-50 */
+  --block-fact-border: #5b21b6;
+  /* violet-800 */
 }
 
 body {
