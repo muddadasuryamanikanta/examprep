@@ -31,7 +31,7 @@ export function BlockFooter({
       {hints && hints.length > 0 && (
         <div className="space-y-2">
            {hints.slice(0, visibleHints).map((hint, idx) => (
-             <div key={idx} className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-md text-sm text-yellow-600 dark:text-yellow-500 flex items-start gap-2 animate-in fade-in slide-in-from-top-1">
+             <div key={idx} className="bg-warning/10 border border-warning/20 p-3 rounded-md text-sm text-warning flex items-start gap-2 animate-in fade-in slide-in-from-top-1">
                 <Lightbulb className="w-4 h-4 mt-0.5 shrink-0" />
                 <span><span className="font-semibold">Hint {idx + 1}:</span> {hint}</span>
              </div>
@@ -41,7 +41,7 @@ export function BlockFooter({
                variant="ghost" 
                size="sm" 
                onClick={onNextHint}
-               className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100 p-0 h-auto font-medium"
+               className="text-warning hover:text-warning hover:bg-warning/10 p-0 h-auto font-medium"
              >
                <Lightbulb className="w-3.5 h-3.5 mr-1.5" />
                Show {visibleHints === 0 ? 'Hint' : 'Next Hint'}

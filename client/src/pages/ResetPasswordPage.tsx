@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '../components/common/Button';
-import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 
 const resetPasswordSchema = z.object({
@@ -22,7 +21,7 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { resetPassword } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +38,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await api.post('/auth/reset-password', { token, password: data.password });
-      setAuth(res.data.user, res.data.token);
+      await resetPassword(token, data.password);
       navigate('/'); // Go to dashboard
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to reset password. Link may be expired.');

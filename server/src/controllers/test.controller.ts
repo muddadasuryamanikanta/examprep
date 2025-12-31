@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import TestService from '../services/test.service.js';
 
 export const getAvailableQuestionCounts = async (req: Request, res: Response) => {
@@ -55,6 +56,12 @@ export const getTestById = async (req: Request, res: Response) => {
     if (!id) {
         return res.status(400).json({ message: 'Test ID is required' });
     }
+    
+    // Validate ObjectId to prevent CastError
+    if (!mongoose.isValidObjectId(id)) {
+         return res.status(400).json({ message: 'Invalid Test ID format' });
+    }
+
     const test = await TestService.getTestById(id, userId);
     
     if (!test) {

@@ -74,3 +74,23 @@ export interface GenericBlock extends BaseContentBlock {
 
 
 export type ContentBlock = NoteBlock | SingleSelectMcqBlock | MultiSelectMcqBlock | DescriptiveBlock | GenericBlock;
+
+export interface TestQuestion {
+  blockId: string;
+  blockSnapshot: ContentBlock;
+  userAnswer?: unknown;
+}
+
+export interface Test extends BaseEntity {
+  status: 'CREATED' | 'IN_PROGRESS' | 'COMPLETED';
+  startTime?: string;
+  endTime?: string;
+  questions: TestQuestion[];
+  score: number;
+  totalMarks: number;
+  config: {
+    questionCount: number;
+    duration: number; // in minutes
+  };
+  warnings?: Array<{ timestamp: Date; reason: string }>;
+}

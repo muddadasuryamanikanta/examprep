@@ -39,7 +39,11 @@ interface ContentState {
   setBlocks: (blocks: ContentBlock[]) => void;
   
   // AI
-  generateAIContent: (text: string, type: ContentBlockType | 'bulk') => Promise<any>;
+  generateAIContent: (text: string, type: ContentBlockType | 'bulk') => Promise<unknown>;
+
+  // Helpers
+  getSubjects: (spaceId: string) => Promise<Subject[]>;
+  getTopics: (subjectId: string) => Promise<Topic[]>;
 }
 
 export const useContentStore = create<ContentState>((set, get) => ({
@@ -271,5 +275,26 @@ export const useContentStore = create<ContentState>((set, get) => ({
       console.error('AI Generation error:', error);
       throw error;
     }
+  },
+
+  // Helpers for wizards/external use without modifying store state
+  getSubjects: async (spaceIdStrOrSlug: string) => {
+      try {
+          const res = await api.get<Subject[]>(`/spaces/${spaceIdStrOrSlug}/subjects`);
+          return res.data;
+      } catch (error) {
+          console.error('getSubjects error', error);
+          throw error;
+      }
+  },
+
+  getTopics: async (subjectIdStrOrSlug: string) => {
+      try {
+          const res = await api.get<Topic[]>(`/subjects/${subjectIdStrOrSlug}/topics`);
+          return res.data;
+      } catch (error) {
+           console.error('getTopics error', error);
+           throw error;
+      }
   },
 }));

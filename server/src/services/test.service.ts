@@ -5,6 +5,8 @@ import { TestStatus } from '../models/Test.js';
 import ContentBlock from '../models/ContentBlock.js';
 import type { IContentBlock } from '../models/ContentBlock.js';
 import { ContentBlockType } from '../models/ContentBlock.js';
+import Subject from '../models/Subject.js';
+import Topic from '../models/Topic.js';
 
 export class TestService {
   /**
@@ -28,9 +30,55 @@ export class TestService {
   /**
    * Create a new test with random questions based on config
    */
+  /**
+   * Create a new test with random questions based on config
+   */
   async createTest(userId: string, config: ITestConfig): Promise<ITest> {
-    const { topicIds, questionTypes, questionCount } = config;
-    const topicObjectIds = topicIds.map((id: any) => new mongoose.Types.ObjectId(id));
+    const { selections, questionTypes, questionCount } = config as any; // Cast as any to access new selections prop if not in ITestConfig yet
+
+    let topicObjectIds: mongoose.Types.ObjectId[] = [];
+
+    // Branch 1: Legacy flat topicIds (for backward compatibility if needed)
+    if (config.topicIds && config.topicIds.length > 0) {
+        topicObjectIds = config.topicIds.map((id: any) => new mongoose.Types.ObjectId(id));
+    } 
+    // Branch 2: New Hierarchical Selections
+    else if (selections && Array.isArray(selections)) {
+        const resolvedIds = new Set<string>();
+
+        // We can run these in parallel, but sequential is safer for now to avoid complexity
+        for (const sel of selections) {
+            const { spaceId, subjects } = sel;
+
+            if (!subjects || subjects.length === 0) {
+                // Implicit All Subjects in Space
+                // Get all subjects in space
+                const spaceSubjects = await Subject.find({ spaceId: spaceId }).select('_id');
+                const spaceSubjectIds = spaceSubjects.map(s => s._id);
+                // Get all topics in these subjects
+                const spaceTopics = await Topic.find({ subjectId: { $in: spaceSubjectIds } }).select('_id');
+                spaceTopics.forEach(t => resolvedIds.add(t._id.toString()));
+            } else {
+                // Specific Subjects
+                for (const subSel of subjects) {
+                    const { subjectId, topics } = subSel;
+                    if (!topics || topics.length === 0) {
+                         // Implicit All Topics in Subject
+                         const currentSubjectTopics = await Topic.find({ subjectId: subjectId }).select('_id');
+                         currentSubjectTopics.forEach(t => resolvedIds.add(t._id.toString()));
+                    } else {
+                         // Explicit Topics
+                         topics.forEach((tid: string) => resolvedIds.add(tid));
+                    }
+                }
+            }
+        }
+        topicObjectIds = Array.from(resolvedIds).map(id => new mongoose.Types.ObjectId(id));
+    }
+
+    if (topicObjectIds.length === 0) {
+        throw new Error('No topics selected');
+    }
 
     // Calculate how many questions per type we might want, or just random mix
     // For now, let's just pull random questions from the pool of selected topics and types
@@ -47,8 +95,8 @@ export class TestService {
 
     const randomBlocks = await ContentBlock.aggregate(pipeline);
 
-    if (randomBlocks.length === 0) {
-      throw new Error('No questions available for the selected criteria');
+    if (randomBlocks.length < questionCount) {
+      throw new Error(`Requested ${questionCount} questions, but only found ${randomBlocks.length} available for the selected criteria.`);
     }
 
     // Map blocks to test questions structure
@@ -64,7 +112,8 @@ export class TestService {
       userId,
       config,
       questions,
-      status: TestStatus.CREATED,
+      status: TestStatus.IN_PROGRESS,
+      startTime: new Date(),
       totalMarks: questions.length // Assuming 1 mark per question for now
     });
 

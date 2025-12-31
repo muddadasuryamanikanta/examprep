@@ -149,8 +149,8 @@ export function BulkImportModal({ isOpen, onClose, onSave }: BulkImportModalProp
                     <p className="text-sm font-medium mb-2">{block.question}</p>
                     <ul className="space-y-1">
                       {block.options?.map((opt: any, i: number) => (
-                        <li key={i} className={`text-xs flex items-center gap-2 ${opt.isCorrect ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>
-                           <span className={`w-1.5 h-1.5 rounded-full ${opt.isCorrect ? 'bg-green-600' : 'bg-muted-foreground/30'}`} />
+                        <li key={i} className={`text-xs flex items-center gap-2 ${opt.isCorrect ? 'text-success font-medium' : 'text-muted-foreground'}`}>
+                           <span className={`w-1.5 h-1.5 rounded-full ${opt.isCorrect ? 'bg-success' : 'bg-muted-foreground/30'}`} />
                            {opt.text}
                         </li>
                       ))}

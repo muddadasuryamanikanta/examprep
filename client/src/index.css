@@ -11,8 +11,16 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-destructive: var(--destructive);
+  --color-mark: var(--mark);
+  --color-mark-foreground: var(--mark-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card-foreground: var(--card-foreground);
 
   /* Block Colors */
   --color-block-note-bg: var(--block-note-bg);
@@ -37,9 +45,15 @@
   --primary: #37352f;
   --secondary: #f1f0ef;  /* Notion Hover/Sidebar Gray */
   --accent: #f1f0ef;
-  --border: #e9e9e7;
-  --input: #e9e9e7;
-  --ring: #37352f;
+  --border: #d4d4d4;
+  --input: #d4d4d4;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #1e1e1e;
+  --accent-foreground: #1e1e1e;
+  --muted: #f1f0ef;
+  --muted-foreground: #737373;
+  --card: #ffffff;
+  --card-foreground: #37352f;
   
   /* Status Colors */
   --success: #2eaadc;    /* Notion Blue-ish for success or keep standard green? Keeping standard green but softer */
@@ -47,6 +61,9 @@
   --success-foreground: #ffffff;
   --destructive: #eb5757; /* Softer Red */
   --destructive-foreground: #ffffff;
+
+  --mark: #a855f7;
+  --mark-foreground: #ffffff;
   
   --popover: #ffffff;
   --popover-foreground: #37352f;
@@ -66,6 +83,8 @@
   --block-fact-bg: #f6f3f9;
   --block-fact-text: #9065b0;
   --block-fact-border: #f6f3f9;
+  
+  --grid-color: #e5e5e5;
 }
 
 [data-theme='dark'] {
@@ -77,13 +96,24 @@
   --accent: #2c2c2c;
   --border: #2f2f2f;
   --input: #2f2f2f;
-  --ring: #d4d4d8;
+  --primary-foreground: #1e1e1e;
+  --secondary-foreground: #d4d4d4;
+  --accent-foreground: #d4d4d4;
+  --muted: #2c2c2c;
+  --muted-foreground: #a1a1aa;
+  --card: #191919;
+  --card-foreground: #d4d4d4;
+  
+  --grid-color: #222222;
   
   /* Status Colors */
   --success: #22c55e;
   --success-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+
+  --mark: #a855f7;
+  --mark-foreground: #ffffff;
   
   --popover: #191919;
   --popover-foreground: #d4d4d4;

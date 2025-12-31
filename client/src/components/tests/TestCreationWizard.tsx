@@ -1,365 +1,559 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Check, Loader2 } from 'lucide-react';
-import api from '../../lib/api';
+import { Loader2, Check, Filter, Search } from 'lucide-react';
+import { useSpaceStore } from '../../store/spaceStore';
+import { useContentStore } from '../../store/contentStore';
+import { useTestStore } from '../../store/testStore';
+import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
-import { Card } from '../common/Card';
+import type { Subject, Topic } from '../../types/domain';
 
-// Types
-interface Space { _id: string; name: string; slug: string; }
-interface Subject { _id: string; title: string; slug: string; spaceId: string; }
-interface Topic { _id: string; title: string; slug: string; subjectId: string; }
+interface TestCreationWizardProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
 
-// Steps
-const Step = {
-  SELECT_SPACE: 0,
-  SELECT_SUBJECTS: 1,
-  SELECT_TOPICS: 2,
-  CONFIGURE: 3
-} as const;
-
-type Step = typeof Step[keyof typeof Step];
-
-export default function TestCreationWizard() {
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<Step>(Step.SELECT_SPACE);
-  const [loading, setLoading] = useState(false);
-  
-  // Data
-  const [spaces, setSpaces] = useState<Space[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [topics, setTopics] = useState<Topic[]>([]);
-  
-  // Selection State
-  const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
-  const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
-  
-  // Configuration State
-  const [questionTypes, setQuestionTypes] = useState<string[]>(['single_select_mcq', 'multi_select_mcq', 'descriptive', 'note']);
-  const [questionCount, setQuestionCount] = useState<number>(10);
-  const [availableCounts, setAvailableCounts] = useState<Record<string, number>>({});
-  const [creating, setCreating] = useState(false);
-
-  // Fetch Spaces on mount
-  useEffect(() => {
-    const fetchSpaces = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get('/spaces');
-        setSpaces(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSpaces();
-  }, []);
-
-  // Fetch Subjects when Space selected
-  useEffect(() => {
-    if (!selectedSpace) return;
-    const fetchSubjects = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get(`/spaces/${selectedSpace.slug}/subjects`);
-        setSubjects(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSubjects();
-  }, [selectedSpace]);
-
-  // Fetch Topics when Subjects selected
-  useEffect(() => {
-    if (selectedSubjectIds.length === 0) {
-        setTopics([]);
-        return;
-    }
-    
-    // We need to fetch topics for all selected subjects. 
-    // The current API might not support batch subject fetch well, so we might loop or need a new endpoint.
-    // Assuming we can fetch by subject slug or ID. 
-    // Let's assume we iterate for now or filtering client side if we had them (we don't).
-    // Actually, common pattern: get topics for current space/subject. 
-    // Since we select multiple subjects, we should probably fetch all topics for those subjects.
-    
-    const fetchTopics = async () => {
-        setLoading(true);
-        try {
-            // Promise.all to fetch topics for each selected subject
-            // Optimization: API endpoint to fetch topics by subject IDs would be better.
-            // For now, let's just loop.
-            const selectedSubjects = subjects.filter(s => selectedSubjectIds.includes(s._id));
-            const promises = selectedSubjects.map(s => api.get(`/spaces/${selectedSpace?.slug}/${s.slug}/topics`));
-            const results = await Promise.all(promises);
-            const allTopics = results.flatMap(r => r.data);
-            setTopics(allTopics);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+// Tree Structure
+type SelectionTree = {
+    [spaceId: string]: {
+        allSubjects: boolean;
+        subjects: {
+            [subjectId: string]: {
+                allTopics: boolean;
+                topics: string[]; // List of topic IDs
+            }
         }
-    };
-    
-    fetchTopics();
-  }, [selectedSubjectIds, subjects, selectedSpace]);
+    }
+}
 
-  // Fetch Available Counts when entering Configure step
-  useEffect(() => {
-      if (currentStep === Step.CONFIGURE && selectedTopicIds.length > 0) {
-          const fetchCounts = async () => {
-              try {
-                  const res = await api.post('/tests/count', { topicIds: selectedTopicIds });
-                  setAvailableCounts(res.data);
-                  
-                  // Adjust max question count
-                  const total = Object.values(res.data as Record<string, number>).reduce((a, b) => a + b, 0);
-                  if (questionCount > total) setQuestionCount(total);
-              } catch (err) {
-                  console.error(err);
-              }
-          };
-          fetchCounts();
-      }
-  }, [currentStep, selectedTopicIds]);
+export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps) {
+    const navigate = useNavigate();
+    const { spaces, fetchSpaces, isLoading: isSpacesLoading } = useSpaceStore();
+    const { getSubjects, getTopics } = useContentStore();
 
-
-  const handleCreateTest = async () => {
-      setCreating(true);
-      try {
-          // If no specific types selected, default to all relevant ones having questions
-          const validTypes = questionTypes.length > 0 ? questionTypes : Object.keys(availableCounts);
-          
-          const config = {
-              spaceId: selectedSpace?._id,
-              subjectIds: selectedSubjectIds,
-              topicIds: selectedTopicIds,
-              questionTypes: validTypes,
-              questionCount
-          };
-
-          const res = await api.post('/tests', config);
-          navigate(`/tests/${res.data._id}`);
-      } catch (err) {
-          console.error(err);
-          alert('Failed to create test. Please check availability.');
-      } finally {
-          setCreating(false);
-      }
-  };
-
-  // Render Helpers
-  const renderSpaceSelection = () => (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {spaces.map(space => (
-              <Card 
-                  key={space._id} 
-                  className={`cursor-pointer transition-all hover:border-primary p-6 ${selectedSpace?._id === space._id ? 'border-primary ring-1 ring-primary' : ''}`}
-                  onClick={() => setSelectedSpace(space)}
-              >
-                  <h3 className="font-semibold text-lg">{space.name}</h3>
-                  <p className="text-sm text-foreground/60">{space.slug}</p>
-              </Card>
-          ))}
-      </div>
-  );
-
-  const renderSubjectSelection = () => (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {subjects.map(subject => (
-              <Card 
-                  key={subject._id} 
-                  className={`cursor-pointer transition-all hover:border-primary p-6 flex justify-between items-center ${selectedSubjectIds.includes(subject._id) ? 'border-primary ring-1 ring-primary' : ''}`}
-                  onClick={() => {
-                      if (selectedSubjectIds.includes(subject._id)) {
-                          setSelectedSubjectIds(prev => prev.filter(id => id !== subject._id));
-                      } else {
-                          setSelectedSubjectIds(prev => [...prev, subject._id]);
-                      }
-                  }}
-              >
-                  <span className="font-semibold">{subject.title}</span>
-                  {selectedSubjectIds.includes(subject._id) && <Check className="w-5 h-5 text-primary" />}
-              </Card>
-          ))}
-      </div>
-  );
-
-  const renderTopicSelection = () => {
-    // Group topics by subject for better UX
-    const topicsBySubject: Record<string, Topic[]> = {};
-    topics.forEach(t => {
-        if (!topicsBySubject[t.subjectId]) topicsBySubject[t.subjectId] = [];
-        topicsBySubject[t.subjectId].push(t);
+    // Wizard Step State
+    const [step, setStep] = useState<'selection' | 'config'>('selection');
+    const [config, setConfig] = useState({
+        questionCount: 15,
+        duration: 60 // minutes
     });
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={() => setSelectedTopicIds(topics.map(t => t._id))}>Select All</Button>
-                <Button size="sm" variant="outline" onClick={() => setSelectedTopicIds([])}>Select None</Button>
-            </div>
+    // Selection State
+    const [tree, setTree] = useState<SelectionTree>({});
+
+    // Modal Stack & Data Cache
+    const [subjectLayer, setSubjectLayer] = useState<{ spaceId: string; spaceName: string } | null>(null);
+    const [topicLayer, setTopicLayer] = useState<{ spaceId: string; subjectId: string; subjectName: string } | null>(null);
+    
+    // We cache data here to avoid refetching when navigating back/forth in the wizard
+    // API calls are strictly via store methods (getSubjects, getTopics)
+    const [cachedSubjects, setCachedSubjects] = useState<Record<string, Subject[]>>({});
+    const [cachedTopics, setCachedTopics] = useState<Record<string, Topic[]>>({});
+    const [isLoadingLayer, setIsLoadingLayer] = useState(false);
+    
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchSpaces();
+            setStep('selection');
+        } else {
+            setTree({});
+            setSubjectLayer(null);
+            setTopicLayer(null);
+            setSearchTerm('');
+            setStep('selection');
+        }
+    }, [isOpen, fetchSpaces]);
+
+    // Clear search when changing layers
+    useEffect(() => {
+        setSearchTerm('');
+    }, [subjectLayer, topicLayer]);
+
+    // --- Helpers ---
+
+    const isSpaceSelected = (spaceId: string) => !!tree[spaceId];
+    
+    const isSubjectSelected = (spaceId: string, subjectId: string) => {
+        const space = tree[spaceId];
+        if (!space) return false;
+        if (space.allSubjects) return true;
+        return !!space.subjects[subjectId];
+    };
+    
+    const isTopicSelected = (spaceId: string, subjectId: string, topicId: string) => {
+        const space = tree[spaceId];
+        if (!space) return false;
+        
+        // Resolve subject selection
+        let subSel;
+        if (space.allSubjects) {
+             // Implicit all subjects selected
+             return true;
+        } else {
+            subSel = space.subjects[subjectId];
+        }
+
+        if (!subSel) return false;
+        if (subSel.allTopics) return true;
+        return subSel.topics.includes(topicId);
+    };
+
+    // --- Action Handlers ---
+
+    const toggleSpace = (spaceId: string) => {
+        setTree(prev => {
+            const next = { ...prev };
+            if (next[spaceId]) {
+                delete next[spaceId];
+            } else {
+                next[spaceId] = { allSubjects: true, subjects: {} };
+            }
+            return next;
+        });
+    };
+
+    const toggleSubject = (spaceId: string, subjectId: string, allSpaceSubjects: Subject[]) => {
+        setTree(prev => {
+            const next = { ...prev };
+            const spaceSel = next[spaceId];
             
-            {Object.entries(topicsBySubject).map(([subjectId, subjectTopics]) => {
-                const subject = subjects.find(s => s._id === subjectId);
-                return (
-                    <div key={subjectId} className="space-y-3">
-                        <h3 className="font-semibold text-foreground/60 uppercase text-sm tracking-wider">{subject?.title || 'Unknown Subject'}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {subjectTopics.map(topic => (
-                                <Card 
-                                    key={topic._id} 
-                                    className={`cursor-pointer transition-all hover:border-primary p-4 flex justify-between items-center ${selectedTopicIds.includes(topic._id) ? 'border-primary ring-1 ring-primary' : ''}`}
-                                    onClick={() => {
-                                        if (selectedTopicIds.includes(topic._id)) {
-                                            setSelectedTopicIds(prev => prev.filter(id => id !== topic._id));
-                                        } else {
-                                            setSelectedTopicIds(prev => [...prev, topic._id]);
-                                        }
-                                    }}
-                                >
-                                    <span className="text-sm font-medium">{topic.title}</span>
-                                    {selectedTopicIds.includes(topic._id) && <Check className="w-4 h-4 text-primary" />}
-                                </Card>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-  };
+            if (!spaceSel) {
+                 // Auto-select space if selecting a subject (from unselected state)
+                 next[spaceId] = { 
+                     allSubjects: false, 
+                     subjects: { [subjectId]: { allTopics: true, topics: [] } }
+                 };
+                 return next;
+            }
 
-  const renderConfiguration = () => {
-      const totalAvailable = Object.values(availableCounts).reduce((a, b) => a + b, 0);
-
-      return (
-          <div className="max-w-2xl mx-auto space-y-8">
-              <div className="bg-background border rounded-lg p-6">
-                  <h3 className="font-semibold mb-4 text-lg">Question Types</h3>
-                  <div className="space-y-3">
-                      {Object.keys(availableCounts).length > 0 ? Object.entries(availableCounts).map(([type, count]) => (
-                          <div key={type} className="flex items-center justify-between p-3 border rounded hover:bg-secondary/50 cursor-pointer"
-                               onClick={() => {
-                                   if (questionTypes.includes(type)) {
-                                       setQuestionTypes(prev => prev.filter(t => t !== type));
-                                   } else {
-                                       setQuestionTypes(prev => [...prev, type]);
-                                   }
-                               }}
-                          >
-                               <div className="flex items-center gap-3">
-                                   <div className={`w-5 h-5 rounded border flex items-center justify-center ${questionTypes.includes(type) ? 'bg-primary border-primary text-background' : 'border-input'}`}>
-                                       {questionTypes.includes(type) && <Check className="w-3.5 h-3.5" />}
-                                   </div>
-                                   <span className="capitalize">{type.replace(/_/g, ' ')}</span>
-                               </div>
-                               <span className="text-sm text-foreground/60">{count} available</span>
-                          </div>
-                      )) : <p className="text-foreground/60 italic">No questions found for selected topics.</p>}
-                  </div>
-              </div>
-
-              <div className="bg-background border rounded-lg p-6">
-                  <h3 className="font-semibold mb-4 text-lg">Number of Questions</h3>
-                  <div className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                          <span>Quantity</span>
-                          <span className="font-mono font-bold">{questionCount}</span>
-                      </div>
-                      <input 
-                          type="range" 
-                          min="1" 
-                          max={Math.min(50, totalAvailable)} 
-                          value={questionCount} 
-                          onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                          className="w-full accent-primary h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
-                      />
-                      <p className="text-xs text-foreground/60 text-center">
-                          Max available: {totalAvailable}
-                      </p>
-                  </div>
-              </div>
-          </div>
-      );
-  };
-
-  // Main Render
-  return (
-    <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-             <h1 className="text-2xl font-bold">Create New Test</h1>
-             <p className="text-foreground/60">Follow the steps to configure your practice test</p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-8 max-w-3xl mx-auto relative">
-             <div className="absolute left-0 top-1/2 w-full h-0.5 bg-secondary -z-10" />
-             {['Select Space', 'Select Chapters', 'Select Topics', 'Configure'].map((label, idx) => (
-                 <div key={idx} className="flex flex-col items-center gap-2 bg-background px-2">
-                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                         currentStep > idx ? 'bg-success text-success-foreground' : 
-                         currentStep === idx ? 'bg-primary text-background' : 
-                         'bg-secondary text-foreground/60'
-                     }`}>
-                         {currentStep > idx ? <Check className="w-4 h-4" /> : idx + 1}
-                     </div>
-                     <span className={`text-xs font-medium ${currentStep === idx ? 'text-primary' : 'text-foreground/60'}`}>{label}</span>
-                 </div>
-             ))}
-        </div>
-
-        {/* Content */}
-        <div className="min-h-[400px] mb-8">
-            {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-            ) : (
-                <>
-                    {currentStep === Step.SELECT_SPACE && renderSpaceSelection()}
-                    {currentStep === Step.SELECT_SUBJECTS && renderSubjectSelection()}
-                    {currentStep === Step.SELECT_TOPICS && renderTopicSelection()}
-                    {currentStep === Step.CONFIGURE && renderConfiguration()}
-                </>
-            )}
-        </div>
-
-        {/* Footer Actions */}
-        <div className="flex justify-between items-center pt-8 border-t">
-            <Button 
-                variant="outline" 
-                onClick={() => setCurrentStep(prev => Math.max(0, prev - 1) as Step)}
-                disabled={currentStep === 0}
-            >
-                <ChevronLeft className="w-4 h-4 mr-2" /> Back
-            </Button>
-            
-            {currentStep < Step.CONFIGURE ? (
-                <Button 
-                    onClick={() => setCurrentStep(prev => Math.min(3, prev + 1) as Step)}
-                    disabled={
-                        (currentStep === Step.SELECT_SPACE && !selectedSpace) ||
-                        (currentStep === Step.SELECT_SUBJECTS && selectedSubjectIds.length === 0) ||
-                        (currentStep === Step.SELECT_TOPICS && selectedTopicIds.length === 0)
+            if (spaceSel.allSubjects) {
+                // Switching from "Implicit All" to "Explicit Selection" (deselecting one item)
+                const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
+                allSpaceSubjects.forEach(s => {
+                    if (s._id !== subjectId) {
+                        newSubjectsMap[s._id] = { allTopics: true, topics: [] };
                     }
-                >
-                    Next <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-            ) : (
-                <Button 
-                    onClick={handleCreateTest} 
-                    disabled={creating || Object.values(availableCounts).reduce((a, b) => a + b, 0) === 0}
-                >
-                    {creating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Start Test'}
-                </Button>
-            )}
-        </div>
-    </div>
-  );
+                });
+                
+                next[spaceId] = {
+                    ...spaceSel,
+                    allSubjects: false,
+                    subjects: newSubjectsMap
+                };
+            } else {
+                // Explicit mode
+                const subSel = spaceSel.subjects[subjectId];
+                if (subSel) {
+                    // Remove
+                    const newSubs = { ...spaceSel.subjects };
+                    delete newSubs[subjectId];
+                    if (Object.keys(newSubs).length === 0) {
+                        delete next[spaceId];
+                    } else {
+                        next[spaceId] = { ...spaceSel, subjects: newSubs };
+                    }
+                } else {
+                    // Add
+                    next[spaceId] = {
+                        ...spaceSel,
+                        subjects: {
+                            ...spaceSel.subjects,
+                            [subjectId]: { allTopics: true, topics: [] }
+                        }
+                    };
+                }
+            }
+            return next;
+        });
+    };
+
+    const toggleTopic = (spaceId: string, subjectId: string, topicId: string, allSubjectTopics: Topic[]) => {
+        setTree(prev => {
+            const next = { ...prev };
+            const spaceSel = next[spaceId];
+            if (!spaceSel) return next; 
+
+            // Handle implicit all subjects -> explicit subject for topic refinement
+            if (spaceSel.allSubjects) {
+                 const allSubs = cachedSubjects[spaceId] || []; 
+                 const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
+                 allSubs.forEach(s => {
+                     newSubjectsMap[s._id] = { allTopics: true, topics: [] };
+                 });
+                 spaceSel.allSubjects = false;
+                 spaceSel.subjects = newSubjectsMap;
+            }
+            
+            let subSel = spaceSel.subjects[subjectId];
+            if (!subSel) {
+                subSel = { allTopics: true, topics: [] }; 
+            }
+
+            if (subSel.allTopics) {
+                // Switch to explicit topics: All except ONE
+                 const newTopicsList = allSubjectTopics
+                    .filter(t => t._id !== topicId)
+                    .map(t => t._id);
+                
+                subSel.allTopics = false;
+                subSel.topics = newTopicsList;
+            } else {
+                // Toggle
+                if (subSel.topics.includes(topicId)) {
+                    subSel.topics = subSel.topics.filter(id => id !== topicId);
+                } else {
+                    subSel.topics.push(topicId);
+                }
+                if (subSel.topics.length === allSubjectTopics.length) {
+                    subSel.allTopics = true;
+                    subSel.topics = [];
+                }
+            }
+            
+            spaceSel.subjects[subjectId] = subSel;
+            next[spaceId] = { ...spaceSel };
+            return next;
+        });
+    };
+    
+    const handleSelectAllSubjects = (spaceId: string, select: boolean) => {
+        setTree(prev => {
+            const next = { ...prev };
+            if (select) {
+                next[spaceId] = { allSubjects: true, subjects: {} };
+            } else {
+                delete next[spaceId];
+            }
+            return next;
+        });
+    };
+
+    const handleSelectAllTopics = (spaceId: string, subjectId: string, select: boolean) => {
+         setTree(prev => {
+            const next = { ...prev };
+            const spaceSel = next[spaceId];
+            
+             if (spaceSel.allSubjects) {
+                 const allSubs = cachedSubjects[spaceId] || [];
+                 const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
+                 allSubs.forEach(s => {
+                     newSubjectsMap[s._id] = { allTopics: true, topics: [] };
+                 });
+                 spaceSel.allSubjects = false;
+                 spaceSel.subjects = newSubjectsMap;
+            }
+            
+            if (select) {
+                spaceSel.subjects[subjectId] = { allTopics: true, topics: [] };
+            } else {
+                delete spaceSel.subjects[subjectId];
+                if (Object.keys(spaceSel.subjects).length === 0) delete next[spaceId];
+            }
+            next[spaceId] = { ...spaceSel };
+            return next;
+        });
+    };
+
+    // --- Modal Expansion ---
+
+    const handleOpenSubjects = async (spaceId: string, spaceName: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSubjectLayer({ spaceId, spaceName });
+
+        if (!cachedSubjects[spaceId]) {
+            setIsLoadingLayer(true);
+            try {
+                const data = await getSubjects(spaceId);
+                setCachedSubjects(prev => ({ ...prev, [spaceId]: data }));
+            } catch (err) { console.error(err); } 
+            finally { setIsLoadingLayer(false); }
+        }
+    };
+
+    const handleOpenTopics = async (spaceId: string, subjectId: string, subjectName: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setTopicLayer({ spaceId, subjectId, subjectName });
+
+        if (!cachedTopics[subjectId]) {
+            setIsLoadingLayer(true);
+            try {
+                const data = await getTopics(subjectId);
+                setCachedTopics(prev => ({ ...prev, [subjectId]: data }));
+            } catch (err) { console.error(err); }
+            finally { setIsLoadingLayer(false); }
+        }
+    };
+
+    const { createTest } = useTestStore();
+    const [isCreating, setIsCreating] = useState(false);
+
+    const handleNext = () => {
+        setStep('config');
+    };
+
+    const handleCreate = async () => {
+        const payload = Object.entries(tree).map(([spaceId, spaceVal]) => {
+            const entry: Record<string, any> = { spaceId };
+            
+            if (!spaceVal.allSubjects) {
+                entry.subjects = Object.entries(spaceVal.subjects).map(([subId, subVal]) => {
+                    const subEntry: Record<string, any> = { subjectId: subId };
+                    if (!subVal.allTopics) {
+                        subEntry.topics = subVal.topics;
+                    }
+                    return subEntry;
+                });
+            }
+            return entry;
+        });
+        
+        setIsCreating(true);
+        try {
+            const newTest = await createTest({
+                selections: payload,
+                questionCount: config.questionCount,
+                duration: config.duration,
+                questionTypes: ['single_select_mcq', 'multi_select_mcq', 'descriptive'] 
+            });
+            onClose();
+            navigate(`/tests/${newTest._id}`);
+        } catch (error: any) {
+            console.error('Failed to create test:', error);
+            alert(error.response?.data?.message || error.message || "Failed to create test. Please try again.");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    // --- Render Helpers ---
+
+    const renderList = <T extends { _id: string, [key: string]: any }>(
+        items: T[],
+        labelKey: keyof T,
+        isSelectedFn: (id: string) => boolean,
+        onToggle: (id: string) => void,
+        onExpand?: (item: T, e: React.MouseEvent) => void,
+        isAllSelected?: boolean,
+        onToggleAll?: (select: boolean) => void,
+        placeholder?: string
+    ) => {
+        const filteredItems = items.filter(item => 
+            String(item[labelKey]).toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        return (
+            <div className="flex flex-col h-[400px]">
+                <div className="mb-3 relative">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                    <input 
+                        type="text"
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-background border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                </div>
+                
+                {onToggleAll && !searchTerm && (
+                     <div className="flex items-center p-3 border-b mb-1 cursor-pointer hover:bg-accent" onClick={() => onToggleAll(!isAllSelected)}>
+                         <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 ${isAllSelected ? 'bg-primary border-primary text-background' : 'border-muted-foreground'}`}>
+                             {isAllSelected && <Check className="w-3 h-3" />}
+                         </div>
+                         <div className="font-medium text-foreground">Select All</div>
+                     </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    {filteredItems.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                            {placeholder || 'No items found.'}
+                        </div>
+                    ) : (
+                        filteredItems.map(item => {
+                            const isSelected = isSelectedFn(item._id);
+                            return (
+                                <div key={item._id} className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${isSelected ? 'bg-secondary/30 border-primary/50' : 'hover:bg-accent'}`}>
+                                    <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => onToggle(item._id)}>
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary text-background' : 'border-muted-foreground'}`}>
+                                            {isSelected && <Check className="w-3 h-3" />}
+                                        </div>
+                                        <div className="font-medium text-foreground">{String(item[labelKey])}</div>
+                                    </div>
+                                    {onExpand && isSelected && (
+                                        <Button 
+                                            variant="ghost" size="icon" 
+                                            onClick={(e) => onExpand(item, e)}
+                                            className="shrink-0 ml-2 h-8 w-8"
+                                            title="Filter"
+                                        >
+                                            <Filter className="w-4 h-4 text-muted-foreground" />
+                                        </Button>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    // --- Layers ---
+
+    const renderSpaceLayer = () => {
+        if (step !== 'selection') return null;
+
+        return (
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title="Create Test - Select Content"
+                footer={
+                    <div className="flex gap-2 justify-end w-full">
+                         <Button variant="secondary" onClick={onClose} disabled={isCreating}>Cancel</Button>
+                         <Button onClick={handleNext} disabled={Object.keys(tree).length === 0}>
+                            Next
+                         </Button>
+                    </div>
+                }
+            >
+                 {isSpacesLoading && spaces.length === 0 ? (
+                    <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+                ) : (
+                    renderList(
+                        spaces, 
+                        'name', 
+                        isSpaceSelected, 
+                        toggleSpace, 
+                        (s, e) => handleOpenSubjects(s._id, s.name, e),
+                        false, 
+                        undefined,
+                        "No spaces found."
+                    )
+                )}
+            </Modal>
+        );
+    };
+
+    const renderConfigLayer = () => {
+        if (step !== 'config') return null;
+
+        return (
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title="Create Test - Configure"
+                footer={
+                    <div className="flex gap-2 justify-end w-full">
+                         <Button variant="secondary" onClick={() => setStep('selection')} disabled={isCreating}>Back</Button>
+                         <Button onClick={handleCreate} disabled={isCreating}>
+                            {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            Start Test
+                         </Button>
+                    </div>
+                }
+            >
+                <div className="space-y-6 p-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Number of Questions</label>
+                        <input 
+                            type="number" 
+                            min="1" 
+                            max="100"
+                            value={config.questionCount}
+                            onChange={(e) => setConfig({ ...config, questionCount: parseInt(e.target.value) || 0 })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Approximate count. Actual questions might vary based on availability.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Duration (minutes)</label>
+                        <input 
+                            type="number" 
+                            min="5" 
+                            max="180"
+                            value={config.duration}
+                            onChange={(e) => setConfig({ ...config, duration: parseInt(e.target.value) || 0 })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                    </div>
+                </div>
+            </Modal>
+        );
+    };
+
+    const renderSubjectLayer = () => {
+        if (!subjectLayer) return null;
+        const currentSubjects = cachedSubjects[subjectLayer.spaceId] || [];
+        const spaceNode = tree[subjectLayer.spaceId];
+        const isAll = spaceNode?.allSubjects;
+
+        return (
+            <Modal
+                isOpen={true}
+                onClose={() => setSubjectLayer(null)}
+                title={`Subjects in ${subjectLayer.spaceName}`}
+                footer={<Button onClick={() => setSubjectLayer(null)}>Done</Button>}
+            >
+                 {isLoadingLayer && currentSubjects.length === 0 ? (
+                     <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+                 ) : (
+                     renderList(
+                        currentSubjects,
+                        'title',
+                        (id) => isSubjectSelected(subjectLayer.spaceId, id),
+                        (id) => toggleSubject(subjectLayer.spaceId, id, currentSubjects),
+                        (s, e) => handleOpenTopics(subjectLayer.spaceId, s._id, s.title, e),
+                        isAll,
+                        (sel) => handleSelectAllSubjects(subjectLayer.spaceId, sel)
+                     )
+                 )}
+            </Modal>
+        );
+    };
+
+    const renderTopicLayer = () => {
+        if (!topicLayer) return null;
+        const currentTopics = cachedTopics[topicLayer.subjectId] || [];
+        const isAll = tree[topicLayer.spaceId]?.subjects[topicLayer.subjectId]?.allTopics;
+
+        return (
+             <Modal
+                isOpen={true}
+                onClose={() => setTopicLayer(null)}
+                title={`Topics in ${topicLayer.subjectName}`}
+                footer={<Button onClick={() => setTopicLayer(null)}>Done</Button>}
+            >
+                 {isLoadingLayer && currentTopics.length === 0 ? (
+                     <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+                 ) : (
+                     renderList(
+                         currentTopics,
+                         'title',
+                         (id) => isTopicSelected(topicLayer.spaceId, topicLayer.subjectId, id),
+                         (id) => toggleTopic(topicLayer.spaceId, topicLayer.subjectId, id, currentTopics),
+                         undefined, 
+                         isAll,
+                         (sel) => handleSelectAllTopics(topicLayer.spaceId, topicLayer.subjectId, sel)
+                     )
+                 )}
+            </Modal>
+        );
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            {renderSpaceLayer()}
+            {renderConfigLayer()}
+            {renderSubjectLayer()}
+            {renderTopicLayer()}
+        </>
+    );
 }

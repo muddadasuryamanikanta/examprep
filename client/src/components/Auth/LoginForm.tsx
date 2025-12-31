@@ -36,7 +36,7 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 space-y-6 border border-border rounded-xl bg-background/50 backdrop-blur-sm">
+    <div className="w-full max-w-md p-8 space-y-6 border border-border/40 rounded-xl bg-background/50 backdrop-blur-md shadow-xl">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold tracking-tighter">Welcome back</h1>
         <p className="text-neutral-500">Enter your credentials to access your account</p>
@@ -66,13 +66,10 @@ export const LoginForm = () => {
           Sign In
         </Button>
       </form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-neutral-500">Or continue with</span>
-        </div>
+      <div className="flex items-center gap-4">
+        <div className="flex-1 border-t border-border"></div>
+        <span className="text-xs uppercase text-neutral-500">Or continue with</span>
+        <div className="flex-1 border-t border-border"></div>
       </div>
       <Button variant="outline" className="w-full h-11" onClick={handleGoogleLogin}>
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">

@@ -38,10 +38,10 @@ export const RegisterForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 space-y-6 border border-border rounded-xl bg-background/50 backdrop-blur-sm">
+    <div className="w-full max-w-md p-8 space-y-6 border border-border/40 rounded-xl bg-background/50 backdrop-blur-md shadow-xl">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold tracking-tighter">Create an account</h1>
-        <p className="text-neutral-500">Enter your information to get started</p>
+        <p className="text-muted-foreground">Enter your information to get started</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
@@ -68,18 +68,15 @@ export const RegisterForm = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Button className="w-full h-11" isLoading={isLoading} type="submit">
           Sign Up
         </Button>
       </form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-neutral-500">Or continue with</span>
-        </div>
+      <div className="flex items-center gap-4">
+        <div className="flex-1 border-t border-border"></div>
+        <span className="text-xs uppercase text-muted-foreground">Or continue with</span>
+        <div className="flex-1 border-t border-border"></div>
       </div>
       <Button variant="outline" className="w-full h-11" onClick={handleGoogleLogin}>
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -102,7 +99,7 @@ export const RegisterForm = () => {
         </svg>
         Google
       </Button>
-      <p className="text-center text-sm text-neutral-500">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link to="/login" className="text-primary hover:underline font-medium">
           Sign in

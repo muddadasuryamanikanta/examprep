@@ -13,7 +13,7 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Plus, Trash2, Sparkles, Wand2, Loader2, PenTool } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import api from '../../lib/api';
+import { useContentStore } from '../../store/contentStore';
 
 interface ContentBlockModalProps {
   isOpen: boolean;
@@ -28,6 +28,8 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
   const [isAiMode, setIsAiMode] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  const generateAIContent = useContentStore(state => state.generateAIContent);
 
   // Common State
   const [explanation, setExplanation] = useState('');
@@ -94,8 +96,7 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
     
     setIsGenerating(true);
     try {
-      const res = await api.post('/ai/generate', { text: aiInput, type });
-      const data = res.data;
+      const data = await generateAIContent(aiInput, type);
 
       // Populate context
       if (type === 'note') {

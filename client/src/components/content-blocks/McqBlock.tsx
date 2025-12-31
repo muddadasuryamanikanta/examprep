@@ -8,31 +8,45 @@ import { CheckSquare, Square, CheckCircle2, XCircle, RotateCcw, Eye, Send } from
 
 interface McqBlockProps {
   block: SingleSelectMcqBlock | MultiSelectMcqBlock;
+  isTest?: boolean;
+  value?: string | string[];
+  onChange?: (val: any) => void;
 }
 
-export function McqBlock({ block }: McqBlockProps) {
+export function McqBlock({ block, isTest = false, value, onChange }: McqBlockProps) {
   const isMulti = block.kind === 'multi_select_mcq';
   
-  // Unified state
-  const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
+  // Unified state (local fallbacks if uncontrolled)
+  const [localSelectedIds, setLocalSelectedIds] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [visibleHints, setVisibleHints] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
 
-  const handleSelect = (id: string) => {
-    if (isSubmitted) return;
+  // Derive current selection from controlled value if present, else local
+  const currentSelection: string[] = value !== undefined 
+      ? (Array.isArray(value) ? value : (value ? [value] : [])) 
+      : localSelectedIds;
 
+  const handleSelect = (id: string) => {
+    // In test mode, we don't block selection based on 'isSubmitted' unless explicitly enforced elsewhere
+    if (isSubmitted && !isTest) return;
+
+    let newSelection: string[];
     if (isMulti) {
-      setSelectedOptionIds(prev => 
-        prev.includes(id) 
-          ? prev.filter(oid => oid !== id) 
-          : [...prev, id]
-      );
+      newSelection = currentSelection.includes(id)
+        ? currentSelection.filter(oid => oid !== id)
+        : [...currentSelection, id];
     } else {
-      // Single select behavior: Select and auto-submit
-      setSelectedOptionIds([id]);
-      setIsSubmitted(true);
+      newSelection = [id];
+      if (!isTest) setIsSubmitted(true); // Auto-submit in practice mode only
+    }
+
+    if (onChange) {
+        // Return string for single, array for multi to match expectation
+        onChange(isMulti ? newSelection : newSelection[0]);
+    } else {
+        setLocalSelectedIds(newSelection);
     }
   };
 
@@ -41,7 +55,9 @@ export function McqBlock({ block }: McqBlockProps) {
   };
 
   const handleReset = () => {
-    setSelectedOptionIds([]);
+    if (onChange) onChange(isMulti ? [] : '');
+    else setLocalSelectedIds([]);
+    
     setIsSubmitted(false);
     setShowAnswer(false);
     setVisibleHints(0);
@@ -49,19 +65,19 @@ export function McqBlock({ block }: McqBlockProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={cn("transition-shadow", isTest ? "shadow-none border-0 p-0" : "hover:shadow-md")}>
       <h3 className="text-lg font-medium mb-4 text-foreground flex items-center">
         {isMulti && (
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-2 py-1 rounded-sm mr-2 align-middle border border-border shrink-0">
             Multi-Select
           </span>
         )}
-        <span>{block.question}</span>
+        <span className="flex-1">{block.question}</span>
       </h3>
       
       <div className="space-y-2">
         {block.options.map((option) => {
-          const isSelected = selectedOptionIds.includes(option.id);
+          const isSelected = currentSelection.includes(option.id);
           const isCorrect = option.isCorrect;
           
           let containerClass = "border-border hover:bg-accent/50 cursor-pointer";
@@ -72,8 +88,6 @@ export function McqBlock({ block }: McqBlockProps) {
           if (isMulti) {
             icon = isSelected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-muted-foreground" />;
           } else {
-             // Radio-like behavior for single select
-             // Using similar visual style to the original SingleSelectMcqBlock
              icon = (
                <div className={cn(
                   "w-5 h-5 rounded-full border flex items-center justify-center shrink-0",
@@ -84,10 +98,9 @@ export function McqBlock({ block }: McqBlockProps) {
              );
           }
 
-          if (isSubmitted || showAnswer) {
+          if (!isTest && (isSubmitted || showAnswer)) {
             containerClass = "cursor-default border-border opacity-60"; // Default dim
             
-            // Logic for coloring - Unified from MultiSelect logic which is more comprehensive
             if (showAnswer) {
               if (isCorrect) {
                   containerClass = "border-success bg-success/10 opacity-100";
@@ -104,14 +117,13 @@ export function McqBlock({ block }: McqBlockProps) {
                   textClass = "text-destructive font-medium";
                   icon = <XCircle className="w-5 h-5 text-destructive" />;
                } else if (!isSelected && isCorrect) {
-                  // For single select, let's also show the correct answer if they got it wrong, similar to MultiSelect
                   containerClass = "border-success border-dashed opacity-80"; 
                   textClass = "text-success";
                   icon = <CheckCircle2 className="w-5 h-5 text-success opacity-50" />;
                }
             }
           } else {
-            // Interactive mode
+            // Interactive mode (Practice & Test)
             if (isSelected) {
                 containerClass = "border-primary bg-primary/5 hover:bg-primary/10";
             }
@@ -129,7 +141,7 @@ export function McqBlock({ block }: McqBlockProps) {
               <div className="mr-3 flex items-center justify-center shrink-0">
                 {icon}
               </div>
-              <span className={cn("flex-1", textClass)}>
+              <span className={cn("flex-1 select-none", textClass)}>
                 {option.text}
               </span>
             </div>
@@ -137,36 +149,39 @@ export function McqBlock({ block }: McqBlockProps) {
         })}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        {isMulti && !isSubmitted ? (
-           <Button onClick={handleSubmit} disabled={selectedOptionIds.length === 0}>
-             <Send className="w-4 h-4 mr-2" /> Submit
-           </Button>
-        ) : (isSubmitted || selectedOptionIds.length > 0 || showAnswer || visibleHints > 0 || showExplanation) ? ( 
-           // Show reset if submitted OR if we have a selection OR showAnswer/Hints/Explanation is active
-           <Button variant="outline" onClick={handleReset}>
-             <RotateCcw className="w-4 h-4 mr-2" /> Reset
-           </Button>
-        ) : null}
+      {!isTest && (
+          <>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+                {isMulti && !isSubmitted ? (
+                <Button onClick={handleSubmit} disabled={currentSelection.length === 0}>
+                    <Send className="w-4 h-4 mr-2" /> Submit
+                </Button>
+                ) : (isSubmitted || currentSelection.length > 0 || showAnswer || visibleHints > 0 || showExplanation) ? ( 
+                <Button variant="outline" onClick={handleReset}>
+                    <RotateCcw className="w-4 h-4 mr-2" /> Reset
+                </Button>
+                ) : null}
 
-        <Button 
-          variant="ghost" 
-          onClick={() => setShowAnswer(!showAnswer)}
-          className={cn("text-muted-foreground", showAnswer && "text-primary")}
-        >
-          <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}
-        </Button>
-      </div>
+                <Button 
+                variant="ghost" 
+                onClick={() => setShowAnswer(!showAnswer)}
+                className={cn("text-muted-foreground", showAnswer && "text-primary")}
+                >
+                <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}
+                </Button>
+            </div>
 
-      <BlockFooter 
-        explanation={block.explanation} 
-        notes={block.notes} 
-        hints={block.hints} 
-        visibleHints={visibleHints}
-        onNextHint={() => setVisibleHints(prev => prev + 1)}
-        showExplanation={showExplanation}
-        onToggleExplanation={() => setShowExplanation(!showExplanation)}
-      />
+            <BlockFooter 
+                explanation={block.explanation} 
+                notes={block.notes} 
+                hints={block.hints} 
+                visibleHints={visibleHints}
+                onNextHint={() => setVisibleHints(prev => prev + 1)}
+                showExplanation={showExplanation}
+                onToggleExplanation={() => setShowExplanation(!showExplanation)}
+            />
+          </>
+      )}
     </Card>
   );
 }

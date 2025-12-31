@@ -1,38 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import api from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 import { Plus, History, PlayCircle, Loader2 } from 'lucide-react';
-
-interface Test {
-    _id: string;
-    status: 'CREATED' | 'IN_PROGRESS' | 'COMPLETED';
-    score: number;
-    totalMarks: number;
-    createdAt: string;
-    config: {
-        questionCount: number;
-    };
-}
+import { useTestStore } from '../store/testStore';
+import { TestCreationWizard } from '../components/tests/TestCreationWizard';
 
 const TestDashboard = () => {
-    const [tests, setTests] = useState<Test[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { tests, isLoading, fetchTests } = useTestStore();
     const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
-        const fetchTests = async () => {
-            try {
-                const res = await api.get('/tests');
-                setTests(res.data);
-            } catch (error) {
-                console.error('Failed to fetch tests', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchTests();
-    }, []);
+    }, [fetchTests]);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString(undefined, {
@@ -51,16 +30,16 @@ const TestDashboard = () => {
                     <h1 className="text-3xl font-bold text-foreground">Test Center</h1>
                     <p className="text-foreground/60 mt-2">Manage your practice tests and review your history</p>
                 </div>
-                <Link 
-                    to="/tests/new" 
+                <button 
+                    onClick={() => setIsModalOpen(true)}
                     className="bg-primary text-background hover:bg-primary/90 px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     Create New Test
-                </Link>
+                </button>
             </div>
 
-            {loading ? (
+            {isLoading && tests.length === 0 ? (
                 <div className="flex justify-center items-center h-64">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
@@ -87,7 +66,7 @@ const TestDashboard = () => {
                                         }`}>
                                             {test.status.replace('_', ' ')}
                                         </div>
-                                        <span className="text-sm text-foreground/60">{formatDate(test.createdAt)}</span>
+                                        <span className="text-sm text-foreground/60">{test.createdAt ? formatDate(test.createdAt) : ''}</span>
                                     </div>
                                     
                                     <div className="mb-6">
@@ -98,7 +77,7 @@ const TestDashboard = () => {
                                     </div>
 
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm font-medium">{test.config.questionCount} Questions</span>
+                                        <span className="text-sm font-medium">{test.config?.questionCount || 0} Questions</span>
                                         {test.status !== 'COMPLETED' && (
                                             <button 
                                                 onClick={() => navigate(`/tests/${test._id}`)}
@@ -122,6 +101,10 @@ const TestDashboard = () => {
                     )}
                 </div>
             )}
+            <TestCreationWizard
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
         </div>
     );
 };

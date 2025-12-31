@@ -14,6 +14,7 @@ export interface ITestConfig {
   topicIds: mongoose.Types.ObjectId[];
   questionTypes: ContentBlockType[];
   questionCount: number;
+  duration: number; // in minutes
 }
 
 export interface IWarning {
@@ -48,7 +49,8 @@ const TestSchema: Schema = new Schema({
     subjectIds: [{ type: Schema.Types.ObjectId, ref: 'Subject' }],
     topicIds: [{ type: Schema.Types.ObjectId, ref: 'Topic' }],
     questionTypes: [{ type: String }],
-    questionCount: { type: Number, required: true }
+    questionCount: { type: Number, required: true },
+    duration: { type: Number, required: true }
   },
   questions: [{
     _id: false,
