@@ -45,6 +45,9 @@ export function Navbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
+              <Link to="/tests" className="hidden md:inline-block text-sm font-medium hover:text-primary transition-colors">
+                Test Center
+              </Link>
               <span className="hidden md:inline-block text-sm font-medium text-muted-foreground">
                 {user?.name || user?.email || 'User'}
               </span>

@@ -10,6 +10,9 @@ import { RegisterPage } from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import { AuthSuccess } from './pages/AuthSuccess';
+import TestDashboard from './pages/TestDashboard';
+import TestCreationWizard from './components/tests/TestCreationWizard';
+import TestScreen from './pages/TestScreen';
 import { Navbar } from './components/common/Navbar';
 import { useAuthStore } from './store/authStore';
 
@@ -80,6 +83,21 @@ function App() {
           <Route path="/spaces/:spaceSlug/:subjectSlug/:topicSlug" element={
             <RequireAuth>
               <TopicCanvas />
+            </RequireAuth>
+          } />
+          <Route path="/tests" element={
+            <RequireAuth>
+              <TestDashboard />
+            </RequireAuth>
+          } />
+          <Route path="/tests/new" element={
+            <RequireAuth>
+              <TestCreationWizard />
+            </RequireAuth>
+          } />
+          <Route path="/tests/:id" element={
+            <RequireAuth>
+              <TestScreen />
             </RequireAuth>
           } />
         </Routes>

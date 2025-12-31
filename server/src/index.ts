@@ -27,9 +27,13 @@ app.use(morgan('dev'));
 app.use(passport.initialize());
 
 // Routes
+import testRoutes from './routes/test.routes.js';
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', contentRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/tests', testRoutes);
 
 // Error Handling
 import { errorHandler } from './middleware/error.middleware.ts';

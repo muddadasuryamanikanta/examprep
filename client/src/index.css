@@ -31,75 +31,81 @@
 }
 
 :root {
+  /* Notion Light Mode Palette */
   --background: #ffffff;
-  --foreground: #09090b; /* Zinc 950 */
-  --primary: #18181b;    /* Zinc 900 */
-  --secondary: #f4f4f5;  /* Zinc 100 */
-  --accent: #e4e4e7;     /* Zinc 200 */
-  --border: #e4e4e7;     /* Zinc 200 */
-  --input: #e4e4e7;      /* Zinc 200 */
-  --ring: #18181b;       /* Zinc 900 */
+  --foreground: #37352f;
+  --primary: #37352f;
+  --secondary: #f1f0ef;  /* Notion Hover/Sidebar Gray */
+  --accent: #f1f0ef;
+  --border: #e9e9e7;
+  --input: #e9e9e7;
+  --ring: #37352f;
   
-  /* Status Colors (Light Mode) */
-  --success: #22c55e;    /* Green 500 */
+  /* Status Colors */
+  --success: #2eaadc;    /* Notion Blue-ish for success or keep standard green? Keeping standard green but softer */
+  --success: #22c55e;
   --success-foreground: #ffffff;
-  --destructive: #ef4444; /* Red 500 */
+  --destructive: #eb5757; /* Softer Red */
   --destructive-foreground: #ffffff;
   
   --popover: #ffffff;
-  --popover-foreground: #09090b;
+  --popover-foreground: #37352f;
 
-  /* Block Type Colors (Light Mode) */
-  --block-note-bg: #ecfdf5;      /* emerald-50 */
-  --block-note-text: #047857;    /* emerald-700 */
-  --block-note-border: #a7f3d0;  /* emerald-200 */
+  /* Block Type Colors (Notion-like Pastels) */
+  /* Note: Greenish */
+  --block-note-bg: #edf3ec;
+  --block-note-text: #448361;
+  --block-note-border: #edf3ec; /* Notion usually has no border or same as bg */
 
-  --block-mcq-bg: #eff6ff;       /* blue-50 */
-  --block-mcq-text: #1d4ed8;     /* blue-700 */
-  --block-mcq-border: #bfdbfe;   /* blue-200 */
+  /* MCQ: Blueish */
+  --block-mcq-bg: #e7f3f8;
+  --block-mcq-text: #2d7292;
+  --block-mcq-border: #e7f3f8;
 
-  --block-fact-bg: #f5f3ff;      /* violet-50 */
-  --block-fact-text: #6d28d9;    /* violet-700 */
-  --block-fact-border: #ddd6fe;  /* violet-200 */
+  /* Fact: Purpleish */
+  --block-fact-bg: #f6f3f9;
+  --block-fact-text: #9065b0;
+  --block-fact-border: #f6f3f9;
 }
 
 [data-theme='dark'] {
-  --background: #09090b; /* Zinc 950 */
-  --foreground: #fafafa; /* Zinc 50 */
-  --primary: #fafafa;    /* Zinc 50 */
-  --secondary: #27272a;  /* Zinc 800 */
-  --accent: #27272a;     /* Zinc 800 */
-  --border: #27272a;     /* Zinc 800 */
-  --input: #27272a;      /* Zinc 800 */
-  --ring: #d4d4d8;       /* Zinc 300 */
+  /* Notion Dark Mode Palette */
+  --background: #191919;
+  --foreground: #d4d4d4;
+  --primary: #d4d4d4;
+  --secondary: #2c2c2c;
+  --accent: #2c2c2c;
+  --border: #2f2f2f;
+  --input: #2f2f2f;
+  --ring: #d4d4d8;
   
-  /* Status Colors (Dark Mode) */
+  /* Status Colors */
   --success: #22c55e;
   --success-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   
-  --popover: #09090b;
-  --popover-foreground: #fafafa;
+  --popover: #191919;
+  --popover-foreground: #d4d4d4;
 
   /* Block Type Colors (Dark Mode) */
-  --block-note-bg: #064e3b;      /* emerald-900 */
-  --block-note-text: #ecfdf5;    /* emerald-50 */
-  --block-note-border: #065f46;  /* emerald-800 */
+  --block-note-bg: #253d37;
+  --block-note-text: #88c6a5;
+  --block-note-border: #253d37;
 
-  --block-mcq-bg: #1e3a8a;       /* blue-900 */
-  --block-mcq-text: #eff6ff;     /* blue-50 */
-  --block-mcq-border: #1e40af;   /* blue-800 */
+  --block-mcq-bg: #213945;
+  --block-mcq-text: #7ac2e1;
+  --block-mcq-border: #213945;
 
-  --block-fact-bg: #4c1d95;      /* violet-900 */
-  --block-fact-text: #f5f3ff;    /* violet-50 */
-  --block-fact-border: #5b21b6;  /* violet-800 */
+  --block-fact-bg: #362c49;
+  --block-fact-text: #c6a6e4;
+  --block-fact-border: #362c49;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif; /* Recommended to verify font availability */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
