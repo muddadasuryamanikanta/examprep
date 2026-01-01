@@ -46,13 +46,13 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
     // Modal Stack & Data Cache
     const [subjectLayer, setSubjectLayer] = useState<{ spaceId: string; spaceName: string } | null>(null);
     const [topicLayer, setTopicLayer] = useState<{ spaceId: string; subjectId: string; subjectName: string } | null>(null);
-    
+
     // We cache data here to avoid refetching when navigating back/forth in the wizard
     // API calls are strictly via store methods (getSubjects, getTopics)
     const [cachedSubjects, setCachedSubjects] = useState<Record<string, Subject[]>>({});
     const [cachedTopics, setCachedTopics] = useState<Record<string, Topic[]>>({});
     const [isLoadingLayer, setIsLoadingLayer] = useState(false);
-    
+
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -76,23 +76,23 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
     // --- Helpers ---
 
     const isSpaceSelected = (spaceId: string) => !!tree[spaceId];
-    
+
     const isSubjectSelected = (spaceId: string, subjectId: string) => {
         const space = tree[spaceId];
         if (!space) return false;
         if (space.allSubjects) return true;
         return !!space.subjects[subjectId];
     };
-    
+
     const isTopicSelected = (spaceId: string, subjectId: string, topicId: string) => {
         const space = tree[spaceId];
         if (!space) return false;
-        
+
         // Resolve subject selection
         let subSel;
         if (space.allSubjects) {
-             // Implicit all subjects selected
-             return true;
+            // Implicit all subjects selected
+            return true;
         } else {
             subSel = space.subjects[subjectId];
         }
@@ -110,7 +110,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
             if (next[spaceId]) {
                 delete next[spaceId];
             } else {
-                next[spaceId] = { allSubjects: true, subjects: {} };
+                next[spaceId] = { allSubjects: false, subjects: {} };
             }
             return next;
         });
@@ -120,14 +120,14 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
         setTree(prev => {
             const next = { ...prev };
             const spaceSel = next[spaceId];
-            
+
             if (!spaceSel) {
-                 // Auto-select space if selecting a subject (from unselected state)
-                 next[spaceId] = { 
-                     allSubjects: false, 
-                     subjects: { [subjectId]: { allTopics: true, topics: [] } }
-                 };
-                 return next;
+                // Auto-select space if selecting a subject (from unselected state)
+                next[spaceId] = {
+                    allSubjects: false,
+                    subjects: { [subjectId]: { allTopics: false, topics: [] } }
+                };
+                return next;
             }
 
             if (spaceSel.allSubjects) {
@@ -138,7 +138,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                         newSubjectsMap[s._id] = { allTopics: true, topics: [] };
                     }
                 });
-                
+
                 next[spaceId] = {
                     ...spaceSel,
                     allSubjects: false,
@@ -162,7 +162,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                         ...spaceSel,
                         subjects: {
                             ...spaceSel.subjects,
-                            [subjectId]: { allTopics: true, topics: [] }
+                            [subjectId]: { allTopics: false, topics: [] }
                         }
                     };
                 }
@@ -174,52 +174,66 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
     const toggleTopic = (spaceId: string, subjectId: string, topicId: string, allSubjectTopics: Topic[]) => {
         setTree(prev => {
             const next = { ...prev };
-            const spaceSel = next[spaceId];
-            if (!spaceSel) return next; 
+            let spaceSel = next[spaceId];
+            if (!spaceSel) {
+                // Initialize space if not present (Partial space selection)
+                next[spaceId] = { allSubjects: false, subjects: {} };
+                spaceSel = next[spaceId];
+            }
 
             // Handle implicit all subjects -> explicit subject for topic refinement
             if (spaceSel.allSubjects) {
-                 const allSubs = cachedSubjects[spaceId] || []; 
-                 const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
-                 allSubs.forEach(s => {
-                     newSubjectsMap[s._id] = { allTopics: true, topics: [] };
-                 });
-                 spaceSel.allSubjects = false;
-                 spaceSel.subjects = newSubjectsMap;
-            }
-            
-            let subSel = spaceSel.subjects[subjectId];
-            if (!subSel) {
-                subSel = { allTopics: true, topics: [] }; 
+                const allSubs = cachedSubjects[spaceId] || [];
+                const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
+                allSubs.forEach(s => {
+                    newSubjectsMap[s._id] = { allTopics: true, topics: [] };
+                });
+                spaceSel.allSubjects = false;
+                spaceSel.subjects = newSubjectsMap;
             }
 
-            if (subSel.allTopics) {
-                // Switch to explicit topics: All except ONE
-                 const newTopicsList = allSubjectTopics
-                    .filter(t => t._id !== topicId)
-                    .map(t => t._id);
-                
-                subSel.allTopics = false;
-                subSel.topics = newTopicsList;
+            let subSel = spaceSel.subjects[subjectId];
+            if (!subSel) {
+                // Initialize subject if not present.
+                // IMPORTANT: Default to selecting ONLY the target topic, not all.
+                subSel = { allTopics: false, topics: [topicId] };
             } else {
-                // Toggle
-                if (subSel.topics.includes(topicId)) {
-                    subSel.topics = subSel.topics.filter(id => id !== topicId);
+                if (subSel.allTopics) {
+                    // Switch to explicit topics: All except ONE (Deselecting)
+                    const newTopicsList = allSubjectTopics
+                        .filter(t => t._id !== topicId)
+                        .map(t => t._id);
+
+                    subSel.allTopics = false;
+                    subSel.topics = newTopicsList;
                 } else {
-                    subSel.topics.push(topicId);
-                }
-                if (subSel.topics.length === allSubjectTopics.length) {
-                    subSel.allTopics = true;
-                    subSel.topics = [];
+                    // Toggle
+                    if (subSel.topics.includes(topicId)) {
+                        subSel.topics = subSel.topics.filter(id => id !== topicId);
+                    } else {
+                        subSel.topics.push(topicId);
+                    }
+                    if (subSel.topics.length === allSubjectTopics.length) {
+                        subSel.allTopics = true;
+                    }
                 }
             }
-            
-            spaceSel.subjects[subjectId] = subSel;
-            next[spaceId] = { ...spaceSel };
+
+            // Cleanup
+            if (!subSel.allTopics && subSel.topics.length === 0) {
+                delete spaceSel.subjects[subjectId];
+            } else {
+                spaceSel.subjects[subjectId] = subSel;
+            }
+            // Clean up if we just set it but verify logic
+            if (next[spaceId] && Object.keys(next[spaceId].subjects).length === 0 && !next[spaceId].allSubjects) {
+                delete next[spaceId];
+            }
+
             return next;
         });
     };
-    
+
     const handleSelectAllSubjects = (spaceId: string, select: boolean) => {
         setTree(prev => {
             const next = { ...prev };
@@ -233,20 +247,20 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
     };
 
     const handleSelectAllTopics = (spaceId: string, subjectId: string, select: boolean) => {
-         setTree(prev => {
+        setTree(prev => {
             const next = { ...prev };
             const spaceSel = next[spaceId];
-            
-             if (spaceSel.allSubjects) {
-                 const allSubs = cachedSubjects[spaceId] || [];
-                 const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
-                 allSubs.forEach(s => {
-                     newSubjectsMap[s._id] = { allTopics: true, topics: [] };
-                 });
-                 spaceSel.allSubjects = false;
-                 spaceSel.subjects = newSubjectsMap;
+
+            if (spaceSel.allSubjects) {
+                const allSubs = cachedSubjects[spaceId] || [];
+                const newSubjectsMap: Record<string, { allTopics: boolean; topics: string[] }> = {};
+                allSubs.forEach(s => {
+                    newSubjectsMap[s._id] = { allTopics: true, topics: [] };
+                });
+                spaceSel.allSubjects = false;
+                spaceSel.subjects = newSubjectsMap;
             }
-            
+
             if (select) {
                 spaceSel.subjects[subjectId] = { allTopics: true, topics: [] };
             } else {
@@ -269,7 +283,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
             try {
                 const data = await getSubjects(spaceId);
                 setCachedSubjects(prev => ({ ...prev, [spaceId]: data }));
-            } catch (err) { console.error(err); } 
+            } catch (err) { console.error(err); }
             finally { setIsLoadingLayer(false); }
         }
     };
@@ -298,7 +312,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
     const handleCreate = async () => {
         const payload = Object.entries(tree).map(([spaceId, spaceVal]) => {
             const entry: Record<string, any> = { spaceId };
-            
+
             if (!spaceVal.allSubjects) {
                 entry.subjects = Object.entries(spaceVal.subjects).map(([subId, subVal]) => {
                     const subEntry: Record<string, any> = { subjectId: subId };
@@ -310,7 +324,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
             }
             return entry;
         });
-        
+
         setIsCreating(true);
         try {
             const newTest = await createTest({
@@ -319,7 +333,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 duration: config.duration,
                 marksPerQuestion: config.marksPerQuestion,
                 negativeMarks: config.negativeMarks,
-                questionTypes: ['single_select_mcq', 'multi_select_mcq', 'descriptive'] 
+                questionTypes: ['single_select_mcq', 'multi_select_mcq', 'descriptive']
             });
             onClose();
             navigate(`/tests/${newTest._id}`);
@@ -343,7 +357,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
         onToggleAll?: (select: boolean) => void,
         placeholder?: string
     ) => {
-        const filteredItems = items.filter(item => 
+        const filteredItems = items.filter(item =>
             String(item[labelKey]).toLowerCase().includes(searchTerm.toLowerCase())
         );
 
@@ -351,7 +365,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
             <div className="flex flex-col h-[400px]">
                 <div className="mb-3 relative">
                     <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-                    <input 
+                    <input
                         type="text"
                         placeholder="Search..."
                         value={searchTerm}
@@ -359,14 +373,14 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                         className="w-full pl-9 pr-4 py-2 bg-background border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
-                
+
                 {onToggleAll && !searchTerm && (
-                     <div className="flex items-center p-3 border-b mb-1 cursor-pointer hover:bg-accent" onClick={() => onToggleAll(!isAllSelected)}>
-                         <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 ${isAllSelected ? 'bg-primary border-primary text-background' : 'border-muted-foreground'}`}>
-                             {isAllSelected && <Check className="w-3 h-3" />}
-                         </div>
-                         <div className="font-medium text-foreground">Select All</div>
-                     </div>
+                    <div className="flex items-center p-3 border-b mb-1 cursor-pointer hover:bg-accent" onClick={() => onToggleAll(!isAllSelected)}>
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center mr-3 ${isAllSelected ? 'bg-primary border-primary text-background' : 'border-muted-foreground'}`}>
+                            {isAllSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <div className="font-medium text-foreground">Select All</div>
+                    </div>
                 )}
 
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -377,20 +391,37 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                     ) : (
                         filteredItems.map(item => {
                             const isSelected = isSelectedFn(item._id);
+                            // Check if item has questionCount 0
+                            const questionCount = (item as any).questionCount;
+                            const isDisabled = typeof questionCount === 'number' && questionCount === 0;
+
                             return (
-                                <div key={item._id} className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${isSelected ? 'bg-secondary/30 border-primary/50' : 'hover:bg-accent'}`}>
-                                    <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => onToggle(item._id)}>
+                                <div
+                                    key={item._id}
+                                    className={`flex items-center justify-between p-3 border rounded-lg transition-colors 
+                                        ${isDisabled ? 'opacity-50 cursor-not-allowed bg-muted' : isSelected ? 'bg-secondary/30 border-primary/50' : 'hover:bg-accent'}`}
+                                >
+                                    <div
+                                        className={`flex items-center gap-3 flex-1 ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                        onClick={() => !isDisabled && onToggle(item._id)}
+                                    >
                                         <div className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary text-background' : 'border-muted-foreground'}`}>
                                             {isSelected && <Check className="w-3 h-3" />}
                                         </div>
-                                        <div className="font-medium text-foreground">{String(item[labelKey])}</div>
+                                        <div className="flex flex-col">
+                                            <div className="font-medium text-foreground">{String(item[labelKey])}</div>
+                                            {typeof questionCount === 'number' && (
+                                                <span className="text-[10px] text-muted-foreground">{questionCount} questions</span>
+                                            )}
+                                        </div>
                                     </div>
                                     {onExpand && isSelected && (
-                                        <Button 
-                                            variant="ghost" size="icon" 
-                                            onClick={(e) => onExpand(item, e)}
+                                        <Button
+                                            variant="ghost" size="icon"
+                                            onClick={(e) => !isDisabled && onExpand(item, e)}
                                             className="shrink-0 ml-2 h-8 w-8"
                                             title="Filter"
+                                            disabled={isDisabled}
                                         >
                                             <Filter className="w-4 h-4 text-muted-foreground" />
                                         </Button>
@@ -416,23 +447,23 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 title="Create Test - Select Content"
                 footer={
                     <div className="flex gap-2 justify-end w-full">
-                         <Button variant="secondary" onClick={onClose} disabled={isCreating}>Cancel</Button>
-                         <Button onClick={handleNext} disabled={Object.keys(tree).length === 0}>
+                        <Button variant="secondary" onClick={onClose} disabled={isCreating}>Cancel</Button>
+                        <Button onClick={handleNext} disabled={Object.keys(tree).length === 0}>
                             Next
-                         </Button>
+                        </Button>
                     </div>
                 }
             >
-                 {isSpacesLoading && spaces.length === 0 ? (
+                {isSpacesLoading && spaces.length === 0 ? (
                     <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
                 ) : (
                     renderList(
-                        spaces, 
-                        'name', 
-                        isSpaceSelected, 
-                        toggleSpace, 
+                        spaces,
+                        'name',
+                        isSpaceSelected,
+                        toggleSpace,
                         (s, e) => handleOpenSubjects(s._id, s.name, e),
-                        false, 
+                        false,
                         undefined,
                         "No spaces found."
                     )
@@ -451,20 +482,20 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 title="Create Test - Configure"
                 footer={
                     <div className="flex gap-2 justify-end w-full">
-                         <Button variant="secondary" onClick={() => setStep('selection')} disabled={isCreating}>Back</Button>
-                         <Button onClick={handleCreate} disabled={isCreating}>
+                        <Button variant="secondary" onClick={() => setStep('selection')} disabled={isCreating}>Back</Button>
+                        <Button onClick={handleCreate} disabled={isCreating}>
                             {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                             Start Test
-                         </Button>
+                        </Button>
                     </div>
                 }
             >
                 <div className="space-y-6 p-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Number of Questions</label>
-                        <input 
-                            type="number" 
-                            min="1" 
+                        <input
+                            type="number"
+                            min="1"
                             max="100"
                             value={config.questionCount}
                             onChange={(e) => setConfig({ ...config, questionCount: parseInt(e.target.value) || 0 })}
@@ -477,22 +508,22 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Duration (minutes)</label>
-                        <input 
-                            type="number" 
-                            min="5" 
+                        <input
+                            type="number"
+                            min="5"
                             max="180"
                             value={config.duration}
                             onChange={(e) => setConfig({ ...config, duration: parseInt(e.target.value) || 0 })}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Marks per Question</label>
-                            <input 
-                                type="number" 
-                                min="1" 
+                            <input
+                                type="number"
+                                min="1"
                                 step="0.5"
                                 value={config.marksPerQuestion}
                                 onChange={(e) => setConfig({ ...config, marksPerQuestion: parseFloat(e.target.value) || 0 })}
@@ -501,9 +532,9 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Negative Marks</label>
-                            <input 
-                                type="number" 
-                                min="0" 
+                            <input
+                                type="number"
+                                min="0"
                                 step="0.25"
                                 max={config.marksPerQuestion}
                                 value={config.negativeMarks}
@@ -533,10 +564,10 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 title={`Subjects in ${subjectLayer.spaceName}`}
                 footer={<Button onClick={() => setSubjectLayer(null)}>Done</Button>}
             >
-                 {isLoadingLayer && currentSubjects.length === 0 ? (
-                     <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
-                 ) : (
-                     renderList(
+                {isLoadingLayer && currentSubjects.length === 0 ? (
+                    <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+                ) : (
+                    renderList(
                         currentSubjects,
                         'title',
                         (id) => isSubjectSelected(subjectLayer.spaceId, id),
@@ -544,8 +575,8 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                         (s, e) => handleOpenTopics(subjectLayer.spaceId, s._id, s.title, e),
                         isAll,
                         (sel) => handleSelectAllSubjects(subjectLayer.spaceId, sel)
-                     )
-                 )}
+                    )
+                )}
             </Modal>
         );
     };
@@ -556,25 +587,25 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
         const isAll = tree[topicLayer.spaceId]?.subjects[topicLayer.subjectId]?.allTopics;
 
         return (
-             <Modal
+            <Modal
                 isOpen={true}
                 onClose={() => setTopicLayer(null)}
                 title={`Topics in ${topicLayer.subjectName}`}
                 footer={<Button onClick={() => setTopicLayer(null)}>Done</Button>}
             >
-                 {isLoadingLayer && currentTopics.length === 0 ? (
-                     <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
-                 ) : (
-                     renderList(
-                         currentTopics,
-                         'title',
-                         (id) => isTopicSelected(topicLayer.spaceId, topicLayer.subjectId, id),
-                         (id) => toggleTopic(topicLayer.spaceId, topicLayer.subjectId, id, currentTopics),
-                         undefined, 
-                         isAll,
-                         (sel) => handleSelectAllTopics(topicLayer.spaceId, topicLayer.subjectId, sel)
-                     )
-                 )}
+                {isLoadingLayer && currentTopics.length === 0 ? (
+                    <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+                ) : (
+                    renderList(
+                        currentTopics,
+                        'title',
+                        (id) => isTopicSelected(topicLayer.spaceId, topicLayer.subjectId, id),
+                        (id) => toggleTopic(topicLayer.spaceId, topicLayer.subjectId, id, currentTopics),
+                        undefined,
+                        isAll,
+                        (sel) => handleSelectAllTopics(topicLayer.spaceId, topicLayer.subjectId, sel)
+                    )
+                )}
             </Modal>
         );
     };

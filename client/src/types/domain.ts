@@ -10,6 +10,7 @@ export interface Space extends BaseEntity {
   slug: string;
   icon?: string;
   subjectCount?: number;
+  questionCount?: number;
 }
 
 export interface Subject extends BaseEntity {
@@ -28,9 +29,10 @@ export interface Topic extends BaseEntity {
   position: number;
   slug: string;
   icon?: string;
+  questionCount?: number;
 }
 
-export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'descriptive' | 'generic';
+export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'descriptive' | 'fill_in_the_blank' | 'generic';
 
 export interface BaseContentBlock extends BaseEntity {
   topicId: string;
@@ -77,9 +79,15 @@ export interface GenericBlock extends BaseContentBlock {
   data: Record<string, unknown>;
 }
 
+export interface FillInTheBlankBlock extends BaseContentBlock {
+  kind: 'fill_in_the_blank';
+  question: string;
+  blankAnswers: string[];
+}
 
 
-export type ContentBlock = NoteBlock | SingleSelectMcqBlock | MultiSelectMcqBlock | DescriptiveBlock | GenericBlock;
+
+export type ContentBlock = NoteBlock | SingleSelectMcqBlock | MultiSelectMcqBlock | DescriptiveBlock | GenericBlock | FillInTheBlankBlock;
 
 export interface TestQuestion {
   blockId: string;

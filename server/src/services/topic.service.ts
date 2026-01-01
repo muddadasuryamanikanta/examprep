@@ -30,7 +30,7 @@ export class TopicService {
     }
 
     if (!data.icon && data.title) {
-        data.icon = await generateIconForSubject(data.title);
+      data.icon = await generateIconForSubject(data.title);
     }
 
     const topic = new Topic({ ...data, subjectId: subjectId });
@@ -39,12 +39,31 @@ export class TopicService {
     return savedTopic;
   }
 
-  static async findAll(userId: string, subjectIdentifier: string): Promise<ITopic[]> {
+  static async findAll(userId: string, subjectIdentifier: string): Promise<any[]> {
     const subject = await SubjectService.findOne(userId, subjectIdentifier);
     if (!subject) {
       throw new Error('Access denied or Subject not found');
     }
-    return await Topic.find({ subjectId: subject._id }, '_id title subjectId position slug icon').sort({ position: 1, createdAt: 1 });
+    const topics = await Topic.find({ subjectId: subject._id }, '_id title subjectId position slug icon').sort({ position: 1, createdAt: 1 });
+
+    // Aggregate question counts for these topics
+    const topicIds = topics.map(s => s._id);
+    const agg = await import('../models/ContentBlock.ts').then(m => m.default.aggregate([
+      {
+        $match: {
+          topicId: { $in: topicIds },
+          kind: { $in: ['single_select_mcq', 'multi_select_mcq', 'descriptive'] }
+        }
+      },
+      { $group: { _id: '$topicId', total: { $sum: 1 } } }
+    ]));
+
+    const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
+
+    return topics.map(t => ({
+      ...t.toObject(),
+      questionCount: countMap.get((t._id as any).toString()) || 0
+    }));
   }
 
   static async findOne(userId: string, identifier: string): Promise<ITopic | null> {

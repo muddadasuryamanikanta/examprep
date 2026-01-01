@@ -1,7 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { TestUnit } from '../../types/dashboard';
-import { useTestStore } from '../../store/testStore';
+import { useTakeTest } from '../../hooks/useTakeTest';
 import { CheckCircle, Clock, PauseCircle, PlayCircle, AlertCircle } from 'lucide-react';
 
 interface TestsDueTableProps {
@@ -27,8 +26,7 @@ const StatusBadge = ({ status }: { status: TestUnit['status'] }) => {
 };
 
 export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll }) => {
-    const navigate = useNavigate();
-    const { createTest } = useTestStore();
+    const { startTest } = useTakeTest();
     const [creatingTestId, setCreatingTestId] = React.useState<string | null>(null);
 
     const handleAction = async (test: TestUnit) => {
@@ -40,16 +38,12 @@ export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll })
         try {
             setCreatingTestId(test.topic._id);
             // Create a test session for this topic
-            const newTest = await createTest({
-                topicIds: [test.topic._id],
-                questionTypes: ['single_select_mcq', 'multi_select_mcq'],
-                questionCount: test.dueQuestions,
-                duration: 30, // 30 minutes default
-                marksPerQuestion: 1,
-                negativeMarks: 0
+            await startTest({
+                spaceId: test.space._id,
+                subjectId: test.subject._id,
+                topicId: test.topic._id,
+                mode: 'pending'
             });
-
-            navigate(`/tests/${newTest._id}`);
         } catch (error) {
             console.error('Failed to start test:', error);
             alert('Failed to start test. Please try again.');

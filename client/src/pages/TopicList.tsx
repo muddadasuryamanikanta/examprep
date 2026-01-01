@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
 import { type Topic } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
+import { useTakeTest } from '../hooks/useTakeTest';
 
-import { useTestStore } from '../store/testStore';
+
 import { useSpaceStore } from '../store/spaceStore';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
@@ -43,10 +44,10 @@ export default function TopicList() {
   const [targetTopic, setTargetTopic] = useState<Topic | null>(null);
   const [targetTestTopic, setTargetTestTopic] = useState<Topic | null>(null);
 
-  const { createTest } = useTestStore();
+
 
   const [isCreating, setIsCreating] = useState(false);
-  
+
   const [formData, setFormData] = useState({ title: '' });
 
   // Initial load
@@ -130,46 +131,22 @@ export default function TopicList() {
     setIsTakeTestModalOpen(true);
   };
 
+  const { startTest } = useTakeTest();
+
   const handleQuickTest = async (mode: 'pending' | 'all') => {
     if (!currentSpace || !currentSubject) return;
 
     setIsCreatingTest(true);
     try {
-      let subjectsSelection;
-
-      if (targetTestTopic) {
-        // Specific Topic Selection
-        subjectsSelection = [{
-          subjectId: currentSubject._id,
-          allTopics: false,
-          topics: [targetTestTopic._id]
-        }];
-      } else {
-        // Whole Subject Selection
-        subjectsSelection = [{
-          subjectId: currentSubject._id,
-          allTopics: true,
-          topics: []
-        }];
-      }
-
-      const selections = [{
+      await startTest({
         spaceId: currentSpace._id,
-        subjects: subjectsSelection
-      }];
-
-      const newTest = await createTest({
-        selections,
-        questionCount: 15,
-        duration: 30,
-        onlyDue: mode === 'pending'
+        subjectId: currentSubject._id,
+        topicId: targetTestTopic?._id,
+        mode
       });
-
       setIsTakeTestModalOpen(false);
-      navigate(`/tests/${newTest._id}`);
     } catch (err: any) {
       console.error('Failed to create test:', err);
-      // Ideally show a toast here, but for now console error is okay or alert
       alert(err.response?.data?.message || "Failed to create test. Maybe no questions available?");
     } finally {
       setIsCreatingTest(false);

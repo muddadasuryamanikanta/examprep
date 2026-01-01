@@ -43,10 +43,10 @@ export class ContentService {
     return savedBlock;
   }
 
-  static async findAll(userId: string, topicIdentifier: string, options: { 
-    types?: string[]; 
-    tags?: string[]; 
-    search?: string; 
+  static async findAll(userId: string, topicIdentifier: string, options: {
+    types?: string[];
+    tags?: string[];
+    search?: string;
     cursor?: string;
     limit?: number;
   } = {}): Promise<{ blocks: IContentBlock[], nextCursor: string | null }> {
@@ -81,31 +81,31 @@ export class ContentService {
       if (Types.ObjectId.isValid(options.cursor)) {
         const lastBlock = await ContentBlock.findById(options.cursor);
         if (lastBlock) {
-             // If we are filtering by search or random aspects, position sort might still be desired?
-             // Usually infinite scroll retains the sort order.
-             // Default sort is position: 1.
-             if (options.search) {
-               // When searching, position might be less relevant due to relevance? 
-               // For now, let's stick to stable sort: position, _id
-               // Complex query with OR for stable pagination
-               query.$or = [
-                 { position: { $gt: lastBlock.position } },
-                 { position: lastBlock.position, _id: { $gt: lastBlock._id } }
-               ];
-             } else {
-               query.$or = [
-                 { position: { $gt: lastBlock.position } },
-                 { position: lastBlock.position, _id: { $gt: lastBlock._id } }
-               ];
-             }
+          // If we are filtering by search or random aspects, position sort might still be desired?
+          // Usually infinite scroll retains the sort order.
+          // Default sort is position: 1.
+          if (options.search) {
+            // When searching, position might be less relevant due to relevance? 
+            // For now, let's stick to stable sort: position, _id
+            // Complex query with OR for stable pagination
+            query.$or = [
+              { position: { $gt: lastBlock.position } },
+              { position: lastBlock.position, _id: { $gt: lastBlock._id } }
+            ];
+          } else {
+            query.$or = [
+              { position: { $gt: lastBlock.position } },
+              { position: lastBlock.position, _id: { $gt: lastBlock._id } }
+            ];
+          }
         }
       }
     }
-    
+
     // console.log('ContentService.findAll Query:', JSON.stringify(query, null, 2));
 
     const limit = options.limit || 20;
-    
+
     // Fetch one extra to know if there is a next page
     const blocks = await ContentBlock.find(query, '_id topicId kind content question answer explanation notes tags group options data position updatedAt')
       .sort({ position: 1, _id: 1 })
@@ -139,6 +139,18 @@ export class ContentService {
       throw new Error('Access denied');
     }
 
-    return await ContentBlock.findByIdAndDelete(blockId);
+    const deletedBlock = await ContentBlock.findByIdAndDelete(blockId);
+
+    if (deletedBlock) {
+      const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive'];
+      if (deletedBlock.kind && questionKinds.includes(deletedBlock.kind)) {
+        const topic = await TopicService.findOne(userId, deletedBlock.topicId.toString());
+        if (topic) {
+          await Subject.findByIdAndUpdate(topic.subjectId, { $inc: { questionCount: -1 } });
+        }
+      }
+    }
+
+    return deletedBlock;
   }
 }
