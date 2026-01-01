@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Sun, Moon, LogOut, User } from 'lucide-react';
+import { Sun, Moon, LogOut, User, GraduationCap, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../hooks/useTheme';
 import { Button } from './Button';
@@ -9,57 +10,123 @@ export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+    setIsProfileOpen(false);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/50 backdrop-blur-md supports-[backdrop-filter]:bg-background/50">
-      <div className="container flex h-14 items-center justify-between mx-auto max-w-7xl px-4 md:px-8">
-        <Link to="/" className="mr-6 flex items-center space-x-2 font-bold text-xl">
-          <span>
-            {isAuthenticated && user?.name 
-              ? `${user.name.split(' ')[0]}Prep` 
-              : 'ExamPrep'}
-          </span>
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-16 items-center justify-between w-full px-4">
+        {/* Logo Section */}
+        <Link to="/" className="flex items-center space-x-2.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <GraduationCap className="h-6 w-6" />
+          </div>
+          <span className="text-xl font-bold tracking-tight">UPSC Prep</span>
         </Link>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 md:gap-4">
+          {isAuthenticated && (
+            <Link 
+              to="/tests" 
+              className="hidden md:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Test Center
+            </Link>
+          )}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            aria-label="Toggle Theme"
-            className="rounded-full"
+            className="rounded-full text-muted-foreground hover:text-foreground"
           >
             {theme === 'dark' ? (
-              <Sun className="h-5 w-5 transition-all" />
+              <Sun className="h-5 w-5" />
             ) : (
-              <Moon className="h-5 w-5 transition-all" />
+              <Moon className="h-5 w-5" />
             )}
           </Button>
 
           {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              <Link to="/tests" className="hidden md:inline-block text-sm font-medium hover:text-primary transition-colors">
-                Test Center
-              </Link>
-              <span className="hidden md:inline-block text-sm font-medium text-muted-foreground">
-                {user?.name || user?.email || 'User'}
-              </span>
-              <Button onClick={handleLogout} variant="secondary" size="sm">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            </div>
+            <>
+
+
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-3 rounded-full hover:bg-muted/50 p-1 md:pr-4 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white shadow-sm">
+                    {user?.name ? getInitials(user.name) : 'U'}
+                  </div>
+                  <div className="hidden md:flex flex-col items-start gap-0.5">
+                    <span className="text-sm font-medium leading-none">
+                      {user?.name || 'User'}
+                    </span>
+                  </div>
+                  <ChevronDown className={`hidden md:block h-4 w-4 text-muted-foreground transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border/50 bg-popover p-1 shadow-lg shadow-black/5 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="px-3 py-2.5 border-b border-border/50 md:hidden">
+                       <p className="text-sm font-medium">{user?.name}</p>
+                       <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                    <div className="p-1">
+                      <Link 
+                        to="/profile" 
+                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             !isAuthPage && (
-              <Button onClick={() => navigate('/login')} size="sm">
-                <User className="mr-2 h-4 w-4" />
+              <Button onClick={() => navigate('/login')} size="sm" className="gap-2 rounded-full px-5">
+                <User className="h-4 w-4" />
                 Login
               </Button>
             )
