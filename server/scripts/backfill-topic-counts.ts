@@ -8,7 +8,6 @@ dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 import Space from '../src/models/Space.ts';
 import Subject from '../src/models/Subject.ts';
-import Topic from '../src/models/Topic.ts';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/examprep';
 
@@ -22,18 +21,14 @@ async function backfillTopicCounts() {
     console.log(`Found ${spaces.length} spaces. Starting update...`);
 
     for (const space of spaces) {
-      // Find all subjects for this space
-      const subjects = await Subject.find({ spaceId: space._id });
-      const subjectIds = subjects.map(s => s._id);
-
-      // Count topics that belong to these subjects
-      const topicCount = await Topic.countDocuments({ subjectId: { $in: subjectIds } });
+      // Count subjects for this space
+      const subjectCount = await Subject.countDocuments({ spaceId: space._id });
 
       // Update the space
-      space.topicCount = topicCount;
+      space.subjectCount = subjectCount;
       await space.save();
 
-      console.log(`Updated space "${space.name}" (${space._id}): ${topicCount} topics`);
+      console.log(`Updated space "${space.name}" (${space._id}): ${subjectCount} subjects`);
     }
 
     console.log('All spaces updated successfully.');
