@@ -11,16 +11,8 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-destructive: var(--destructive);
-  --color-mark: var(--mark);
-  --color-mark-foreground: var(--mark-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-card-foreground: var(--card-foreground);
 
   /* Block Colors */
   --color-block-note-bg: var(--block-note-bg);
@@ -39,103 +31,111 @@
 }
 
 :root {
-  /* Notion Light Mode Palette */
-  --background: #ffffff;
-  --foreground: #37352f;
-  --primary: #37352f;
-  --secondary: #f1f0ef;  /* Notion Hover/Sidebar Gray */
-  --accent: #f1f0ef;
-  --border: #d4d4d4;
-  --input: #d4d4d4;
-  --primary-foreground: #ffffff;
-  --secondary-foreground: #1e1e1e;
-  --accent-foreground: #1e1e1e;
-  --muted: #f1f0ef;
-  --muted-foreground: #737373;
-  --card: #ffffff;
-  --card-foreground: #37352f;
-  
-  /* Status Colors */
-  --success: #2eaadc;    /* Notion Blue-ish for success or keep standard green? Keeping standard green but softer */
-  --success: #22c55e;
+  --background: #fdfaff;
+  /* Very light indigo tint */
+  --foreground: #1e1b4b;
+  /* Indigo 950 */
+  --primary: #4f46e5;
+  /* Indigo 600 */
+  --secondary: #e0e7ff;
+  /* Indigo 100 */
+  --accent: #eff6ff;
+  /* Blue 50 */
+  --border: #c7d2fe;
+  /* Indigo 200 */
+  --input: #cbd5e1;
+  /* Slate 300 */
+  --ring: #4f46e5;
+  /* Indigo 600 */
+
+  /* Status Colors (Light Mode) */
+  --success: #16a34a;
+  /* Green 600 */
   --success-foreground: #ffffff;
-  --destructive: #eb5757; /* Softer Red */
+  --destructive: #dc2626;
+  /* Red 600 */
   --destructive-foreground: #ffffff;
 
-  --mark: #a855f7;
-  --mark-foreground: #ffffff;
-  
   --popover: #ffffff;
-  --popover-foreground: #37352f;
+  --popover-foreground: #1e1b4b;
 
-  /* Block Type Colors (Notion-like Pastels) */
-  /* Note: Greenish */
-  --block-note-bg: #edf3ec;
-  --block-note-text: #448361;
-  --block-note-border: #edf3ec; /* Notion usually has no border or same as bg */
+  /* Block Type Colors (Light Mode) */
+  --block-note-bg: #ecfdf5;
+  /* emerald-50 */
+  --block-note-text: #047857;
+  /* emerald-700 */
+  --block-note-border: #a7f3d0;
+  /* emerald-200 */
 
-  /* MCQ: Blueish */
-  --block-mcq-bg: #e7f3f8;
-  --block-mcq-text: #2d7292;
-  --block-mcq-border: #e7f3f8;
+  --block-mcq-bg: #eff6ff;
+  /* blue-50 */
+  --block-mcq-text: #1d4ed8;
+  /* blue-700 */
+  --block-mcq-border: #bfdbfe;
+  /* blue-200 */
 
-  /* Fact: Purpleish */
-  --block-fact-bg: #f6f3f9;
-  --block-fact-text: #9065b0;
-  --block-fact-border: #f6f3f9;
-  
-  --grid-color: #e5e5e5;
+  --block-fact-bg: #f5f3ff;
+  /* violet-50 */
+  --block-fact-text: #6d28d9;
+  /* violet-700 */
+  --block-fact-border: #ddd6fe;
+  /* violet-200 */
 }
 
 [data-theme='dark'] {
-  /* Notion Dark Mode Palette */
-  --background: #191919;
-  --foreground: #d4d4d4;
-  --primary: #d4d4d4;
-  --secondary: #2c2c2c;
-  --accent: #2c2c2c;
-  --border: #2f2f2f;
-  --input: #2f2f2f;
-  --primary-foreground: #1e1e1e;
-  --secondary-foreground: #d4d4d4;
-  --accent-foreground: #d4d4d4;
-  --muted: #2c2c2c;
-  --muted-foreground: #a1a1aa;
-  --card: #191919;
-  --card-foreground: #d4d4d4;
-  
-  --grid-color: #222222;
-  
-  /* Status Colors */
+  --background: #0f172a;
+  /* Slate 900 */
+  --foreground: #f8fafc;
+  /* Slate 50 */
+  --primary: #818cf8;
+  /* Indigo 400 */
+  --secondary: #1e1b4b;
+  /* Indigo 950 */
+  --accent: #1e293b;
+  /* Slate 800 */
+  --border: #334155;
+  /* Slate 700 */
+  --input: #334155;
+  /* Slate 700 */
+  --ring: #818cf8;
+  /* Indigo 400 */
+
+  /* Status Colors (Dark Mode) */
   --success: #22c55e;
   --success-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  --mark: #a855f7;
-  --mark-foreground: #ffffff;
-  
-  --popover: #191919;
-  --popover-foreground: #d4d4d4;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
 
   /* Block Type Colors (Dark Mode) */
-  --block-note-bg: #253d37;
-  --block-note-text: #88c6a5;
-  --block-note-border: #253d37;
+  --block-note-bg: #064e3b;
+  /* emerald-900 */
+  --block-note-text: #ecfdf5;
+  /* emerald-50 */
+  --block-note-border: #065f46;
+  /* emerald-800 */
 
-  --block-mcq-bg: #213945;
-  --block-mcq-text: #7ac2e1;
-  --block-mcq-border: #213945;
+  --block-mcq-bg: #1e3a8a;
+  /* blue-900 */
+  --block-mcq-text: #eff6ff;
+  /* blue-50 */
+  --block-mcq-border: #1e40af;
+  /* blue-800 */
 
-  --block-fact-bg: #362c49;
-  --block-fact-text: #c6a6e4;
-  --block-fact-border: #362c49;
+  --block-fact-bg: #4c1d95;
+  /* violet-900 */
+  --block-fact-text: #f5f3ff;
+  /* violet-50 */
+  --block-fact-border: #5b21b6;
+  /* violet-800 */
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif; /* Recommended to verify font availability */
+  font-family: 'Inter', sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
