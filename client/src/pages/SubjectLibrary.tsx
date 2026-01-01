@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
 import { type Subject } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
+import { useTestStore } from '../store/testStore';
 import { useSpaceStore } from '../store/spaceStore';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
+import { Tooltip } from '../components/common/Tooltip';
 import { EmptyState } from '../components/common/EmptyState';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { TruncatedText } from '../components/common/TruncatedText';
@@ -13,16 +15,22 @@ import { TruncatedText } from '../components/common/TruncatedText';
 export default function SubjectLibrary() {
   const { spaceSlug } = useParams();
   const navigate = useNavigate();
-  
+
   // Stores
   const { currentSpace, fetchSpace } = useSpaceStore();
   const { subjects, isLoading, fetchSubjects, createSubject, updateSubject, deleteSubject, setCurrentSubject } = useContentStore();
-  
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [targetSubject, setTargetSubject] = useState<Subject | null>(null);
-  
+
+  const [isTakeTestModalOpen, setIsTakeTestModalOpen] = useState(false);
+  const [isCreatingTest, setIsCreatingTest] = useState(false);
+  const [targetTestSubject, setTargetTestSubject] = useState<Subject | null>(null);
+
+  const { createTest } = useTestStore();
+
   const [formData, setFormData] = useState({ title: '' });
 
   useEffect(() => {
@@ -84,7 +92,49 @@ export default function SubjectLibrary() {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setIsDeleteModalOpen(false);
+    setIsDeleteModalOpen(false);
+    setIsTakeTestModalOpen(false);
     setTargetSubject(null);
+    setTargetTestSubject(null);
+  };
+
+  const openTakeTestModal = (subject: Subject, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTargetTestSubject(subject);
+    setIsTakeTestModalOpen(true);
+  };
+
+  const handleQuickTest = async (mode: 'pending' | 'all') => {
+    if (!currentSpace || !targetTestSubject) return;
+
+    setIsCreatingTest(true);
+    try {
+      // Create selection for targeted subject (all topics implicitly)
+      const selections = [{
+        spaceId: currentSpace._id,
+        subjects: [{
+          subjectId: targetTestSubject._id,
+          allTopics: true,
+          topics: []
+        }]
+      }];
+
+      const newTest = await createTest({
+        selections,
+        questionCount: 15,
+        duration: 30,
+        onlyDue: mode === 'pending'
+      });
+
+      setIsTakeTestModalOpen(false);
+      navigate(`/tests/${newTest._id}`);
+    } catch (err: any) {
+      console.error('Failed to create test:', err);
+      // Ideally show a toast here, but for now console error is okay or alert
+      alert(err.response?.data?.message || "Failed to create test. Maybe no questions available?");
+    } finally {
+      setIsCreatingTest(false);
+    }
   };
 
   const handleSubjectClick = (subject: Subject) => {
@@ -142,8 +192,20 @@ export default function SubjectLibrary() {
                   {subject.title}
                 </TruncatedText>
               </div>
-              
+
+
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Tooltip content="Take Test" delay={0}>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={(e) => openTakeTestModal(subject, e)}
+                  >
+                    <Play className="h-4 w-4 fill-current" />
+                  </Button>
+                </Tooltip>
+                <div className="w-px h-4 bg-border mx-1" />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -166,7 +228,7 @@ export default function SubjectLibrary() {
       )}
 
       {/* Create/Edit Modal Reuse structure */}
-       <Modal
+      <Modal
         isOpen={isCreateModalOpen}
         onClose={closeModals}
         title="Add New Subject"
@@ -205,7 +267,7 @@ export default function SubjectLibrary() {
           <>
             <Button variant="secondary" onClick={closeModals}>Cancel</Button>
             <Button onClick={handleUpdate} disabled={isLoading}>
-               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
             </Button>
           </>
         }
@@ -234,7 +296,7 @@ export default function SubjectLibrary() {
           <>
             <Button variant="secondary" onClick={closeModals}>Cancel</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete Subject'}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete Subject'}
             </Button>
           </>
         }
@@ -242,6 +304,51 @@ export default function SubjectLibrary() {
         <p className="text-sm text-muted-foreground">
           Are you sure you want to delete "{targetSubject?.title}"?
         </p>
+        <p className="text-sm text-muted-foreground">
+          Are you sure you want to delete "{targetSubject?.title}"?
+        </p>
+      </Modal>
+
+      <Modal
+        isOpen={isTakeTestModalOpen}
+        onClose={() => setIsTakeTestModalOpen(false)}
+        title={targetTestSubject ? `Test: ${targetTestSubject.title}` : 'Take Quick Test'}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Start a quick test for <strong>{targetTestSubject?.title}</strong>.
+            This will create a 30-minute test with 15 questions (if available).
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5"
+              onClick={() => handleQuickTest('pending')}
+              disabled={isCreatingTest}
+            >
+              <span className="text-lg font-bold">Pending Q's</span>
+              <span className="text-xs text-muted-foreground">Due for review</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5"
+              onClick={() => handleQuickTest('all')}
+              disabled={isCreatingTest}
+            >
+              <span className="text-lg font-bold">All Q's</span>
+              <span className="text-xs text-muted-foreground">Random mix</span>
+            </Button>
+          </div>
+
+          {isCreatingTest && (
+            <div className="flex items-center justify-center text-sm text-muted-foreground mt-4">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating test...
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

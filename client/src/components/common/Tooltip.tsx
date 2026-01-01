@@ -20,7 +20,7 @@ export function Tooltip({ content, children, className, delay = 0.2 }: TooltipPr
   const handleMouseMove = (e: React.MouseEvent) => {
     // Offset by 10px so cursor doesn't cover tooltip
     setPosition({
-      top: e.clientY - 15, 
+      top: e.clientY - 15,
       left: e.clientX
     });
   };
@@ -28,8 +28,8 @@ export function Tooltip({ content, children, className, delay = 0.2 }: TooltipPr
   const handleMouseEnter = (e: React.MouseEvent) => {
     // Set initial position
     setPosition({
-       top: e.clientY - 15,
-       left: e.clientX
+      top: e.clientY - 15,
+      left: e.clientX
     });
 
     timeoutRef.current = setTimeout(() => {
@@ -55,32 +55,32 @@ export function Tooltip({ content, children, className, delay = 0.2 }: TooltipPr
 
   return (
     <>
-      <div 
+      <div
         ref={triggerRef}
-        onMouseEnter={handleMouseEnter} 
+        onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className={cn("inline-block", className)}
       >
         {children}
       </div>
-      
+
       {createPortal(
         <AnimatePresence>
           {isVisible && content && (
-            <div 
+            <div
               className="fixed pointer-events-none z-[9999]"
-              style={{ 
-                top: position.top, 
-                left: position.left, 
+              style={{
+                top: position.top,
+                left: position.left,
               }}
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                animate={{ opacity: 1, scale: 1, y: -10 }} 
+                animate={{ opacity: 1, scale: 1, y: -10 }}
                 exit={{ opacity: 0, scale: 0.95, y: 5 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="bg-zinc-900 text-white text-xs px-3 py-1.5 rounded-md shadow-lg max-w-xs -translate-x-1/2 whitespace-normal break-words leading-relaxed border border-zinc-800"
+                className="bg-white text-zinc-950 text-xs px-3 py-1.5 rounded-md shadow-md max-w-xs -translate-x-1/2 whitespace-normal break-words leading-relaxed border border-zinc-200"
               >
                 {content}
               </motion.div>

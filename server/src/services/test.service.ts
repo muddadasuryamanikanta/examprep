@@ -7,6 +7,7 @@ import type { IContentBlock } from '../models/ContentBlock.js';
 import { ContentBlockType } from '../models/ContentBlock.js';
 import Subject from '../models/Subject.js';
 import Topic from '../models/Topic.js';
+import SpacedRepetition from '../models/Anki.js';
 
 export class TestService {
   /**
@@ -34,7 +35,7 @@ export class TestService {
    * Create a new test with random questions based on config
    */
   async createTest(userId: string, config: ITestConfig): Promise<ITest> {
-    const { selections, questionTypes, questionCount } = config as any; // Cast as any to access new selections prop if not in ITestConfig yet
+    const { selections, questionTypes, questionCount, onlyDue } = config as any; // Cast as any to access new selections prop if not in ITestConfig yet
 
     // Defaults for optional config values
     const effectiveQuestionTypes = questionTypes && questionTypes.length > 0
@@ -92,15 +93,47 @@ export class TestService {
     // Calculate how many questions per type we might want, or just random mix
     // For now, let's just pull random questions from the pool of selected topics and types
 
-    const pipeline: any[] = [
-      {
-        $match: {
-          topicId: { $in: topicObjectIds },
-          kind: { $in: effectiveQuestionTypes }
-        }
-      },
-      { $sample: { size: effectiveQuestionCount } }
-    ];
+    let pipeline: any[];
+
+    if (onlyDue) {
+      // Filter questions that are DUE based on spaced repetition
+      const now = new Date();
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+
+      // Get question IDs that are due for this user
+      const dueQuestionIds = await SpacedRepetition.find({
+        userId: userObjectId,
+        nextReviewAt: { $lte: now }
+      }).select('questionId').lean();
+
+      const dueQuestionObjectIds = dueQuestionIds.map(q => q.questionId);
+
+      if (dueQuestionObjectIds.length === 0) {
+        throw new Error('No pending questions due for review.');
+      }
+
+      pipeline = [
+        {
+          $match: {
+            _id: { $in: dueQuestionObjectIds },
+            topicId: { $in: topicObjectIds },
+            kind: { $in: effectiveQuestionTypes }
+          }
+        },
+        { $sample: { size: effectiveQuestionCount } }
+      ];
+    } else {
+      // All questions mode
+      pipeline = [
+        {
+          $match: {
+            topicId: { $in: topicObjectIds },
+            kind: { $in: effectiveQuestionTypes }
+          }
+        },
+        { $sample: { size: effectiveQuestionCount } }
+      ];
+    }
 
     const randomBlocks = await ContentBlock.aggregate(pipeline);
 
