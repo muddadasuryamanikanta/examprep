@@ -13,6 +13,11 @@
   --color-destructive: var(--destructive);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-primary-foreground: var(--primary-foreground);
 
   /* Block Colors */
   --color-block-note-bg: var(--block-note-bg);
@@ -47,6 +52,16 @@
   /* Slate 300 */
   --ring: #4f46e5;
   /* Indigo 600 */
+  --primary-foreground: #ffffff;
+
+  --muted: #f1f5f9;
+  /* Slate 100 */
+  --muted-foreground: #64748b;
+  /* Slate 500 */
+
+  --warning: #f59e0b;
+  /* Amber 500 */
+  --warning-foreground: #ffffff;
 
   /* Status Colors (Light Mode) */
   --success: #16a34a;
@@ -99,6 +114,16 @@
   /* Slate 700 */
   --ring: #818cf8;
   /* Indigo 400 */
+  --primary-foreground: #ffffff;
+
+  --muted: #1e293b;
+  /* Slate 800 */
+  --muted-foreground: #94a3b8;
+  /* Slate 400 */
+
+  --warning: #f59e0b;
+  /* Amber 500 */
+  --warning-foreground: #ffffff;
 
   /* Status Colors (Dark Mode) */
   --success: #22c55e;

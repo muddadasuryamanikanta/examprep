@@ -53,15 +53,23 @@ export function Navbar() {
           </div>
           <span className="text-xl font-bold tracking-tight">UPSC Prep</span>
         </Link>
-        
+
         <div className="flex items-center gap-2 md:gap-4">
           {isAuthenticated && (
-            <Link 
-              to="/tests" 
-              className="hidden md:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Test Center
-            </Link>
+            <>
+              <Link
+                to="/tests"
+                className="hidden md:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Test Center
+              </Link>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Dashboard
+              </Link>
+            </>
           )}
           <Button
             variant="ghost"
@@ -99,12 +107,12 @@ export function Navbar() {
                 {isProfileOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border/50 bg-popover p-1 shadow-lg shadow-black/5 animate-in fade-in zoom-in-95 duration-200">
                     <div className="px-3 py-2.5 border-b border-border/50 md:hidden">
-                       <p className="text-sm font-medium">{user?.name}</p>
-                       <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                     <div className="p-1">
-                      <Link 
-                        to="/profile" 
+                      <Link
+                        to="/profile"
                         className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
                         onClick={() => setIsProfileOpen(false)}
                       >

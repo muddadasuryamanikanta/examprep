@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "seed": "tsx scripts/seed.ts",
+    "seed-dashboard": "tsx scripts/seed-dashboard.ts",
     "backfill-slugs": "tsx scripts/backfill-slugs.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

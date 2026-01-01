@@ -12,6 +12,7 @@ import './config/passport.ts';
 import authRoutes from './routes/auth.routes.ts';
 import contentRoutes from './routes/content.routes.ts';
 import aiRoutes from './routes/ai.routes.ts';
+import dashboardRoutes from './routes/dashboard.routes.ts';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api', contentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/tests', testRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error Handling
 import { errorHandler } from './middleware/error.middleware.ts';
