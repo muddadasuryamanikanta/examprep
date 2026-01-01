@@ -114,7 +114,7 @@ export class TestService {
       questions,
       status: TestStatus.IN_PROGRESS,
       startTime: new Date(),
-      totalMarks: questions.length // Assuming 1 mark per question for now
+      totalMarks: questions.length * (config.marksPerQuestion || 1)
     });
 
     return await test.save();
@@ -137,7 +137,7 @@ export class TestService {
   /**
    * Submit test and calculate score
    */
-  async submitTest(testId: string, userId: string, answers: Record<string, any>, warnings: any[]): Promise<ITest> {
+  async submitTest(testId: string, userId: string, answers: Record<string, any>, warnings: any[], timeSpent?: Record<string, number>): Promise<ITest> {
     const test = await Test.findOne({ _id: testId, userId });
     if (!test) throw new Error('Test not found');
 
@@ -146,12 +146,20 @@ export class TestService {
     }
 
     let score = 0;
+    const positiveMarks = test.config.marksPerQuestion || 1;
+    const negativeMarks = test.config.negativeMarks || 0;
     
     // Process answers
     test.questions.forEach((q: any) => {
       const qId = q.blockId.toString();
       const answer = answers[qId];
       q.userAnswer = answer;
+      
+      // Update time spent
+      if (timeSpent && timeSpent[qId] !== undefined) {
+          q.timeSpent = Number(timeSpent[qId]);
+      }
+
 
       // Simple grading logic
       const block = q.blockSnapshot;
@@ -187,11 +195,22 @@ export class TestService {
       }
 
       q.isCorrect = isCorrect;
+      
       if (isCorrect) {
-          q.marksObtained = 1; // Assuming 1 mark weight
-          score += 1;
+          q.marksObtained = positiveMarks;
+          score += positiveMarks;
       } else {
-          q.marksObtained = 0;
+          // If attempted but wrong, apply negative marks
+          // Check if answer is present (and not empty)
+          const isAttempted = answer !== undefined && answer !== null && 
+                             (Array.isArray(answer) ? answer.length > 0 : answer !== '');
+          
+          if (isAttempted) {
+              q.marksObtained = -negativeMarks;
+              score -= negativeMarks;
+          } else {
+              q.marksObtained = 0;
+          }
       }
     });
 

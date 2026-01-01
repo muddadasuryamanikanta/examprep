@@ -15,6 +15,8 @@ export interface ITestConfig {
   questionTypes: ContentBlockType[];
   questionCount: number;
   duration: number; // in minutes
+  marksPerQuestion: number;
+  negativeMarks: number;
 }
 
 export interface IWarning {
@@ -29,8 +31,10 @@ export interface ITest extends Document {
     blockId: mongoose.Types.ObjectId;
     blockSnapshot: any; // Store a snapshot of the question at the time of test creation
     userAnswer?: any;
+    correctAnswer?: any;
     isCorrect?: boolean;
     marksObtained?: number;
+    timeSpent?: number; // Time spent on this question in seconds
   }>;
   status: TestStatus;
   score: number;
@@ -50,15 +54,19 @@ const TestSchema: Schema = new Schema({
     topicIds: [{ type: Schema.Types.ObjectId, ref: 'Topic' }],
     questionTypes: [{ type: String }],
     questionCount: { type: Number, required: true },
-    duration: { type: Number, required: true }
+    duration: { type: Number, required: true },
+    marksPerQuestion: { type: Number, required: true, default: 1 },
+    negativeMarks: { type: Number, required: true, default: 0 }
   },
   questions: [{
     _id: false,
     blockId: { type: Schema.Types.ObjectId, ref: 'ContentBlock', required: true },
     blockSnapshot: { type: Schema.Types.Mixed, required: true }, // Store full question data
     userAnswer: { type: Schema.Types.Mixed },
+    correctAnswer: { type: Schema.Types.Mixed }, // Store the correct answer for easier validation/review
     isCorrect: { type: Boolean },
-    marksObtained: { type: Number, default: 0 }
+    marksObtained: { type: Number, default: 0 },
+    timeSpent: { type: Number, default: 0 }
   }],
   status: { 
     type: String, 

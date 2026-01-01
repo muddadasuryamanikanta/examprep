@@ -35,7 +35,9 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
     const [step, setStep] = useState<'selection' | 'config'>('selection');
     const [config, setConfig] = useState({
         questionCount: 15,
-        duration: 60 // minutes
+        duration: 60, // minutes
+        marksPerQuestion: 1,
+        negativeMarks: 0.25
     });
 
     // Selection State
@@ -315,6 +317,8 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 selections: payload,
                 questionCount: config.questionCount,
                 duration: config.duration,
+                marksPerQuestion: config.marksPerQuestion,
+                negativeMarks: config.negativeMarks,
                 questionTypes: ['single_select_mcq', 'multi_select_mcq', 'descriptive'] 
             });
             onClose();
@@ -481,6 +485,35 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                             onChange={(e) => setConfig({ ...config, duration: parseInt(e.target.value) || 0 })}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Marks per Question</label>
+                            <input 
+                                type="number" 
+                                min="1" 
+                                step="0.5"
+                                value={config.marksPerQuestion}
+                                onChange={(e) => setConfig({ ...config, marksPerQuestion: parseFloat(e.target.value) || 0 })}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Negative Marks</label>
+                            <input 
+                                type="number" 
+                                min="0" 
+                                step="0.25"
+                                max={config.marksPerQuestion}
+                                value={config.negativeMarks}
+                                onChange={(e) => setConfig({ ...config, negativeMarks: parseFloat(e.target.value) || 0 })}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                                Marks deducted for wrong answers.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </Modal>
