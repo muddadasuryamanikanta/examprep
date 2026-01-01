@@ -169,3 +169,36 @@ body {
     @apply border-border outline-ring;
   }
 }
+
+@layer components {
+  .space-icon-blue {
+    @apply text-blue-600 dark:text-blue-400 bg-blue-500/10;
+  }
+  .space-icon-purple {
+    @apply text-purple-600 dark:text-purple-400 bg-purple-500/10;
+  }
+  .space-icon-emerald {
+    @apply text-emerald-600 dark:text-emerald-400 bg-emerald-500/10;
+  }
+  .space-icon-orange {
+    @apply text-orange-600 dark:text-orange-400 bg-orange-500/10;
+  }
+  .space-icon-pink {
+    @apply text-pink-600 dark:text-pink-400 bg-pink-500/10;
+  }
+  .space-icon-teal {
+    @apply text-teal-600 dark:text-teal-400 bg-teal-500/10;
+  }
+  .space-icon-indigo {
+    @apply text-indigo-600 dark:text-indigo-400 bg-indigo-500/10;
+  }
+  .space-icon-rose {
+    @apply text-rose-600 dark:text-rose-400 bg-rose-500/10;
+  }
+  .space-icon-cyan {
+    @apply text-cyan-600 dark:text-cyan-400 bg-cyan-500/10;
+  }
+  .space-icon-amber {
+    @apply text-amber-600 dark:text-amber-400 bg-amber-500/10;
+  }
+}

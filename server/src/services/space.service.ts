@@ -10,21 +10,21 @@ export class SpaceService {
   }
 
   static async findAll(userId: string): Promise<ISpace[]> {
-    return await Space.find({ userId }, '_id name description slug').sort({ createdAt: -1 });
+    return await Space.find({ userId }, '_id name description slug icon subjectCount').sort({ createdAt: -1 });
   }
 
   static async findOne(userId: string, identifier: string): Promise<ISpace | null> {
     const query = Types.ObjectId.isValid(identifier)
       ? { _id: identifier, userId }
       : { slug: identifier, userId };
-    return await Space.findOne(query, '_id name description slug');
+    return await Space.findOne(query, '_id name description slug icon');
   }
 
   static async update(userId: string, spaceId: string, data: Partial<ISpace>): Promise<ISpace | null> {
     return await Space.findOneAndUpdate(
       { _id: spaceId, userId },
       data,
-      { new: true, select: '_id name description' }
+      { new: true, select: '_id name description icon' }
     );
   }
 

@@ -5,6 +5,7 @@ import { cn } from '../../lib/utils';
 import { Button } from '../common/Button';
 import type { ContentBlock, ContentBlockType } from '../../types/domain';
 import { useNavigate } from 'react-router-dom';
+import { TruncatedText } from '../common/TruncatedText';
 
 interface TopicSidebarProps {
   spaceName?: string;
@@ -131,9 +132,13 @@ export function TopicSidebar({
           <Button variant="ghost" size="icon" className="h-5 w-5 -ml-1" onClick={() => navigate(-1)}>
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <span className="truncate">{spaceName} / {subjectTitle}</span>
+          <TruncatedText className="flex-1">
+             {spaceName} / {subjectTitle}
+          </TruncatedText>
         </div>
-        <h2 className="font-bold text-xl truncate">{topicTitle || 'Topic'}</h2>
+        <TruncatedText as="h2" className="font-bold text-xl">
+          {topicTitle || 'Topic'}
+        </TruncatedText>
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -232,12 +237,22 @@ export function TopicSidebar({
                     Q{index + 1}
                   </span>
                 </div>
-                <h3 className={cn("font-medium text-sm line-clamp-2 leading-tight mt-1", isActive ? "text-primary" : "text-foreground")}>
+                <TruncatedText 
+                  as="h3" 
+                  lines={2}
+                  className={cn("font-medium text-sm leading-tight mt-1", isActive ? "text-primary" : "text-foreground")}
+                  title={title}
+                >
                   {title}
-                </h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">
+                </TruncatedText>
+                <TruncatedText 
+                  as="p" 
+                  lines={2}
+                  className="text-xs text-muted-foreground"
+                  title={preview}
+                >
                   {preview}
-                </p>
+                </TruncatedText>
               </div>
             );
           })

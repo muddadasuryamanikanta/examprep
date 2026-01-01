@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { TruncatedText } from './TruncatedText';
 import { Fragment } from 'react';
 import type { ReactNode } from 'react';
 
@@ -35,14 +36,18 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
             {item.href && !isLast ? (
               <Link
                 to={item.href}
-                className="hover:text-foreground transition-colors"
+                className="hover:text-foreground transition-colors inline-block align-bottom"
               >
-                {item.label}
+                <TruncatedText className="max-w-[150px]">
+                  {item.label}
+                </TruncatedText>
               </Link>
             ) : (
-              <span className={cn('font-medium text-foreground', isLast && 'pointer-events-none')}>
+              <TruncatedText 
+                className={cn('font-medium text-foreground max-w-[150px] inline-block align-bottom', isLast && 'pointer-events-none')}
+              >
                 {item.label}
-              </span>
+              </TruncatedText>
             )}
           </Fragment>
         );

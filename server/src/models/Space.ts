@@ -9,6 +9,8 @@ export interface ISpace extends Document {
   description?: string;
   slug: string;
   userId: mongoose.Types.ObjectId;
+  icon: string;
+  subjectCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,8 @@ const SpaceSchema = new Schema<ISpace>(
     description: String,
     slug: { type: String, required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    icon: { type: String, default: "Book" },
+    subjectCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

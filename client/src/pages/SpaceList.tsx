@@ -7,6 +7,8 @@ import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
+import { DynamicIcon, getDeterministicColor } from '../components/UI/DynamicIcon';
+import { TruncatedText } from '../components/common/TruncatedText';
 
 export default function SpaceList() {
   const navigate = useNavigate();
@@ -110,37 +112,71 @@ export default function SpaceList() {
             <Card
               key={space._id}
               onClick={() => navigate(`/spaces/${space.slug}/library`)}
-              className="group relative flex flex-col justify-between h-48 hover:border-primary/50 transition-colors cursor-pointer"
+              className="group relative flex flex-col justify-between h-56 hover:border-primary/50 transition-all hover:shadow-md cursor-pointer p-6"
             >
-              <div>
-                <h3 className="text-xl font-semibold mb-2 bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
-                  {space.name}
-                </h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {space.description || 'No description provided.'}
-                </p>
-              </div>
-              
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => openEditModal(space, e)}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                  onClick={(e) => openDeleteModal(space, e)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4">
+                  <div className={`p-3 rounded-xl ${getDeterministicColor(space._id)}`}>
+                    <DynamicIcon name={space.icon} className="h-6 w-6" />
+                  </div>
+                  <div className="relative">
+                    {/* Default View */}
+                    <span className="text-xs font-medium px-2.5 py-1.5 rounded-full bg-secondary text-secondary-foreground inline-block group-hover:opacity-0 transition-opacity duration-200">
+                      {space.subjectCount || 0} Subjects
+                    </span>
+
+                    {/* Hover View */}
+                    <div className="absolute top-0 right-0 flex items-center bg-secondary rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-sm border border-black/5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-8 rounded-l-full rounded-r-none hover:bg-black/5"
+                        onClick={(e) => openEditModal(space, e)}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <div className="w-px h-3 bg-black/10" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-8 rounded-r-full rounded-l-none text-destructive hover:text-destructive hover:bg-red-50"
+                        onClick={(e) => openDeleteModal(space, e)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <TruncatedText 
+                    as="h3"
+                    className="text-xl font-semibold mb-2 bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text"
+                  >
+                    {space.name}
+                  </TruncatedText>
+                  <TruncatedText 
+                    as="p"
+                    lines={3}
+                    className="text-sm text-muted-foreground leading-relaxed"
+                    title={space.description || 'No description provided.'}
+                  >
+                    {space.description || 'No description provided.'}
+                  </TruncatedText>
+                </div>
               </div>
             </Card>
           ))}
+          
+          <button
+            onClick={openCreateModal}
+            className="group relative flex flex-col items-center justify-center h-56 border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50 rounded-xl transition-all cursor-pointer p-6"
+          >
+             <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Plus className="h-6 w-6 text-primary" />
+             </div>
+             <span className="font-semibold text-foreground">Add New Space</span>
+          </button>
         </div>
       )}
 

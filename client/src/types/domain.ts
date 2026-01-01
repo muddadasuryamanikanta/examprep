@@ -8,6 +8,8 @@ export interface Space extends BaseEntity {
   name: string;
   description?: string;
   slug: string;
+  icon?: string;
+  subjectCount?: number;
 }
 
 export interface Subject extends BaseEntity {

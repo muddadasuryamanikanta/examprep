@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { SpaceService } from '../services/space.service.ts';
 import { z } from 'zod';
 import type { IUser } from '../models/User.ts';
+import { generateIconForSubject } from '../utils/common.ts';
 
 // Zod schemas
 const createSpaceSchema = z.object({
@@ -21,7 +22,10 @@ export class SpaceController {
     try {
       const validatedData = createSpaceSchema.parse(req.body);
       const user = req.user as IUser;
-      const space = await SpaceService.create((user._id as any).toString(), validatedData as any);
+
+      const icon = await generateIconForSubject(validatedData.name);
+
+      const space = await SpaceService.create((user._id as any).toString(), { ...validatedData, icon } as any);
       res.status(201).json(space);
     } catch (error) {
       if (error instanceof z.ZodError) {

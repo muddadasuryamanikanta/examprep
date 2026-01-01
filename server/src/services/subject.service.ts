@@ -1,4 +1,5 @@
 import Subject, { type ISubject } from '../models/Subject.ts';
+import Space from '../models/Space.ts';
 import { SpaceService } from './space.service.ts';
 import { Types } from 'mongoose';
 
@@ -28,7 +29,11 @@ export class SubjectService {
     }
 
     const subject = new Subject({ ...data, spaceId: spaceId });
-    return await subject.save();
+    const savedSubject = await subject.save();
+
+    await Space.findByIdAndUpdate(spaceId, { $inc: { subjectCount: 1 } });
+
+    return savedSubject;
   }
 
   static async findAll(userId: string, spaceIdentifier: string): Promise<ISubject[]> {
@@ -76,7 +81,11 @@ export class SubjectService {
       throw new Error('Access denied');
     }
 
-    return await Subject.findByIdAndDelete(subjectId);
+    const deletedSubject = await Subject.findByIdAndDelete(subjectId);
+    if (deletedSubject) {
+      await Space.findByIdAndUpdate(deletedSubject.spaceId, { $inc: { subjectCount: -1 } });
+    }
+    return deletedSubject;
   }
 
   static async checkOwnership(userId: string, identifier: string): Promise<boolean> {

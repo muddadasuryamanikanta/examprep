@@ -8,6 +8,7 @@ import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { EmptyState } from '../components/common/EmptyState';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { TruncatedText } from '../components/common/TruncatedText';
 
 export default function TopicList() {
   const { spaceSlug, subjectSlug } = useParams();
@@ -131,7 +132,9 @@ export default function TopicList() {
       </div>
 
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{currentSubject?.title}</h1>
+        <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
+          {currentSubject?.title}
+        </TruncatedText>
         <Button onClick={openCreateModal}>
           <Plus className="mr-2 h-4 w-4" />
           Add Topic
@@ -152,11 +155,13 @@ export default function TopicList() {
               onClick={() => handleTopicClick(topic)}
               className="group flex items-center justify-between p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-md bg-secondary flex items-center justify-center text-lg font-bold text-muted-foreground">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="h-10 w-10 rounded-md bg-secondary flex items-center justify-center text-lg font-bold text-muted-foreground shrink-0">
                   #
                 </div>
-                <h3 className="text-lg font-medium">{topic.title}</h3>
+                <TruncatedText as="h3" className="text-lg font-medium">
+                  {topic.title}
+                </TruncatedText>
               </div>
               
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
