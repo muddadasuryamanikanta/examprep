@@ -11,7 +11,7 @@ import ContentBlock, { ContentBlockType } from '../src/models/ContentBlock.ts';
 // Based on previous file explorations, .env is in server/.env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-const TARGET_USER_ID = '6947a4a4fb83f332d3314cb8';
+const TARGET_USER_ID = '69564ae0f5fd43dffda7295c';
 
 const connectDB = async () => {
     try {
@@ -94,10 +94,10 @@ const seedData = async () => {
     let user;
     try {
         user = await User.findById(TARGET_USER_ID);
-    } catch(e) {
+    } catch (e) {
         console.log("Invalid User ID format or DB error");
     }
-    
+
     if (!user) {
         console.error(`User with ID ${TARGET_USER_ID} not found! Please create the user first or update the ID in the seed script.`);
         // Optional: Create user if missing? No, user specified this ID.
@@ -142,21 +142,21 @@ const seedData = async () => {
 
             for (let k = 1; k <= numGroups; k++) {
                 const groupName = `Topic ${k} - ${randomTitle()}`;
-                
+
                 // Create 15-30 ContentBlocks per Group
                 const numBlocks = getRandomInt(15, 30);
                 for (let l = 1; l <= numBlocks; l++) {
-                    contentBlocksToInsert.push(generateContentBlock(topic._id as mongoose.Types.ObjectId, groupName, (k * 100) + l)); 
+                    contentBlocksToInsert.push(generateContentBlock(topic._id as mongoose.Types.ObjectId, groupName, (k * 100) + l));
                     // Position is hacked to segregate groups roughly if sorted by position, 
                     // or just sequential. Let's make it sequential within group, but groups interleaved? 
                     // No, usually blocks are just list. 
                     // Let's just use simple incrementing position for now.
                 }
             }
-            
+
             // Bulk insert is faster
             if (contentBlocksToInsert.length > 0) {
-                 await ContentBlock.insertMany(contentBlocksToInsert);
+                await ContentBlock.insertMany(contentBlocksToInsert);
             }
         }
     }

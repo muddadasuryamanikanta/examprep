@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.routes.ts';
 import contentRoutes from './routes/content.routes.ts';
 import aiRoutes from './routes/ai.routes.ts';
 import dashboardRoutes from './routes/dashboard.routes.ts';
+import downloadRoutes from './routes/download.routes.ts';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -32,6 +33,7 @@ import testRoutes from './routes/test.routes.js';
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/downloads', downloadRoutes);
 app.use('/api', contentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/tests', testRoutes);

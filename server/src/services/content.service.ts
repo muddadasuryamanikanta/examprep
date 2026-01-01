@@ -41,6 +41,11 @@ export class ContentService {
     }
 
     return savedBlock;
+    return savedBlock;
+  }
+
+  static async count(topicId: string): Promise<number> {
+    return await ContentBlock.countDocuments({ topicId });
   }
 
   static async findAll(userId: string, topicIdentifier: string, options: {

@@ -4,8 +4,12 @@ import { SubjectController } from '../controllers/subject.controller.ts';
 import { TopicController } from '../controllers/topic.controller.ts';
 import { ContentController } from '../controllers/content.controller.ts';
 import { authMiddleware } from '../middleware/auth.middleware.ts';
+import multer from 'multer';
 
 const router: Router = Router();
+
+// --- CONTENT BLOCKS (Import needs bypass for testing or token) ---
+router.post('/topics/:topicId/import', multer().single('file'), ContentController.import);
 
 // Apply auth middleware to all routes
 router.use(authMiddleware);
@@ -33,6 +37,7 @@ router.delete('/topics/:id', TopicController.delete);
 
 // --- CONTENT BLOCKS ---
 router.get('/topics/:topicId/content', ContentController.getAll);
+// router.post('/topics/:topicId/import', multer().single('file'), ContentController.import); // Moved up
 router.post('/content', ContentController.create);
 router.put('/content/:id', ContentController.update);
 router.delete('/content/:id', ContentController.delete);

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check, X } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 interface Option {
     id: string;
@@ -46,10 +46,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         onChange(newSelected);
     };
 
-    const removeOption = (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
-        onChange(safeSelected.filter(item => item !== id));
-    };
+
 
     const selectedLabels = options
         .filter(opt => safeSelected.includes(opt.id))

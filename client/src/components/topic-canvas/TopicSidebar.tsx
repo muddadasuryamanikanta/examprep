@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Filter, Plus, Loader2, ChevronLeft } from 'lucide-react';
+import { Search, Filter, Plus, Loader2, ChevronLeft, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { Button } from '../common/Button';
@@ -78,8 +78,9 @@ export function TopicSidebar({
     { type: 'note', label: 'Note' },
     { type: 'single_select_mcq', label: 'Single Choice' },
     { type: 'multi_select_mcq', label: 'Multi Choice' },
+    { type: 'fill_in_the_blank', label: 'Fill in the Blank' },
     { type: 'descriptive', label: 'Question' },
-    { type: 'bulk' as any, label: 'Bulk Import (AI)' },
+    { type: 'bulk' as any, label: 'Bulk Import (AI/Excel)' },
   ];
 
   const getBlockSummary = (block: ContentBlock) => {
@@ -105,7 +106,7 @@ export function TopicSidebar({
   };
 
   const getBlockTypeLabel = (kind: ContentBlockType) => {
-    switch(kind) {
+    switch (kind) {
       case 'note': return 'NOTE';
       case 'single_select_mcq': return 'MCQ';
       case 'multi_select_mcq': return 'MCQ';
@@ -115,7 +116,7 @@ export function TopicSidebar({
   };
 
   const getBlockColorClasses = (kind: ContentBlockType) => {
-    switch(kind) {
+    switch (kind) {
       case 'note': return 'bg-block-note-bg text-block-note-text border-block-note-border';
       case 'single_select_mcq':
       case 'multi_select_mcq': return 'bg-block-mcq-bg text-block-mcq-text border-block-mcq-border';
@@ -133,7 +134,7 @@ export function TopicSidebar({
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
           <TruncatedText className="flex-1">
-             {spaceName} / {subjectTitle}
+            {spaceName} / {subjectTitle}
           </TruncatedText>
         </div>
         <TruncatedText as="h2" className="font-bold text-xl">
@@ -158,6 +159,19 @@ export function TopicSidebar({
             onClick={onOpenFilter}
           >
             <Filter className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            title="Download Sample Excel"
+            onClick={() => {
+              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+              window.open(`${baseUrl}/api/downloads/sample-excel`, '_blank');
+            }}
+          >
+            <Download className="h-4 w-4" />
           </Button>
 
           <div className="relative" ref={menuRef}>
@@ -237,16 +251,16 @@ export function TopicSidebar({
                     Q{index + 1}
                   </span>
                 </div>
-                <TruncatedText 
-                  as="h3" 
+                <TruncatedText
+                  as="h3"
                   lines={2}
                   className={cn("font-medium text-sm leading-tight mt-1", isActive ? "text-primary" : "text-foreground")}
                   title={title}
                 >
                   {title}
                 </TruncatedText>
-                <TruncatedText 
-                  as="p" 
+                <TruncatedText
+                  as="p"
                   lines={2}
                   className="text-xs text-muted-foreground"
                   title={preview}
@@ -263,6 +277,6 @@ export function TopicSidebar({
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }
