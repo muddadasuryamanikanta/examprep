@@ -10,6 +10,7 @@ import { Modal } from '../components/common/Modal';
 import { Tooltip } from '../components/common/Tooltip';
 import { EmptyState } from '../components/common/EmptyState';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { DynamicIcon, getDeterministicColor } from '../components/UI/DynamicIcon';
 import { TruncatedText } from '../components/common/TruncatedText';
 
 export default function SubjectLibrary() {
@@ -31,6 +32,8 @@ export default function SubjectLibrary() {
 
   const { createTest } = useTestStore();
 
+  const [isCreating, setIsCreating] = useState(false);
+  
   const [formData, setFormData] = useState({ title: '' });
 
   useEffect(() => {
@@ -42,11 +45,14 @@ export default function SubjectLibrary() {
 
   const handleCreate = async () => {
     if (!spaceSlug) return;
+    setIsCreating(true);
     try {
       await createSubject(spaceSlug, formData.title);
       closeModals();
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -177,51 +183,69 @@ export default function SubjectLibrary() {
           action={<Button onClick={openCreateModal}>Add Subject</Button>}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-6">
           {subjects.map((subject) => (
             <div
               key={subject._id}
               onClick={() => handleSubjectClick(subject)}
-              className="group flex items-center justify-between p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
+              className="group relative flex flex-col justify-between p-6 rounded-xl border border-border bg-card hover:shadow-md cursor-pointer transition-all hover:border-primary/50"
             >
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="h-10 w-10 rounded-md bg-secondary flex items-center justify-center text-lg font-bold text-muted-foreground shrink-0">
-                  {subject.title.charAt(0).toUpperCase()}
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-xl ${getDeterministicColor(subject._id)}`}>
+                    <DynamicIcon name={subject.icon || 'Book'} className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1">{subject.title}</h3>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        {subject.topicCount || 0} Topics
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {subject.questionCount || 0} Questions
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <TruncatedText as="h3" className="text-lg font-medium">
-                  {subject.title}
-                </TruncatedText>
-              </div>
 
-
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Tooltip content="Take Test" delay={0}>
+                <div className="flex items-center bg-secondary/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Tooltip content="Take Test" delay={0}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                      onClick={(e) => openTakeTestModal(subject, e)}
+                    >
+                      <Play className="h-4 w-4 fill-current" />
+                    </Button>
+                  </Tooltip>
+                  <div className="w-px h-4 bg-border" />
                   <Button
-                    variant="secondary"
+                    variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                    onClick={(e) => openTakeTestModal(subject, e)}
+                    onClick={(e) => openEditModal(subject, e)}
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   >
-                    <Play className="h-4 w-4 fill-current" />
+                    <Edit2 className="h-4 w-4" />
                   </Button>
-                </Tooltip>
-                <div className="w-px h-4 bg-border mx-1" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => openEditModal(subject, e)}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  onClick={(e) => openDeleteModal(subject, e)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  <div className="w-px h-4 bg-border" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => openDeleteModal(subject, e)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
+              {/* Progress bar removed as per request "here no need of that progress" */}
             </div>
           ))}
         </div>
@@ -235,8 +259,8 @@ export default function SubjectLibrary() {
         footer={
           <>
             <Button variant="secondary" onClick={closeModals}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={isLoading}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Subject'}
+            <Button onClick={handleCreate} disabled={isCreating}>
+              {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Subject'}
             </Button>
           </>
         }

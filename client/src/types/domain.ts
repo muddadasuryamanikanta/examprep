@@ -17,6 +17,9 @@ export interface Subject extends BaseEntity {
   spaceId: string;
   position: number;
   slug: string;
+  topicCount?: number;
+  questionCount?: number;
+  icon?: string;
 }
 
 export interface Topic extends BaseEntity {
@@ -24,6 +27,7 @@ export interface Topic extends BaseEntity {
   subjectId: string;
   position: number;
   slug: string;
+  icon?: string;
 }
 
 export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'descriptive' | 'generic';

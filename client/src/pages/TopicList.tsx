@@ -11,6 +11,7 @@ import { Modal } from '../components/common/Modal';
 import { Tooltip } from '../components/common/Tooltip';
 import { EmptyState } from '../components/common/EmptyState';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { DynamicIcon, getDeterministicColor } from '../components/UI/DynamicIcon';
 import { TruncatedText } from '../components/common/TruncatedText';
 
 export default function TopicList() {
@@ -44,6 +45,8 @@ export default function TopicList() {
 
   const { createTest } = useTestStore();
 
+  const [isCreating, setIsCreating] = useState(false);
+  
   const [formData, setFormData] = useState({ title: '' });
 
   // Initial load
@@ -63,11 +66,14 @@ export default function TopicList() {
 
   const handleCreate = async () => {
     if (!subjectSlug) return;
+    setIsCreating(true);
     try {
       await createTopic(subjectSlug, formData.title);
       closeModals();
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -224,8 +230,8 @@ export default function TopicList() {
               className="group flex items-center justify-between p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="h-10 w-10 rounded-md bg-secondary flex items-center justify-center text-lg font-bold text-muted-foreground shrink-0">
-                  #
+                <div className={`h-10 w-10 rounded-md flex items-center justify-center text-lg font-bold shrink-0 ${getDeterministicColor(topic._id)}`}>
+                  <DynamicIcon name={topic.icon || 'Hash'} className="h-5 w-5" />
                 </div>
                 <TruncatedText as="h3" className="text-lg font-medium">
                   {topic.title}
@@ -273,8 +279,8 @@ export default function TopicList() {
         footer={
           <>
             <Button variant="secondary" onClick={closeModals}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={isLoading}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Topic'}
+            <Button onClick={handleCreate} disabled={isCreating}>
+              {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Topic'}
             </Button>
           </>
         }

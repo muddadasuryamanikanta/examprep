@@ -1,5 +1,6 @@
 
 import ContentBlock, { type IContentBlock } from '../models/ContentBlock.ts';
+import Subject from '../models/Subject.ts';
 import { TopicService } from './topic.service.ts';
 import { Types } from 'mongoose';
 
@@ -29,7 +30,17 @@ export class ContentService {
     }
 
     const block = new ContentBlock({ ...data, topicId: topicId });
-    return await block.save();
+    const savedBlock = await block.save();
+    // Increment Subject questionCount if this block is a question
+    const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive'];
+    if (data.kind && questionKinds.includes(data.kind)) {
+      const topic = await TopicService.findOne(userId, topicId);
+      if (topic) {
+        await Subject.findByIdAndUpdate(topic.subjectId, { $inc: { questionCount: 1 } });
+      }
+    }
+
+    return savedBlock;
   }
 
   static async findAll(userId: string, topicIdentifier: string, options: { 

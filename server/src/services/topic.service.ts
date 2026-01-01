@@ -1,6 +1,8 @@
 import Topic, { type ITopic } from '../models/Topic.ts';
+import Subject from '../models/Subject.ts';
 import { SubjectService } from './subject.service.ts';
 import { Types } from 'mongoose';
+import { generateIconForSubject } from '../utils/common.ts';
 
 export class TopicService {
 
@@ -27,8 +29,14 @@ export class TopicService {
       data.position = count;
     }
 
+    if (!data.icon && data.title) {
+        data.icon = await generateIconForSubject(data.title);
+    }
+
     const topic = new Topic({ ...data, subjectId: subjectId });
-    return await topic.save();
+    const savedTopic = await topic.save();
+    await Subject.findByIdAndUpdate(subjectId, { $inc: { topicCount: 1 } });
+    return savedTopic;
   }
 
   static async findAll(userId: string, subjectIdentifier: string): Promise<ITopic[]> {
@@ -36,7 +44,7 @@ export class TopicService {
     if (!subject) {
       throw new Error('Access denied or Subject not found');
     }
-    return await Topic.find({ subjectId: subject._id }, '_id title subjectId position slug').sort({ position: 1, createdAt: 1 });
+    return await Topic.find({ subjectId: subject._id }, '_id title subjectId position slug icon').sort({ position: 1, createdAt: 1 });
   }
 
   static async findOne(userId: string, identifier: string): Promise<ITopic | null> {

@@ -9,6 +9,7 @@ export interface ITopic extends Document {
   slug: string;
   subjectId: mongoose.Types.ObjectId;
   position: number;
+  icon: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +19,7 @@ const TopicSchema: Schema = new Schema({
   slug: { type: String, required: true, index: true },
   subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true, index: true },
   position: { type: Number, default: 0 },
+  icon: { type: String, default: 'Hash' }, // Default to Hash icon for topics
 }, { timestamps: true });
 
 TopicSchema.pre("validate", async function () {

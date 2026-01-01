@@ -2,6 +2,7 @@ import Subject, { type ISubject } from '../models/Subject.ts';
 import Space from '../models/Space.ts';
 import { SpaceService } from './space.service.ts';
 import { Types } from 'mongoose';
+import { generateIconForSubject } from '../utils/common.ts';
 
 export class SubjectService {
 
@@ -28,6 +29,10 @@ export class SubjectService {
       data.position = count;
     }
 
+    if (!data.icon && data.title) {
+      data.icon = await generateIconForSubject(data.title);
+    }
+
     const subject = new Subject({ ...data, spaceId: spaceId });
     const savedSubject = await subject.save();
 
@@ -42,7 +47,7 @@ export class SubjectService {
       throw new Error('Access denied or Space not found');
     }
 
-    return await Subject.find({ spaceId: space._id }, '_id title spaceId position slug').sort({ position: 1, createdAt: 1 });
+    return await Subject.find({ spaceId: space._id }, '_id title spaceId position slug topicCount questionCount icon').sort({ position: 1, createdAt: 1 });
   }
 
   static async findOne(userId: string, identifier: string): Promise<ISubject | null> {

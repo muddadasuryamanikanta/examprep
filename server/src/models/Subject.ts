@@ -9,6 +9,9 @@ export interface ISubject extends Document {
   slug: string;
   spaceId: mongoose.Types.ObjectId;
   position: number;
+  topicCount: number;
+  questionCount: number;
+  icon: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,6 +21,9 @@ const SubjectSchema: Schema = new Schema({
   slug: { type: String, required: true, index: true },
   spaceId: { type: Schema.Types.ObjectId, ref: 'Space', required: true, index: true },
   position: { type: Number, default: 0 },
+  topicCount: { type: Number, default: 0 },
+  questionCount: { type: Number, default: 0 },
+  icon: { type: String, default: 'Book' },
 }, { timestamps: true });
 
 SubjectSchema.pre("validate", async function () {
