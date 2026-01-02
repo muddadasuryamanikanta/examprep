@@ -134,7 +134,8 @@ export default function TopicList() {
 
   const { startTest } = useTakeTest();
 
-  const handleQuickTest = async (mode: 'pending' | 'all') => {
+  const handleQuickTest = async (mode: 'pending' | 'all', topicOverride?: Topic) => {
+    const topicToUse = topicOverride || targetTestTopic;
     if (!currentSpace || !currentSubject) return;
 
     setIsCreatingTest(true);
@@ -142,7 +143,7 @@ export default function TopicList() {
       await startTest({
         spaceId: currentSpace._id,
         subjectId: currentSubject._id,
-        topicId: targetTestTopic?._id,
+        topicId: topicToUse?._id,
         mode
       });
       setIsTakeTestModalOpen(false);
@@ -217,32 +218,51 @@ export default function TopicList() {
               </div>
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Tooltip content="Take Test" delay={0}>
+                <Button
+                  className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/recall/topic/${topic._id}`);
+                  }}
+                >
+                  RECALL
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {/* Note: Original code didn't have a bg-secondary/50 wrapper for TopicList actions in the snippet I saw, but I'll check if I should add it or just keep them inline. 
+                       Looking at previous read, TopicList buttons were just in a flex div. 
+                       I will group the others to match SubjectLibrary if appropriate, or just leave them.
+                       The previous code had them separated by dividers (w-px). 
+                       I'll group the secondary actions for consistency if they were grouped before or just lay them out.
+                       Actually looking at the TargetContent, they were just in a div with gap-2. 
+                   */}
+                  <Tooltip content="Take Test" delay={0}>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                      onClick={(e) => openTakeTestModal(topic, e)}
+                    >
+                      <Play className="h-4 w-4 fill-current" />
+                    </Button>
+                  </Tooltip>
+                  <div className="w-px h-4 bg-border mx-1" />
                   <Button
-                    variant="secondary"
+                    variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                    onClick={(e) => openTakeTestModal(topic, e)}
+                    onClick={(e) => openEditModal(topic, e)}
                   >
-                    <Play className="h-4 w-4 fill-current" />
+                    <Edit2 className="h-4 w-4" />
                   </Button>
-                </Tooltip>
-                <div className="w-px h-4 bg-border mx-1" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => openEditModal(topic, e)}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  onClick={(e) => openDeleteModal(topic, e)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={(e) => openDeleteModal(topic, e)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

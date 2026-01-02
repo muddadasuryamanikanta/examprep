@@ -57,22 +57,21 @@ export function QuestionArea({
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* Review Mode Banner */}
                     {isReview && isAnswerCorrect !== undefined && (
-                        <div className={`p-4 rounded-lg border flex items-center gap-3 ${
-                            isAnswerCorrect 
-                                ? 'bg-success/10 border-success/30 text-success' 
+                        <div className={`p-4 rounded-lg border flex items-center gap-3 ${isAnswerCorrect
+                                ? 'bg-success/10 border-success/30 text-success'
                                 : 'bg-destructive/10 border-destructive/30 text-destructive'
-                        }`}>
+                            }`}>
                             <div className={`font-bold`}>{isAnswerCorrect ? 'Correct Answer' : 'Incorrect Answer'}</div>
                         </div>
                     )}
 
                     <div className={isReview ? "pointer-events-none opacity-90" : ""}>
-                        <ContentBlockDisplay 
-                            block={questionBlock} 
+                        <ContentBlockDisplay
+                            block={questionBlock}
                             isTest={true}
-                            value={userAnswer} 
+                            value={userAnswer}
                             onChange={onAnswerChange}
-                        /> 
+                        />
                     </div>
 
                     {/* Review Mode Details: Explanation & Correct Answer */}
@@ -115,27 +114,27 @@ export function QuestionArea({
                 {!isReview ? (
                     <>
                         <div className="flex gap-3">
-                            <Button 
-                                variant="secondary" 
-                                className="border shadow-sm gap-2 hover:bg-mark/10 hover:text-mark hover:border-mark/50 transition-colors" 
+                            <Button
+                                variant="secondary"
+                                className="border shadow-sm gap-2 hover:bg-mark/10 hover:text-mark hover:border-mark/50 transition-colors"
                                 onClick={onMarkForReview}
                             >
                                 <Bookmark className="w-4 h-4" />
                                 <span className="hidden sm:inline">Mark for Review & Next</span>
                                 <span className="sm:hidden">Mark</span>
                             </Button>
-                            <Button 
-                                variant="ghost" 
-                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2" 
+                            <Button
+                                variant="ghost"
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2"
                                 onClick={onClearResponse}
                             >
                                 <Trash2 className="w-4 h-4" />
                                 <span className="hidden sm:inline">Clear Response</span>
                             </Button>
                         </div>
-                        
-                        <Button 
-                            onClick={onSaveAndNext} 
+
+                        <Button
+                            onClick={onSaveAndNext}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px] h-11 text-base shadow-lg shadow-primary/20 gap-2"
                         >
                             <Save className="w-4 h-4" />
@@ -146,9 +145,9 @@ export function QuestionArea({
                 ) : (
                     <>
                         <div className="text-sm text-muted-foreground">Review Mode (Read Only)</div>
-                        <Button 
-                             onClick={onSaveAndNext} // Reusing this for Next navigation
-                             className="bg-secondary hover:bg-secondary/80 text-secondary-foreground min-w-[140px] h-11 gap-2"
+                        <Button
+                            onClick={onSaveAndNext} // Reusing this for Next navigation
+                            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground min-w-[140px] h-11 gap-2"
                         >
                             Next Question
                             <ArrowRight className="w-4 h-4 opacity-70" />

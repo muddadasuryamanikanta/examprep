@@ -34,7 +34,7 @@ export default function SubjectLibrary() {
   const { createTest } = useTestStore();
 
   const [isCreating, setIsCreating] = useState(false);
-  
+
   const [formData, setFormData] = useState({ title: '' });
 
   useEffect(() => {
@@ -111,8 +111,9 @@ export default function SubjectLibrary() {
     setIsTakeTestModalOpen(true);
   };
 
-  const handleQuickTest = async (mode: 'pending' | 'all') => {
-    if (!currentSpace || !targetTestSubject) return;
+  const handleQuickTest = async (mode: 'pending' | 'all', subjectOverride?: Subject) => {
+    const subjectToUse = subjectOverride || targetTestSubject;
+    if (!currentSpace || !subjectToUse) return;
 
     setIsCreatingTest(true);
     try {
@@ -120,7 +121,7 @@ export default function SubjectLibrary() {
       const selections = [{
         spaceId: currentSpace._id,
         subjects: [{
-          subjectId: targetTestSubject._id,
+          subjectId: subjectToUse._id,
           allTopics: true,
           topics: []
         }]
@@ -215,42 +216,55 @@ export default function SubjectLibrary() {
                   </div>
                 </div>
 
-                <div className="flex items-center bg-secondary/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Tooltip content="Take Test" delay={0}>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/recall/subject/${subject._id}`);
+                    }}
+                  >
+                    RECALL
+                  </Button>
+
+                  <div className="flex items-center bg-secondary/50 rounded-lg">
+                    <Tooltip content="Take Test" delay={0}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={(e) => openTakeTestModal(subject, e)}
+                      >
+                        <Play className="h-4 w-4 fill-current" />
+                      </Button>
+                    </Tooltip>
+                    <div className="w-px h-4 bg-border" />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                      onClick={(e) => openTakeTestModal(subject, e)}
+                      onClick={(e) => openEditModal(subject, e)}
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     >
-                      <Play className="h-4 w-4 fill-current" />
+                      <Edit2 className="h-4 w-4" />
                     </Button>
-                  </Tooltip>
-                  <div className="w-px h-4 bg-border" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => openEditModal(subject, e)}
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <div className="w-px h-4 bg-border" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={(e) => openDeleteModal(subject, e)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    <div className="w-px h-4 bg-border" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => openDeleteModal(subject, e)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               {/* Progress bar removed as per request "here no need of that progress" */}
             </div>
           ))}
         </div>
-      )}
+      )
+      }
 
       {/* Create/Edit Modal Reuse structure */}
       <Modal
@@ -375,6 +389,6 @@ export default function SubjectLibrary() {
           )}
         </div>
       </Modal>
-    </div>
+    </div >
   );
 }

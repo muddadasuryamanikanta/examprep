@@ -20,8 +20,8 @@ export interface ITestConfig {
 }
 
 export interface IWarning {
-    timestamp: Date;
-    reason: string;
+  timestamp: Date;
+  reason: string;
 }
 
 export interface ITest extends Document {
@@ -68,19 +68,19 @@ const TestSchema: Schema = new Schema({
     marksObtained: { type: Number, default: 0 },
     timeSpent: { type: Number, default: 0 }
   }],
-  status: { 
-    type: String, 
-    enum: Object.values(TestStatus), 
+  status: {
+    type: String,
+    enum: Object.values(TestStatus),
     default: TestStatus.CREATED,
-    index: true 
+    index: true
   },
   score: { type: Number, default: 0 },
   totalMarks: { type: Number, default: 0 },
   startTime: { type: Date },
   endTime: { type: Date },
   warnings: [{
-      timestamp: { type: Date, default: Date.now },
-      reason: { type: String }
+    timestamp: { type: Date, default: Date.now },
+    reason: { type: String }
   }]
 }, { timestamps: true });
 

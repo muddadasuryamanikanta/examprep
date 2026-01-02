@@ -13,6 +13,7 @@ import { AuthSuccess } from './pages/AuthSuccess';
 import TestDashboard from './pages/TestDashboard';
 import Dashboard from './pages/Dashboard';
 import TestScreen from './pages/TestScreen';
+import AnkiBoard from './pages/AnkiBoard';
 import { Navbar } from './components/common/Navbar';
 import { GlobalPrompt } from './components/common/GlobalPrompt';
 import { useAuthStore } from './store/authStore';
@@ -101,6 +102,11 @@ const AppContent = () => {
         <Route path="/tests/:id" element={
           <RequireAuth>
             <TestScreen />
+          </RequireAuth>
+        } />
+        <Route path="/recall/:type/:id" element={
+          <RequireAuth>
+            <AnkiBoard />
           </RequireAuth>
         } />
 

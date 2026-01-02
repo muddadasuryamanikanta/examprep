@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { 
-  ContentBlockType, 
-  McqOption, 
-  NoteBlock, 
+import type {
+  ContentBlockType,
+  McqOption,
+  NoteBlock,
   SingleSelectMcqBlock,
   MultiSelectMcqBlock,
   FillInTheBlankBlock,
@@ -28,15 +28,15 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
   const [hints, setHints] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  
+
   // Note State
   const [content, setContent] = useState('');
 
   const [question, setQuestion] = useState('');
-  
+
   // MCQ State
   const [options, setOptions] = useState<McqOption[]>([]);
-  
+
   // Fill in the Blank State
   const [blankAnswers, setBlankAnswers] = useState<string[]>([]);
 
@@ -48,16 +48,17 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
       setNotes(initialData?.notes || '');
       setHints(initialData?.hints || []);
       setTags(initialData?.tags || []);
-      
+
       if (initialData) {
         if (type === 'note') {
-           setContent((initialData as NoteBlock).content || '');
-           const block = initialData as SingleSelectMcqBlock | MultiSelectMcqBlock;
-           setQuestion(block.question || '');
-           setOptions(block.options || []);
+          setContent((initialData as NoteBlock).content || '');
+        } else if (type === 'single_select_mcq' || type === 'multi_select_mcq') {
+          const block = initialData as SingleSelectMcqBlock | MultiSelectMcqBlock;
+          setQuestion(block.question || '');
+          setOptions(block.options || []);
         } else if (type === 'fill_in_the_blank') {
-           setQuestion((initialData as FillInTheBlankBlock).question || '');
-           setBlankAnswers((initialData as FillInTheBlankBlock).blankAnswers || []);
+          setQuestion((initialData as FillInTheBlankBlock).question || '');
+          setBlankAnswers((initialData as FillInTheBlankBlock).blankAnswers || []);
         }
       } else {
         // Reset defaults
@@ -129,181 +130,181 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
       }
     >
       <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-        
-            {/* Type Specific Fields */}
-            {type === 'note' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Content (Markdown supported)</label>
-                <textarea
-                  className="w-full bg-background border border-input rounded-md p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Enter note content..."
-                />
-              </div>
-            )}
 
-            {(type === 'single_select_mcq' || type === 'multi_select_mcq') && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Question</label>
-                  <textarea
-                    className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="Enter question..."
+        {/* Type Specific Fields */}
+        {type === 'note' && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Content (Markdown supported)</label>
+            <textarea
+              className="w-full bg-background border border-input rounded-md p-3 min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Enter note content..."
+            />
+          </div>
+        )}
+
+        {(type === 'single_select_mcq' || type === 'multi_select_mcq') && (
+          <>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Question</label>
+              <textarea
+                className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="Enter question..."
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-medium">Options</label>
+              {options.map((opt, idx) => (
+                <div key={opt.id || idx} className="flex items-start gap-2">
+                  <input
+                    type={type === 'single_select_mcq' ? "radio" : "checkbox"}
+                    name={type === 'single_select_mcq' ? "correct-option" : undefined}
+                    className="mt-3 h-4 w-4"
+                    checked={opt.isCorrect}
+                    onChange={(e) => {
+                      if (type === 'single_select_mcq') {
+                        const newOptions = options.map((o, i) => ({
+                          ...o,
+                          isCorrect: i === idx
+                        }));
+                        setOptions(newOptions);
+                      } else {
+                        updateOption(idx, 'isCorrect', e.target.checked);
+                      }
+                    }}
                   />
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-medium">Options</label>
-                  {options.map((opt, idx) => (
-                    <div key={opt.id || idx} className="flex items-start gap-2">
-                      <input
-                        type={type === 'single_select_mcq' ? "radio" : "checkbox"}
-                        name={type === 'single_select_mcq' ? "correct-option" : undefined}
-                        className="mt-3 h-4 w-4"
-                        checked={opt.isCorrect}
-                        onChange={(e) => {
-                          if (type === 'single_select_mcq') {
-                            const newOptions = options.map((o, i) => ({
-                              ...o,
-                              isCorrect: i === idx
-                            }));
-                            setOptions(newOptions);
-                          } else {
-                            updateOption(idx, 'isCorrect', e.target.checked);
-                          }
-                        }}
-                      />
-                      <input
-                        className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        value={opt.text}
-                        onChange={(e) => updateOption(idx, 'text', e.target.value)}
-                        placeholder={`Option ${idx + 1}`}
-                      />
-                      <Button variant="ghost" size="icon" onClick={() => removeOption(idx)} className="text-destructive h-9 w-9">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button variant="outline" size="sm" onClick={addOption} className="w-full mt-2">
-                    <Plus className="h-4 w-4 mr-2" /> Add Option
+                  <input
+                    className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={opt.text}
+                    onChange={(e) => updateOption(idx, 'text', e.target.value)}
+                    placeholder={`Option ${idx + 1}`}
+                  />
+                  <Button variant="ghost" size="icon" onClick={() => removeOption(idx)} className="text-destructive h-9 w-9">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </>
-            )}
-
-            {type === 'fill_in_the_blank' && (
-              <div className="space-y-2">
-                 <label className="text-sm font-medium">Question</label>
-                 <textarea
-                   className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                   value={question}
-                   onChange={(e) => setQuestion(e.target.value)}
-                   placeholder="Enter question with blanks..."
-                 />
-                 <div className="text-xs text-muted-foreground">
-                   Define blanks in your question text (implementation pending full support).
-                 </div>
-              </div>
-            )}
-
-            {/* Tags Section */}
-            <div className="space-y-3 pt-4 border-t border-border">
-               <label className="text-sm font-medium">Tags</label>
-               <div className="flex gap-2">
-                 <input
-                   className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                   value={tagInput}
-                   onChange={(e) => setTagInput(e.target.value)}
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter') {
-                       e.preventDefault();
-                       if (tagInput.trim()) {
-                         setTags([...tags, tagInput.trim()]);
-                         setTagInput('');
-                       }
-                     }
-                   }}
-                   placeholder="Add a tag..."
-                 />
-                 <Button 
-                   variant="secondary" 
-                   onClick={() => {
-                     if (tagInput.trim()) {
-                       setTags([...tags, tagInput.trim()]);
-                       setTagInput('');
-                     }
-                   }}
-                   disabled={!tagInput.trim()}
-                 >
-                   Add
-                 </Button>
-               </div>
-               
-               {tags.length > 0 && (
-                 <div className="flex flex-wrap gap-2">
-                   {tags.map((tag, idx) => (
-                     <div key={idx} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
-                       <span>#{tag}</span>
-                       <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="ml-1 hover:text-destructive">
-                         <Trash2 className="h-3 w-3" />
-                       </button>
-                     </div>
-                   ))}
-                 </div>
-               )}
+              ))}
+              <Button variant="outline" size="sm" onClick={addOption} className="w-full mt-2">
+                <Plus className="h-4 w-4 mr-2" /> Add Option
+              </Button>
             </div>
+          </>
+        )}
 
-            {/* Common Fields */}
-            <div className="pt-4 border-t border-border space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Hints</label>
-                {hints.map((hint, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      value={hint}
-                      onChange={(e) => {
-                        const newHints = [...hints];
-                        newHints[idx] = e.target.value;
-                        setHints(newHints);
-                      }}
-                      placeholder={`Hint ${idx + 1}`}
-                    />
-                    <Button variant="ghost" size="icon" onClick={() => setHints(hints.filter((_, i) => i !== idx))} className="text-destructive h-9 w-9">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={() => setHints([...hints, ''])} className="w-full mt-1">
-                  <Plus className="h-4 w-4 mr-2" /> Add Hint
+        {type === 'fill_in_the_blank' && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Question</label>
+            <textarea
+              className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="Enter question with blanks..."
+            />
+            <div className="text-xs text-muted-foreground">
+              Define blanks in your question text (implementation pending full support).
+            </div>
+          </div>
+        )}
+
+        {/* Tags Section */}
+        <div className="space-y-3 pt-4 border-t border-border">
+          <label className="text-sm font-medium">Tags</label>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (tagInput.trim()) {
+                    setTags([...tags, tagInput.trim()]);
+                    setTagInput('');
+                  }
+                }
+              }}
+              placeholder="Add a tag..."
+            />
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (tagInput.trim()) {
+                  setTags([...tags, tagInput.trim()]);
+                  setTagInput('');
+                }
+              }}
+              disabled={!tagInput.trim()}
+            >
+              Add
+            </Button>
+          </div>
+
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag, idx) => (
+                <div key={idx} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
+                  <span>#{tag}</span>
+                  <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="ml-1 hover:text-destructive">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Common Fields */}
+        <div className="pt-4 border-t border-border space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Hints</label>
+            {hints.map((hint, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  value={hint}
+                  onChange={(e) => {
+                    const newHints = [...hints];
+                    newHints[idx] = e.target.value;
+                    setHints(newHints);
+                  }}
+                  placeholder={`Hint ${idx + 1}`}
+                />
+                <Button variant="ghost" size="icon" onClick={() => setHints(hints.filter((_, i) => i !== idx))} className="text-destructive h-9 w-9">
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => setHints([...hints, ''])} className="w-full mt-1">
+              <Plus className="h-4 w-4 mr-2" /> Add Hint
+            </Button>
+          </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Explanation</label>
-                  <textarea
-                    className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    value={explanation}
-                    onChange={(e) => setExplanation(e.target.value)}
-                    placeholder="Detailed explanation..."
-                  />
-                </div>
-              
-                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Notes</label>
-                  <textarea
-                    className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Additional notes..."
-                  />
-                </div>
-               </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Explanation</label>
+              <textarea
+                className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                placeholder="Detailed explanation..."
+              />
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Notes</label>
+              <textarea
+                className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Additional notes..."
+              />
+            </div>
+          </div>
+        </div>
 
       </div>
     </Modal>

@@ -18,7 +18,7 @@ export default function TestScreen() {
     const navigate = useNavigate();
     const { currentTest: test, isLoading: loading, fetchTest, submitTest, saveProgress } = useTestStore();
     const { user } = useAuthStore();
-    
+
     // Local state
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, unknown>>({});
@@ -29,13 +29,13 @@ export default function TestScreen() {
     // Status tracking
     const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set([0]));
     const [markedForReview, setMarkedForReview] = useState<Set<number>>(new Set());
-    
+
     // Time tracking
     const [questionTimes, setQuestionTimes] = useState<Record<string, number>>({});
     const startTimeRef = useRef<number>(Date.now());
-    
+
     // Focus tracking
-    const [focusWarnings, setFocusWarnings] = useState<{timestamp: Date, reason: string}[]>([]);
+    const [focusWarnings, setFocusWarnings] = useState<{ timestamp: Date, reason: string }[]>([]);
     const [submitting, setSubmitting] = useState(false);
 
     // Initial fetch
@@ -48,26 +48,26 @@ export default function TestScreen() {
     // Initialize state from test data
     useEffect(() => {
         if (test && test._id === id) {
-             const existingAnswers: Record<string, unknown> = {};
-             test.questions.forEach((q) => {
-                 if (q.userAnswer) existingAnswers[q.blockId] = q.userAnswer;
-             });
-             setAnswers(existingAnswers);
-             
-             if (test.warnings && test.warnings.length > 0) {
-                 setFocusWarnings(test.warnings.map(w => ({ ...w, timestamp: new Date(w.timestamp) })));
-             }
+            const existingAnswers: Record<string, unknown> = {};
+            test.questions.forEach((q) => {
+                if (q.userAnswer) existingAnswers[q.blockId] = q.userAnswer;
+            });
+            setAnswers(existingAnswers);
 
-             // Initialize question times if available (e.g. for review mode)
-             const times: Record<string, number> = {};
-             test.questions.forEach(q => {
-                 if (q.timeSpent !== undefined) {
-                     times[q.blockId] = q.timeSpent;
-                 }
-             });
-             if (Object.keys(times).length > 0) {
-                 setQuestionTimes(times);
-             }
+            if (test.warnings && test.warnings.length > 0) {
+                setFocusWarnings(test.warnings.map(w => ({ ...w, timestamp: new Date(w.timestamp) })));
+            }
+
+            // Initialize question times if available (e.g. for review mode)
+            const times: Record<string, number> = {};
+            test.questions.forEach(q => {
+                if (q.timeSpent !== undefined) {
+                    times[q.blockId] = q.timeSpent;
+                }
+            });
+            if (Object.keys(times).length > 0) {
+                setQuestionTimes(times);
+            }
         }
     }, [test, id]);
 
@@ -76,7 +76,7 @@ export default function TestScreen() {
         if (isReviewMode || test?.status === 'COMPLETED') return;
 
         startTimeRef.current = Date.now();
-        
+
         return () => {
             if (!test) return;
             const now = Date.now();
@@ -99,21 +99,21 @@ export default function TestScreen() {
     }, []);
 
     const captureCurrentTime = useCallback(() => {
-         const now = Date.now();
-         const duration = (now - startTimeRef.current) / 1000;
-         const currentBlockId = test?.questions[currentQuestionIndex]?.blockId;
-         
-         const finalTimes = { ...questionTimes };
-         if (currentBlockId) {
-              finalTimes[currentBlockId] = (finalTimes[currentBlockId] || 0) + duration;
-         }
-         return finalTimes;
+        const now = Date.now();
+        const duration = (now - startTimeRef.current) / 1000;
+        const currentBlockId = test?.questions[currentQuestionIndex]?.blockId;
+
+        const finalTimes = { ...questionTimes };
+        if (currentBlockId) {
+            finalTimes[currentBlockId] = (finalTimes[currentBlockId] || 0) + duration;
+        }
+        return finalTimes;
     }, [test, currentQuestionIndex, questionTimes]);
 
     const handleSubmitTest = useCallback(async (finalWarnings = focusWarnings) => {
         if (submitting || !id) return;
         setSubmitting(true);
-        
+
         const finalTimes = captureCurrentTime();
 
         try {
@@ -131,7 +131,7 @@ export default function TestScreen() {
 
     const handlePause = useCallback(async () => {
         if (submitting || !id) return;
-        
+
         // Confirm pause
         if (!window.confirm("Are you sure you want to pause? Your progress will be saved and you can resume later.")) {
             return;
@@ -139,7 +139,7 @@ export default function TestScreen() {
 
         setSubmitting(true); // Prevent other actions
         const finalTimes = captureCurrentTime();
-        
+
         try {
             await saveProgress(id, {
                 answers,
@@ -159,8 +159,8 @@ export default function TestScreen() {
     }, [submitting, id, answers, focusWarnings, saveProgress, captureCurrentTime, navigate]);
 
     const registerWarning = useCallback((reason: string) => {
-        if (submitting || isReviewMode || test?.status === 'COMPLETED') return; 
-        
+        if (submitting || isReviewMode || test?.status === 'COMPLETED') return;
+
         const now = new Date();
         setFocusWarnings(prev => {
             if (prev.length > 0) {
@@ -168,16 +168,16 @@ export default function TestScreen() {
                 const last = new Date(prev[prev.length - 1].timestamp).getTime();
                 if (now.getTime() - last < 2000) return prev;
             }
-            
+
             // Show alert immediately to the user
             PromptService.warn(`Warning: ${reason}\n\nRepeated violations will submit the test.`);
 
             const newWarnings = [...prev, { timestamp: now, reason }];
-            
+
             if (newWarnings.length >= 3) {
                 handleSubmitTest(newWarnings);
             }
-            
+
             return newWarnings;
         });
     }, [submitting, handleSubmitTest, isReviewMode, test?.status]);
@@ -197,11 +197,11 @@ export default function TestScreen() {
         if (!test || test.status === 'COMPLETED' || isReviewMode) return;
 
         const handleFocusLoss = () => {
-             if (document.visibilityState === 'hidden' || !document.hasFocus()) {
-                 registerWarning("Focus lost (tab switch or background)");
-             }
+            if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+                registerWarning("Focus lost (tab switch or background)");
+            }
         };
-        
+
         const handleFullscreenChange = () => {
             setIsFullscreen(!!document.fullscreenElement);
             if (!document.fullscreenElement) {
@@ -223,17 +223,17 @@ export default function TestScreen() {
     // Timer Logic
     useEffect(() => {
         if (!test || isReviewMode) return;
-        
+
         // Ensure we have a valid start time
         const startString = test.startTime || test.createdAt || new Date().toISOString();
         const start = new Date(startString);
-        if (isNaN(start.getTime())) return; 
+        if (isNaN(start.getTime())) return;
 
         const startTime = start.getTime();
-        const durationMinutes = test.config?.duration || 60; 
+        const durationMinutes = test.config?.duration || 60;
         const durationMs = durationMinutes * 60 * 1000;
         const endTime = startTime + durationMs;
-        
+
         const updateTimer = () => {
             const now = Date.now();
             if (test.status === 'COMPLETED') {
@@ -242,11 +242,11 @@ export default function TestScreen() {
             }
 
             const diff = Math.ceil((endTime - now) / 1000);
-            
+
             if (diff <= 0) {
                 setTimeLeft(0);
                 if (test.status === 'IN_PROGRESS' && !submitting) {
-                     handleSubmitTest();
+                    handleSubmitTest();
                 }
             } else {
                 setTimeLeft(diff);
@@ -255,7 +255,7 @@ export default function TestScreen() {
 
         updateTimer();
         const interval = setInterval(updateTimer, 1000);
-        
+
         return () => clearInterval(interval);
     }, [test, submitting, handleSubmitTest, isReviewMode]);
 
@@ -295,7 +295,7 @@ export default function TestScreen() {
             // Optional: prompt to submit if last question
         }
     };
-    
+
     // --- Render ---
 
     if (loading) {
@@ -310,7 +310,7 @@ export default function TestScreen() {
 
     if (test.status === 'COMPLETED' && !isReviewMode) {
         return (
-            <TestCompleted 
+            <TestCompleted
                 score={test.score || 0}
                 totalMarks={test.totalMarks || 0}
                 onReturn={() => navigate('/tests')}
@@ -321,7 +321,7 @@ export default function TestScreen() {
 
     if (!isFullscreen && !isReviewMode) {
         return (
-            <FullScreenWarning 
+            <FullScreenWarning
                 onEnterFullscreen={enterFullscreen}
                 onCancel={() => navigate('/tests')}
             />
@@ -334,42 +334,42 @@ export default function TestScreen() {
 
     return (
         <div className="flex h-screen w-screen overflow-hidden flex-col bg-background font-sans text-foreground">
-           
-           <TestHeader 
+
+            <TestHeader
                 title={`${isReviewMode ? 'Review Mode - ' : ''}${test.config?.questionCount || test.questions.length} Questions Test`}
                 timeLeft={timeLeft}
                 totalQuestions={test.questions.length}
                 onPause={handlePause}
                 isReview={isReviewMode}
-           />
-        
-           <div className="flex-1 flex overflow-hidden">
-              <QuestionArea 
-                  questionIndex={currentQuestionIndex}
-                  questionBlock={currentBlock}
-                  userAnswer={answers[currentBlock._id]}
-                  onAnswerChange={(val) => handleAnswerUpdate(currentBlock._id, val)}
-                  onMarkForReview={handleMarkForReview}
-                  onClearResponse={handleClearResponse}
-                  onSaveAndNext={handleSaveAndNext}
-                  isLastQuestion={currentQuestionIndex === test.questions.length - 1}
-                  isReview={isReviewMode}
-                  timeSpent={questionTimes[currentQuestion.blockId] || 0}
-                  isAnswerCorrect={currentQuestion.isCorrect}
-              />
-        
-              <TestSidebar 
-                  userName={user?.name || 'Guest User'}
-                  questions={test.questions}
-                  currentQuestionIndex={currentQuestionIndex}
-                  answers={answers}
-                  markedForReview={markedForReview}
-                  visitedQuestions={visitedQuestions}
-                  onQuestionChange={changeQuestion}
-                  onSubmit={() => isReviewMode ? navigate('/tests') : handleSubmitTest()}
-                  isReview={isReviewMode}
-              />
-           </div>
+            />
+
+            <div className="flex-1 flex overflow-hidden">
+                <QuestionArea
+                    questionIndex={currentQuestionIndex}
+                    questionBlock={currentBlock}
+                    userAnswer={answers[currentBlock._id]}
+                    onAnswerChange={(val) => handleAnswerUpdate(currentBlock._id, val)}
+                    onMarkForReview={handleMarkForReview}
+                    onClearResponse={handleClearResponse}
+                    onSaveAndNext={handleSaveAndNext}
+                    isLastQuestion={currentQuestionIndex === test.questions.length - 1}
+                    isReview={isReviewMode}
+                    timeSpent={questionTimes[currentQuestion.blockId] || 0}
+                    isAnswerCorrect={currentQuestion.isCorrect}
+                />
+
+                <TestSidebar
+                    userName={user?.name || 'Guest User'}
+                    questions={test.questions}
+                    currentQuestionIndex={currentQuestionIndex}
+                    answers={answers}
+                    markedForReview={markedForReview}
+                    visitedQuestions={visitedQuestions}
+                    onQuestionChange={changeQuestion}
+                    onSubmit={() => isReviewMode ? navigate('/tests') : handleSubmitTest()}
+                    isReview={isReviewMode}
+                />
+            </div>
         </div>
     );
 }
