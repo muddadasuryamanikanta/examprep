@@ -1,6 +1,7 @@
 import React from 'react';
 import type { TestUnit } from '../../types/dashboard';
 import { useTakeTest } from '../../hooks/useTakeTest';
+import { PromptService } from '../../services/PromptService';
 import { CheckCircle, Clock, PauseCircle, PlayCircle, AlertCircle } from 'lucide-react';
 
 interface TestsDueTableProps {
@@ -46,7 +47,7 @@ export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll })
             });
         } catch (error) {
             console.error('Failed to start test:', error);
-            alert('Failed to start test. Please try again.');
+            PromptService.error('Failed to start test. Please try again.');
         } finally {
             setCreatingTestId(null);
         }

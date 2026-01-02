@@ -4,9 +4,7 @@ export enum ContentBlockType {
   NOTE = 'note',
   SINGLE_SELECT_MCQ = 'single_select_mcq',
   MULTI_SELECT_MCQ = 'multi_select_mcq',
-  DESCRIPTIVE = 'descriptive',
-  FILL_IN_THE_BLANK = 'fill_in_the_blank',
-  GENERIC = 'generic'
+  FILL_IN_THE_BLANK = 'fill_in_the_blank'
 }
 
 export interface IContentBlock extends Document {
@@ -15,14 +13,13 @@ export interface IContentBlock extends Document {
   kind: ContentBlockType;
   content?: string; // For note
   question?: string; // For mcqs/descriptive
-  answer?: string; // For descriptive
   explanation?: string;
   notes?: string;
   tags?: string[];
   group?: string;
   blankAnswers?: string[];
+  hints?: string[];
   options?: Array<{ id: string; text: string; isCorrect: boolean }>; // For mcqs
-  data?: Record<string, unknown>; // For generic
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,8 +34,7 @@ const ContentBlockSchema: Schema = new Schema({
   },
   // Type-specific fields (sparse to save space/clarity, or we could use discriminators but single collection is easier for ordering)
   content: { type: String }, // For Note
-  question: { type: String }, // For MCQs/Descriptive
-  answer: { type: String }, // For Descriptive
+  question: { type: String }, // For MCQs
   explanation: { type: String },
   notes: { type: String }, // Additional notes for the question
   tags: [{ type: String }], // Array of strings for hashtags
@@ -51,7 +47,6 @@ const ContentBlockSchema: Schema = new Schema({
     text: String,
     isCorrect: Boolean
   }],
-  data: { type: Schema.Types.Mixed }, // For Generic
 }, { timestamps: true });
 
 ContentBlockSchema.index({ topicId: 1 });

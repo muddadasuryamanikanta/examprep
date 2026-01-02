@@ -20,8 +20,8 @@ export function TopicContentArea({ selectedBlock, onEdit, onDelete }: TopicConte
       case 'note': return 'NOTE';
       case 'single_select_mcq': return 'MCQ';
       case 'multi_select_mcq': return 'MCQ';
-      case 'descriptive': return 'FACT';
-      default: return 'GEN';
+      case 'fill_in_the_blank': return 'FILL';
+      default: return 'UNK';
     }
   };
 
@@ -30,7 +30,7 @@ export function TopicContentArea({ selectedBlock, onEdit, onDelete }: TopicConte
       case 'note': return 'bg-block-note-bg text-block-note-text border-block-note-border';
       case 'single_select_mcq': 
       case 'multi_select_mcq': return 'bg-block-mcq-bg text-block-mcq-text border-block-mcq-border';
-      case 'descriptive': return 'bg-block-fact-bg text-block-fact-text border-block-fact-border';
+      case 'fill_in_the_blank': return 'bg-block-fact-bg text-block-fact-text border-block-fact-border';
       default: return 'bg-secondary text-secondary-foreground border-border';
     }
   };

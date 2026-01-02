@@ -83,8 +83,8 @@ export function QuestionArea({
                                 <div className="p-4 bg-muted/30 rounded-lg border border-border">
                                     <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Correct Answer</h4>
                                     <div className="font-medium text-sm">
-                                        {questionBlock.kind === 'descriptive' ? (
-                                            <div className="whitespace-pre-wrap">{questionBlock.answer || "No model answer provided."}</div>
+                                        {questionBlock.kind === 'fill_in_the_blank' ? (
+                                            <div className="text-muted-foreground">Fill in the blank answers not yet supported in review.</div>
                                         ) : (
                                             <ul className="list-disc pl-5 space-y-1">
                                                 {questionBlock.options?.filter((o: any) => o.isCorrect).map((o: any) => (

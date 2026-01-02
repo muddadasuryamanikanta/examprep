@@ -4,6 +4,7 @@ import { Loader2, Check, Filter, Search } from 'lucide-react';
 import { useSpaceStore } from '../../store/spaceStore';
 import { useContentStore } from '../../store/contentStore';
 import { useTestStore } from '../../store/testStore';
+import { PromptService } from '../../services/PromptService';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import type { Subject, Topic } from '../../types/domain';
@@ -333,13 +334,13 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 duration: config.duration,
                 marksPerQuestion: config.marksPerQuestion,
                 negativeMarks: config.negativeMarks,
-                questionTypes: ['single_select_mcq', 'multi_select_mcq', 'descriptive']
+                questionTypes: ['single_select_mcq', 'multi_select_mcq']
             });
             onClose();
             navigate(`/tests/${newTest._id}`);
         } catch (error: any) {
             console.error('Failed to create test:', error);
-            alert(error.response?.data?.message || error.message || "Failed to create test. Please try again.");
+            PromptService.error(error.response?.data?.message || error.message || "Failed to create test. Please try again.");
         } finally {
             setIsCreating(false);
         }

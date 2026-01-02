@@ -32,7 +32,7 @@ export interface Topic extends BaseEntity {
   questionCount?: number;
 }
 
-export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'descriptive' | 'fill_in_the_blank' | 'generic';
+export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'fill_in_the_blank';
 
 export interface BaseContentBlock extends BaseEntity {
   topicId: string;
@@ -68,17 +68,6 @@ export interface MultiSelectMcqBlock extends BaseContentBlock {
   options: McqOption[];
 }
 
-export interface DescriptiveBlock extends BaseContentBlock {
-  kind: 'descriptive';
-  question: string;
-  answer?: string;
-}
-
-export interface GenericBlock extends BaseContentBlock {
-  kind: 'generic';
-  data: Record<string, unknown>;
-}
-
 export interface FillInTheBlankBlock extends BaseContentBlock {
   kind: 'fill_in_the_blank';
   question: string;
@@ -86,8 +75,7 @@ export interface FillInTheBlankBlock extends BaseContentBlock {
 }
 
 
-
-export type ContentBlock = NoteBlock | SingleSelectMcqBlock | MultiSelectMcqBlock | DescriptiveBlock | GenericBlock | FillInTheBlankBlock;
+export type ContentBlock = NoteBlock | SingleSelectMcqBlock | MultiSelectMcqBlock | FillInTheBlankBlock;
 
 export interface TestQuestion {
   blockId: string;

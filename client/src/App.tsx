@@ -14,6 +14,7 @@ import TestDashboard from './pages/TestDashboard';
 import Dashboard from './pages/Dashboard';
 import TestScreen from './pages/TestScreen';
 import { Navbar } from './components/common/Navbar';
+import { GlobalPrompt } from './components/common/GlobalPrompt';
 import { useAuthStore } from './store/authStore';
 
 const TitleUpdater = () => {
@@ -112,6 +113,7 @@ function App() {
   return (
     <BrowserRouter>
       <TitleUpdater />
+      <GlobalPrompt />
       <AppContent />
     </BrowserRouter>
   );

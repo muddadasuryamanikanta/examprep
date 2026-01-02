@@ -38,8 +38,7 @@ interface ContentState {
   deleteBlock: (id: string) => Promise<void>;
   setBlocks: (blocks: ContentBlock[]) => void;
   
-  // AI
-  generateAIContent: (text: string, type: ContentBlockType | 'bulk') => Promise<unknown>;
+
 
   // Helpers
   getSubjects: (spaceId: string) => Promise<Subject[]>;
@@ -219,7 +218,7 @@ export const useContentStore = create<ContentState>((set, get) => ({
         topicId,
         kind: type,
         content: type === 'note' ? 'New note...' : undefined,
-        question: type !== 'note' && type !== 'generic' ? 'New Question' : undefined,
+        question: type !== 'note' ? 'New Question' : undefined,
         options: (type === 'single_select_mcq' || type === 'multi_select_mcq') ? [{ id: '1', text: 'Option A', isCorrect: false }] : undefined,
       };
       
@@ -267,15 +266,7 @@ export const useContentStore = create<ContentState>((set, get) => ({
   
   setBlocks: (blocks) => set({ blocks }),
 
-  generateAIContent: async (text, type) => {
-    try {
-      const res = await api.post('/ai/generate', { text, type });
-      return res.data;
-    } catch (error) {
-      console.error('AI Generation error:', error);
-      throw error;
-    }
-  },
+
 
   // Helpers for wizards/external use without modifying store state
   getSubjects: async (spaceIdStrOrSlug: string) => {

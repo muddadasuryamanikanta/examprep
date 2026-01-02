@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
+import { PromptService } from '../services/PromptService';
 import { type Subject } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
 import { useTestStore } from '../store/testStore';
@@ -137,7 +138,7 @@ export default function SubjectLibrary() {
     } catch (err: any) {
       console.error('Failed to create test:', err);
       // Ideally show a toast here, but for now console error is okay or alert
-      alert(err.response?.data?.message || "Failed to create test. Maybe no questions available?");
+      PromptService.error(err.response?.data?.message || "Failed to create test. Maybe no questions available?");
     } finally {
       setIsCreatingTest(false);
     }

@@ -78,8 +78,7 @@ export function TopicSidebar({
     { type: 'note', label: 'Note' },
     { type: 'single_select_mcq', label: 'Single Choice' },
     { type: 'multi_select_mcq', label: 'Multi Choice' },
-    { type: 'descriptive', label: 'Question' },
-    { type: 'bulk' as any, label: 'Bulk Import (AI)' },
+    { type: 'fill_in_the_blank', label: 'Fill in the Blank' },
   ];
 
   const getBlockSummary = (block: ContentBlock) => {
@@ -92,12 +91,12 @@ export function TopicSidebar({
     } else if (block.kind === 'single_select_mcq' || block.kind === 'multi_select_mcq') {
       title = block.question;
       preview = 'Multiple Choice Question';
-    } else if (block.kind === 'descriptive') {
+    } else if (block.kind === 'fill_in_the_blank') {
       title = block.question;
-      preview = block.answer ? block.answer.slice(0, 80) + '...' : 'Open Ended Question';
+      preview = 'Fill in the Blank';
     } else {
-      title = 'Generic Block';
-      preview = 'Custom content';
+        title = 'Unknown Block';
+        preview = 'Unknown content';
     }
 
     if (title.length > 40) title = title.substring(0, 40) + '...';
@@ -109,8 +108,8 @@ export function TopicSidebar({
       case 'note': return 'NOTE';
       case 'single_select_mcq': return 'MCQ';
       case 'multi_select_mcq': return 'MCQ';
-      case 'descriptive': return 'FACT';
-      default: return 'GEN';
+      case 'fill_in_the_blank': return 'FILL';
+      default: return 'UNK';
     }
   };
 
@@ -119,7 +118,7 @@ export function TopicSidebar({
       case 'note': return 'bg-block-note-bg text-block-note-text border-block-note-border';
       case 'single_select_mcq':
       case 'multi_select_mcq': return 'bg-block-mcq-bg text-block-mcq-text border-block-mcq-border';
-      case 'descriptive': return 'bg-block-fact-bg text-block-fact-text border-block-fact-border';
+      case 'fill_in_the_blank': return 'bg-block-fact-bg text-block-fact-text border-block-fact-border';
       default: return 'bg-secondary text-secondary-foreground border-border';
     }
   };

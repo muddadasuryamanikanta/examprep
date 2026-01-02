@@ -11,6 +11,7 @@ import { TestSidebar } from '../components/test-screen/TestSidebar';
 import { QuestionArea } from '../components/test-screen/QuestionArea';
 import { FullScreenWarning } from '../components/test-screen/FullScreenWarning';
 import { TestCompleted } from '../components/test-screen/TestCompleted';
+import { PromptService } from '../services/PromptService';
 
 export default function TestScreen() {
     const { id } = useParams<{ id: string }>();
@@ -124,7 +125,7 @@ export default function TestScreen() {
         } catch (err) {
             console.error(err);
             setSubmitting(false);
-            alert("Failed to submit test. Please try again.");
+            PromptService.error("Failed to submit test. Please try again.");
         }
     }, [submitting, id, focusWarnings, answers, submitTest, captureCurrentTime]);
 
@@ -153,7 +154,7 @@ export default function TestScreen() {
         } catch (err) {
             console.error(err);
             setSubmitting(false);
-            alert("Failed to save progress.");
+            PromptService.error("Failed to save progress.");
         }
     }, [submitting, id, answers, focusWarnings, saveProgress, captureCurrentTime, navigate]);
 
@@ -168,6 +169,9 @@ export default function TestScreen() {
                 if (now.getTime() - last < 2000) return prev;
             }
             
+            // Show alert immediately to the user
+            PromptService.warn(`Warning: ${reason}\n\nRepeated violations will submit the test.`);
+
             const newWarnings = [...prev, { timestamp: now, reason }];
             
             if (newWarnings.length >= 3) {
@@ -184,7 +188,7 @@ export default function TestScreen() {
             setIsFullscreen(true);
         } catch (err) {
             console.error("Error attempting to enable full-screen mode:", err);
-            alert("Full screen mode is required for this test.");
+            PromptService.warn("Full screen mode is required for this test.");
         }
     }, []);
 

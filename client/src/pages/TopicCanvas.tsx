@@ -9,7 +9,7 @@ import { ContentBlockModal } from '../components/content-blocks/ContentBlockModa
 import { TopicSidebar } from '../components/topic-canvas/TopicSidebar';
 import { TopicContentArea } from '../components/topic-canvas/TopicContentArea';
 import { MultiSelect } from '../components/common/MultiSelect';
-import { BulkImportModal } from '../components/content-blocks/BulkImportModal';
+
 
 export default function TopicCanvas() {
   const { spaceSlug, subjectSlug, topicSlug } = useParams();
@@ -36,7 +36,7 @@ export default function TopicCanvas() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
   const [editingBlock, setEditingBlock] = useState<ContentBlock | null>(null);
   const [modalType, setModalType] = useState<ContentBlockType>('note');
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
@@ -118,10 +118,7 @@ export default function TopicCanvas() {
   }, [blocks, selectedBlockId]);
 
   const handleAddBlockClick = (type: ContentBlockType | 'bulk') => {
-    if (type === 'bulk') {
-      setIsBulkModalOpen(true);
-      return;
-    }
+    /* if (type === 'bulk') return; // Removed */
     setModalType(type as ContentBlockType);
     setEditingBlock(null);
     setIsModalOpen(true);
@@ -146,27 +143,7 @@ export default function TopicCanvas() {
     }
   };
 
-  const handleBulkSave = async (blocksData: any[]) => {
-    if (!topicSlug) return;
-    
-    // Sanitize and ensure IDs
-    const sanitizedBlocks = blocksData.map(block => ({
-      ...block,
-      options: block.options?.map((opt: any, idx: number) => ({
-        ...opt,
-        id: opt.id || `opt-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`
-      }))
-    }));
 
-    try {
-       await Promise.all(sanitizedBlocks.map(data => 
-         addBlock(topicSlug, 'single_select_mcq', data)
-       ));
-    } catch (err) {
-      console.error('Error saving bulk blocks', err);
-      throw err; // Modal handles alert
-    }
-  };
 
   const handleDeleteBlock = async (id: string) => {
     if (!confirm('Delete this block?')) return;
@@ -187,7 +164,7 @@ export default function TopicCanvas() {
     { type: 'note', label: 'Note' },
     { type: 'single_select_mcq', label: 'Single Choice' },
     { type: 'multi_select_mcq', label: 'Multi Choice' },
-    { type: 'descriptive', label: 'Question' },
+    { type: 'fill_in_the_blank', label: 'Fill in the Blank' },
   ];
 
   const handleLoadMore = () => {
@@ -233,11 +210,7 @@ export default function TopicCanvas() {
         initialData={editingBlock || undefined}
       />
 
-      <BulkImportModal 
-        isOpen={isBulkModalOpen}
-        onClose={() => setIsBulkModalOpen(false)}
-        onSave={handleBulkSave}
-      />
+
       
       {/* Filter Modal */}
       <Modal

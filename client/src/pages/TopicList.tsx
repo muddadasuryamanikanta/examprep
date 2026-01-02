@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
+import { PromptService } from '../services/PromptService';
 import { type Topic } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
 import { useTakeTest } from '../hooks/useTakeTest';
@@ -147,7 +148,7 @@ export default function TopicList() {
       setIsTakeTestModalOpen(false);
     } catch (err: any) {
       console.error('Failed to create test:', err);
-      alert(err.response?.data?.message || "Failed to create test. Maybe no questions available?");
+      PromptService.error(err.response?.data?.message || "Failed to create test. Maybe no questions available?");
     } finally {
       setIsCreatingTest(false);
     }
