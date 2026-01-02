@@ -13,6 +13,7 @@ interface TestState {
   // For createTest, we might pass config or topic selections
   createTest: (payload: Record<string, unknown>) => Promise<Test>; 
   submitTest: (id: string, payload: { answers: Record<string, unknown>; warnings: unknown[]; timeSpent: Record<string, number> }) => Promise<void>;
+  saveProgress: (id: string, payload: { answers: Record<string, unknown>; warnings: unknown[]; timeSpent: Record<string, number> }) => Promise<void>;
   checkAvailability: (topicIds: string[]) => Promise<Record<string, number>>;
   setTest: (test: Test | null) => void;
 }
@@ -81,6 +82,21 @@ export const useTestStore = create<TestState>((set, get) => ({
       set({ error: 'Failed to submit test', isLoading: false });
       throw error;
     }
+  },
+
+  saveProgress: async (id, payload) => {
+      // Don't set global loading state to avoid full screen spinner, or handle UI gracefully
+      // But for now, maybe small loading indicator. 
+      // If we pause, we are exiting, so maybe loading is fine.
+      set({ isLoading: true, error: null });
+      try {
+          await api.post(`/tests/${id}/progress`, payload);
+          set({ isLoading: false });
+      } catch (error) {
+          console.error('Save progress error:', error);
+          set({ error: 'Failed to save progress', isLoading: false });
+          throw error;
+      }
   },
 
   checkAvailability: async (topicIds) => {

@@ -5,9 +5,10 @@ interface TestCompletedProps {
     score: number;
     totalMarks: number;
     onReturn: () => void;
+    onReview: () => void;
 }
 
-export function TestCompleted({ score, totalMarks, onReturn }: TestCompletedProps) {
+export function TestCompleted({ score, totalMarks, onReturn, onReview }: TestCompletedProps) {
     return (
         <div className="container mx-auto p-4 md:p-8 flex items-center justify-center min-h-screen">
              <div className="max-w-xl w-full bg-card border rounded-2xl p-12 text-center space-y-8 shadow-xl">
@@ -29,7 +30,10 @@ export function TestCompleted({ score, totalMarks, onReturn }: TestCompletedProp
                      </div>
                  </div>
                  
-                 <div className="pt-2">
+                 <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+                     <Button onClick={onReview} variant="outline" className="min-w-[200px] h-11 gap-2">
+                        Review Answers
+                     </Button>
                      <Button onClick={onReturn} className="min-w-[200px] h-11 gap-2">
                         <Home className="w-4 h-4" />
                         Return to Dashboard

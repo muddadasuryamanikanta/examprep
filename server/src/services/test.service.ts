@@ -277,6 +277,41 @@ export class TestService {
 
     return await test.save();
   }
+
+  /**
+   * Update test progress without submitting (for pause/resume)
+   */
+  async updateProgress(testId: string, userId: string, answers: Record<string, any>, warnings: any[], timeSpent?: Record<string, number>): Promise<ITest> {
+    const test = await Test.findOne({ _id: testId, userId });
+    if (!test) throw new Error('Test not found');
+
+    if (test.status === TestStatus.COMPLETED) {
+      throw new Error('Cannot update progress of a completed test');
+    }
+
+    // Process answers and time spent
+    test.questions.forEach((q: any) => {
+      const qId = q.blockId.toString();
+      
+      // Update answer if provided
+      if (answers && answers[qId] !== undefined) {
+         q.userAnswer = answers[qId];
+      }
+
+      // Update time spent if provided
+      if (timeSpent && timeSpent[qId] !== undefined) {
+        q.timeSpent = Number(timeSpent[qId]);
+      }
+    });
+
+    // Update warnings
+    if (warnings && Array.isArray(warnings)) {
+      test.warnings = warnings;
+    }
+    
+    // Status stays IN_PROGRESS
+    return await test.save();
+  }
 }
 
 export default new TestService();

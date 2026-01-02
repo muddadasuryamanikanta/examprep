@@ -18,6 +18,8 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-primary-foreground: var(--primary-foreground);
+  --color-mark: var(--mark);
+  --color-mark-foreground: var(--mark-foreground);
 
   /* Block Colors */
   --color-block-note-bg: var(--block-note-bg);
@@ -73,6 +75,11 @@
 
   --popover: #ffffff;
   --popover-foreground: #1e1b4b;
+
+  --mark: #f3e8ff;
+  /* purple-100 */
+  --mark-foreground: #6b21a8;
+  /* purple-800 */
 
   /* Block Type Colors (Light Mode) */
   --block-note-bg: #ecfdf5;
@@ -133,6 +140,11 @@
 
   --popover: #0f172a;
   --popover-foreground: #f8fafc;
+
+  --mark: #581c87;
+  /* purple-900 */
+  --mark-foreground: #f3e8ff;
+  /* purple-100 */
 
   /* Block Type Colors (Dark Mode) */
   --block-note-bg: #064e3b;

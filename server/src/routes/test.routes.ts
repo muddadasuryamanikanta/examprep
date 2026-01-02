@@ -11,5 +11,6 @@ router.post('/', testController.createTest);
 router.get('/', testController.getTests);
 router.get('/:id', testController.getTestById);
 router.post('/:id/submit', testController.submitTest);
+router.post('/:id/progress', testController.saveProgress);
 
 export default router;

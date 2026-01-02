@@ -93,6 +93,9 @@ export interface TestQuestion {
   blockId: string;
   blockSnapshot: ContentBlock;
   userAnswer?: unknown;
+  isCorrect?: boolean;
+  marksObtained?: number;
+  timeSpent?: number;
 }
 
 export interface Test extends BaseEntity {

@@ -2,7 +2,7 @@ import { User } from 'lucide-react';
 import { Button } from '../common/Button';
 import { cn } from '../../lib/utils';
 
-export type QuestionStatus = 'answered' | 'not_answered' | 'marked' | 'marked_answered' | 'not_visited';
+export type QuestionStatus = 'answered' | 'not_answered' | 'marked' | 'marked_answered' | 'not_visited' | 'correct' | 'incorrect';
 
 interface TestSidebarProps {
     userName: string;
@@ -13,6 +13,7 @@ interface TestSidebarProps {
     visitedQuestions: Set<number>;
     onQuestionChange: (index: number) => void;
     onSubmit: () => void;
+    isReview?: boolean;
 }
 
 export function TestSidebar({
@@ -23,10 +24,16 @@ export function TestSidebar({
     markedForReview,
     visitedQuestions,
     onQuestionChange,
-    onSubmit
+    onSubmit,
+    isReview = false
 }: TestSidebarProps) {
     
-    const getQuestionStatus = (idx: number, blockId: string): QuestionStatus => {
+    const getQuestionStatus = (idx: number, blockId: string, question: any): QuestionStatus => {
+        if (isReview) {
+            if (question.isCorrect) return 'correct';
+            if (question.isCorrect === false) return 'incorrect';
+        }
+
         const isAnswered = answers[blockId] !== undefined && answers[blockId] !== null && (Array.isArray(answers[blockId]) ? (answers[blockId] as any[]).length > 0 : answers[blockId] !== '');
         const isMarked = markedForReview.has(idx);
         const isVisited = visitedQuestions.has(idx);
@@ -40,26 +47,31 @@ export function TestSidebar({
 
     const getStatusColor = (status: QuestionStatus) => {
         switch (status) {
+            case 'correct': return 'bg-success text-success-foreground border-success hover:bg-success/90';
+            case 'incorrect': return 'bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90';
             case 'answered': return 'bg-success text-success-foreground border-success hover:bg-success/90';
-            case 'not_answered': return 'bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90';
+            case 'not_answered': return 'bg-destructive/20 text-destructive border-destructive/20 hover:bg-destructive/30';
             case 'marked': return 'bg-mark text-mark-foreground border-mark hover:bg-mark/90';
             case 'marked_answered': return 'bg-mark text-mark-foreground border-mark relative'; 
             default: return 'bg-background text-foreground border-border hover:bg-secondary';
         }
     };
 
-    // Calculate counts
     const counts = {
         answered: 0,
         notAnswered: 0,
         notVisited: 0,
         marked: 0,
-        markedAnswered: 0
+        markedAnswered: 0,
+        correct: 0,
+        incorrect: 0
     };
     
     questions.forEach((q, idx) => {
-        const s = getQuestionStatus(idx, q.blockId);
-        if (s === 'answered') counts.answered++;
+        const s = getQuestionStatus(idx, q.blockId, q);
+        if (s === 'correct') counts.correct++;
+        else if (s === 'incorrect') counts.incorrect++;
+        else if (s === 'answered') counts.answered++;
         else if (s === 'not_answered') counts.notAnswered++;
         else if (s === 'marked') counts.marked++;
         else if (s === 'marked_answered') counts.markedAnswered++;
@@ -67,7 +79,7 @@ export function TestSidebar({
     });
 
     return (
-        <div className="w-[320px] bg-card border-l flex flex-col shrink-0 h-full shadow-xl z-10">
+        <div className="w-[320px] bg-popover border-l flex flex-col shrink-0 h-full shadow-xl z-10">
             {/* User Profile */}
             <div className="p-4 flex items-center gap-3 border-b bg-muted/30">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
@@ -81,17 +93,27 @@ export function TestSidebar({
 
             {/* Legend - Grid Layout */}
             <div className="p-4 grid grid-cols-2 gap-y-3 gap-x-2 text-[10px] border-b bg-background/50">
-                <LegendItem count={counts.answered} label="Answered" color="bg-success text-success-foreground" />
-                <LegendItem count={counts.notAnswered} label="Not Answered" color="bg-destructive text-destructive-foreground" />
-                <LegendItem count={counts.notVisited} label="Not Visited" color="bg-background border border-border text-foreground" />
-                <LegendItem count={counts.marked} label="Marked" color="bg-mark text-mark-foreground" />
-                <div className="col-span-2 flex items-center gap-1.5 opacity-80">
-                     <div className="w-5 h-5 rounded-md flex items-center justify-center bg-mark text-mark-foreground text-[10px] font-bold relative border border-border/50">
-                        <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-success rounded-full border border-white"></div>
-                        {counts.markedAnswered}
-                     </div> 
-                     <span className="text-muted-foreground font-medium">Marked & Answered</span>
-                </div>
+                {isReview ? (
+                    <>
+                        <LegendItem count={counts.correct} label="Correct" color="bg-success text-success-foreground" />
+                        <LegendItem count={counts.incorrect} label="Incorrect" color="bg-destructive text-destructive-foreground" />
+                        <LegendItem count={questions.length - (counts.correct + counts.incorrect)} label="Ungraded" color="bg-background border border-border text-foreground" />
+                    </>
+                ) : (
+                    <>
+                        <LegendItem count={counts.answered} label="Answered" color="bg-success text-success-foreground" />
+                        <LegendItem count={counts.notAnswered} label="Not Answered" color="bg-destructive/10 text-destructive border border-destructive/20" />
+                        <LegendItem count={counts.notVisited} label="Not Visited" color="bg-background border border-border text-foreground" />
+                        <LegendItem count={counts.marked} label="Marked" color="bg-mark text-mark-foreground" />
+                        <div className="col-span-2 flex items-center gap-1.5 opacity-80">
+                             <div className="w-5 h-5 rounded-md flex items-center justify-center bg-mark text-mark-foreground text-[10px] font-bold relative border border-border/50">
+                                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-success rounded-full border border-white"></div>
+                                {counts.markedAnswered}
+                             </div> 
+                             <span className="text-muted-foreground font-medium">Marked & Answered</span>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Grid */}
@@ -105,7 +127,7 @@ export function TestSidebar({
                 
                 <div className="grid grid-cols-5 gap-2">
                     {questions.map((q, idx) => {
-                        const status = getQuestionStatus(idx, q.blockId);
+                        const status = getQuestionStatus(idx, q.blockId, q);
                         const colorClass = getStatusColor(status);
                         
                         return (
@@ -133,10 +155,14 @@ export function TestSidebar({
             {/* Bottom Actions */}
             <div className="p-4 border-t bg-muted/30 space-y-3">
                  <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md py-6 text-base" 
+                    variant={isReview ? "secondary" : "primary"}
+                    className={cn(
+                        "w-full font-semibold shadow-md py-6 text-base",
+                        !isReview && "bg-primary hover:bg-primary/90 text-primary-foreground"
+                    )}
                     onClick={onSubmit}
                  >
-                    Submit Test
+                    {isReview ? "Exit Review" : "Submit Test"}
                  </Button>
             </div>
         </div>

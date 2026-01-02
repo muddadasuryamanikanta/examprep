@@ -89,3 +89,25 @@ export const submitTest = async (req: Request, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const saveProgress = async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any)._id;
+    const { answers, warnings, timeSpent } = req.body;
+    
+    const id = req.params.id;
+    if (!id) {
+        return res.status(400).json({ message: 'Test ID is required' });
+    }
+    
+    // Validate ObjectId
+    if (!mongoose.isValidObjectId(id)) {
+         return res.status(400).json({ message: 'Invalid Test ID format' });
+    }
+
+    const test = await TestService.updateProgress(id, userId, answers, warnings, timeSpent);
+    res.json(test);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

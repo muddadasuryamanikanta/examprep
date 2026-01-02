@@ -15,7 +15,7 @@ import { TestCompleted } from '../components/test-screen/TestCompleted';
 export default function TestScreen() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { currentTest: test, isLoading: loading, fetchTest, submitTest } = useTestStore();
+    const { currentTest: test, isLoading: loading, fetchTest, submitTest, saveProgress } = useTestStore();
     const { user } = useAuthStore();
     
     // Local state
@@ -23,6 +23,7 @@ export default function TestScreen() {
     const [answers, setAnswers] = useState<Record<string, unknown>>({});
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [isReviewMode, setIsReviewMode] = useState(false);
 
     // Status tracking
     const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set([0]));
@@ -55,11 +56,24 @@ export default function TestScreen() {
              if (test.warnings && test.warnings.length > 0) {
                  setFocusWarnings(test.warnings.map(w => ({ ...w, timestamp: new Date(w.timestamp) })));
              }
+
+             // Initialize question times if available (e.g. for review mode)
+             const times: Record<string, number> = {};
+             test.questions.forEach(q => {
+                 if (q.timeSpent !== undefined) {
+                     times[q.blockId] = q.timeSpent;
+                 }
+             });
+             if (Object.keys(times).length > 0) {
+                 setQuestionTimes(times);
+             }
         }
     }, [test, id]);
 
     // Track time spent per question
     useEffect(() => {
+        if (isReviewMode || test?.status === 'COMPLETED') return;
+
         startTimeRef.current = Date.now();
         
         return () => {
@@ -74,7 +88,7 @@ export default function TestScreen() {
                 }));
             }
         };
-    }, [currentQuestionIndex, test]);
+    }, [currentQuestionIndex, test, isReviewMode]);
 
 
     // Navigation Helper
@@ -83,19 +97,23 @@ export default function TestScreen() {
         setCurrentQuestionIndex(index);
     }, []);
 
+    const captureCurrentTime = useCallback(() => {
+         const now = Date.now();
+         const duration = (now - startTimeRef.current) / 1000;
+         const currentBlockId = test?.questions[currentQuestionIndex]?.blockId;
+         
+         const finalTimes = { ...questionTimes };
+         if (currentBlockId) {
+              finalTimes[currentBlockId] = (finalTimes[currentBlockId] || 0) + duration;
+         }
+         return finalTimes;
+    }, [test, currentQuestionIndex, questionTimes]);
+
     const handleSubmitTest = useCallback(async (finalWarnings = focusWarnings) => {
         if (submitting || !id) return;
         setSubmitting(true);
         
-        // Capture meaningful time for the very last active moment
-        const now = Date.now();
-        const duration = (now - startTimeRef.current) / 1000;
-        const currentBlockId = test?.questions[currentQuestionIndex]?.blockId;
-        
-        const finalTimes = { ...questionTimes };
-        if (currentBlockId) {
-             finalTimes[currentBlockId] = (finalTimes[currentBlockId] || 0) + duration;
-        }
+        const finalTimes = captureCurrentTime();
 
         try {
             await submitTest(id, {
@@ -108,10 +126,39 @@ export default function TestScreen() {
             setSubmitting(false);
             alert("Failed to submit test. Please try again.");
         }
-    }, [submitting, id, focusWarnings, answers, submitTest, questionTimes, currentQuestionIndex, test]);
+    }, [submitting, id, focusWarnings, answers, submitTest, captureCurrentTime]);
+
+    const handlePause = useCallback(async () => {
+        if (submitting || !id) return;
+        
+        // Confirm pause
+        if (!window.confirm("Are you sure you want to pause? Your progress will be saved and you can resume later.")) {
+            return;
+        }
+
+        setSubmitting(true); // Prevent other actions
+        const finalTimes = captureCurrentTime();
+        
+        try {
+            await saveProgress(id, {
+                answers,
+                warnings: focusWarnings,
+                timeSpent: finalTimes
+            });
+            // Exit Fullscreen if active
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            }
+            navigate('/tests');
+        } catch (err) {
+            console.error(err);
+            setSubmitting(false);
+            alert("Failed to save progress.");
+        }
+    }, [submitting, id, answers, focusWarnings, saveProgress, captureCurrentTime, navigate]);
 
     const registerWarning = useCallback((reason: string) => {
-        if (submitting) return; 
+        if (submitting || isReviewMode || test?.status === 'COMPLETED') return; 
         
         const now = new Date();
         setFocusWarnings(prev => {
@@ -129,7 +176,7 @@ export default function TestScreen() {
             
             return newWarnings;
         });
-    }, [submitting, handleSubmitTest]);
+    }, [submitting, handleSubmitTest, isReviewMode, test?.status]);
 
     const enterFullscreen = useCallback(async () => {
         try {
@@ -143,7 +190,7 @@ export default function TestScreen() {
 
     // Full screen enforcement & Focus tracking
     useEffect(() => {
-        if (!test || test.status === 'COMPLETED') return;
+        if (!test || test.status === 'COMPLETED' || isReviewMode) return;
 
         const handleFocusLoss = () => {
              if (document.visibilityState === 'hidden' || !document.hasFocus()) {
@@ -167,11 +214,11 @@ export default function TestScreen() {
             document.removeEventListener('visibilitychange', handleFocusLoss);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
-    }, [test, registerWarning]);
+    }, [test, registerWarning, isReviewMode]);
 
     // Timer Logic
     useEffect(() => {
-        if (!test) return;
+        if (!test || isReviewMode) return;
         
         // Ensure we have a valid start time
         const startString = test.startTime || test.createdAt || new Date().toISOString();
@@ -206,14 +253,16 @@ export default function TestScreen() {
         const interval = setInterval(updateTimer, 1000);
         
         return () => clearInterval(interval);
-    }, [test, submitting, handleSubmitTest]);
+    }, [test, submitting, handleSubmitTest, isReviewMode]);
 
 
     const handleAnswerUpdate = (blockId: string, value: unknown) => {
+        if (isReviewMode) return;
         setAnswers(prev => ({ ...prev, [blockId]: value }));
     };
 
     const handleClearResponse = () => {
+        if (isReviewMode) return;
         const currentQuestion = test?.questions[currentQuestionIndex];
         if (!currentQuestion) return;
         const blockId = currentQuestion.blockSnapshot._id;
@@ -223,6 +272,7 @@ export default function TestScreen() {
     };
 
     const handleMarkForReview = () => {
+        if (isReviewMode) return;
         setMarkedForReview(prev => {
             const next = new Set(prev);
             if (next.has(currentQuestionIndex)) next.delete(currentQuestionIndex);
@@ -254,17 +304,18 @@ export default function TestScreen() {
 
     if (!test) return <div className="p-8 text-center bg-background text-foreground">Test not found</div>;
 
-    if (test.status === 'COMPLETED') {
+    if (test.status === 'COMPLETED' && !isReviewMode) {
         return (
             <TestCompleted 
                 score={test.score || 0}
                 totalMarks={test.totalMarks || 0}
                 onReturn={() => navigate('/tests')}
+                onReview={() => setIsReviewMode(true)}
             />
         );
     }
 
-    if (!isFullscreen) {
+    if (!isFullscreen && !isReviewMode) {
         return (
             <FullScreenWarning 
                 onEnterFullscreen={enterFullscreen}
@@ -281,9 +332,11 @@ export default function TestScreen() {
         <div className="flex h-screen w-screen overflow-hidden flex-col bg-background font-sans text-foreground">
            
            <TestHeader 
-                title={`${test.config?.questionCount || test.questions.length} Questions Test`}
+                title={`${isReviewMode ? 'Review Mode - ' : ''}${test.config?.questionCount || test.questions.length} Questions Test`}
                 timeLeft={timeLeft}
                 totalQuestions={test.questions.length}
+                onPause={handlePause}
+                isReview={isReviewMode}
            />
         
            <div className="flex-1 flex overflow-hidden">
@@ -296,6 +349,9 @@ export default function TestScreen() {
                   onClearResponse={handleClearResponse}
                   onSaveAndNext={handleSaveAndNext}
                   isLastQuestion={currentQuestionIndex === test.questions.length - 1}
+                  isReview={isReviewMode}
+                  timeSpent={questionTimes[currentQuestion.blockId] || 0}
+                  isAnswerCorrect={currentQuestion.isCorrect}
               />
         
               <TestSidebar 
@@ -306,7 +362,8 @@ export default function TestScreen() {
                   markedForReview={markedForReview}
                   visitedQuestions={visitedQuestions}
                   onQuestionChange={changeQuestion}
-                  onSubmit={() => handleSubmitTest()}
+                  onSubmit={() => isReviewMode ? navigate('/tests') : handleSubmitTest()}
+                  isReview={isReviewMode}
               />
            </div>
         </div>
