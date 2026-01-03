@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { PromptService } from '../../services/PromptService';
 import type {
   ContentBlockType,
   McqOption,
@@ -51,14 +52,25 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
 
       if (initialData) {
         if (type === 'note') {
-          setContent((initialData as NoteBlock).content || '');
+           setContent((initialData as NoteBlock).content || '');
         } else if (type === 'single_select_mcq' || type === 'multi_select_mcq') {
-          const block = initialData as SingleSelectMcqBlock | MultiSelectMcqBlock;
-          setQuestion(block.question || '');
-          setOptions(block.options || []);
+           const block = initialData as SingleSelectMcqBlock | MultiSelectMcqBlock;
+           setQuestion(block.question || '');
+           setOptions(block.options || []);
         } else if (type === 'fill_in_the_blank') {
-          setQuestion((initialData as FillInTheBlankBlock).question || '');
-          setBlankAnswers((initialData as FillInTheBlankBlock).blankAnswers || []);
+           const blk = initialData as FillInTheBlankBlock;
+           let editableQuestion = blk.question || '';
+           const answers = blk.blankAnswers || [];
+           
+           // Re-hydrate brackets for editing: Replace {{blank}} with [answer] sequentially
+           let answerIndex = 0;
+           while (editableQuestion.includes('{{blank}}') && answerIndex < answers.length) {
+               editableQuestion = editableQuestion.replace('{{blank}}', `[${answers[answerIndex]}]`);
+               answerIndex++;
+           }
+           
+           setQuestion(editableQuestion);
+           setBlankAnswers(answers);
         }
       } else {
         // Reset defaults
@@ -95,7 +107,24 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
         specificData = { question, options };
         break;
       case 'fill_in_the_blank':
-        specificData = { question, blankAnswers };
+        // Parse logic: Extract [answers] and replace with {{blank}}
+        const regex = /\[(.*?)\]/g;
+        const extractedAnswers: string[] = [];
+        const formattedQuestion = question.replace(regex, (_, answer) => {
+           extractedAnswers.push(answer);
+           return '{{blank}}';
+        });
+
+        // Validation
+        if (extractedAnswers.length === 0) {
+            // Error handling could be improved, but for now we just won't save if no blanks
+            // Ideally use a prompt or validation state, but keeping it simple as per request for "neat" code
+            // Actually, let's at least not save broken data.
+             PromptService.alert("Please define at least one blank using [brackets], e.g. 'Roses are [red]'.");
+             return; 
+        }
+
+        specificData = { question: formattedQuestion, blankAnswers: extractedAnswers };
         break;
     }
 
@@ -197,64 +226,64 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
 
         {type === 'fill_in_the_blank' && (
           <div className="space-y-2">
-            <label className="text-sm font-medium">Question</label>
-            <textarea
-              className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Enter question with blanks..."
-            />
-            <div className="text-xs text-muted-foreground">
-              Define blanks in your question text (implementation pending full support).
-            </div>
+             <label className="text-sm font-medium">Question</label>
+             <textarea
+               className="w-full bg-background border border-input rounded-md p-2 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+               value={question}
+               onChange={(e) => setQuestion(e.target.value)}
+               placeholder="Enter question with blanks..."
+             />
+             <div className="text-xs text-muted-foreground">
+               Define blanks using square brackets. E.g., "The capital of France is [Paris]."
+             </div>
           </div>
         )}
 
         {/* Tags Section */}
         <div className="space-y-3 pt-4 border-t border-border">
-          <label className="text-sm font-medium">Tags</label>
-          <div className="flex gap-2">
-            <input
-              className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  if (tagInput.trim()) {
-                    setTags([...tags, tagInput.trim()]);
-                    setTagInput('');
-                  }
-                }
-              }}
-              placeholder="Add a tag..."
-            />
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (tagInput.trim()) {
-                  setTags([...tags, tagInput.trim()]);
-                  setTagInput('');
-                }
-              }}
-              disabled={!tagInput.trim()}
-            >
-              Add
-            </Button>
-          </div>
-
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag, idx) => (
-                <div key={idx} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
-                  <span>#{tag}</span>
-                  <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="ml-1 hover:text-destructive">
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+           <label className="text-sm font-medium">Tags</label>
+           <div className="flex gap-2">
+             <input
+               className="flex-1 bg-background border border-input rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+               value={tagInput}
+               onChange={(e) => setTagInput(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter') {
+                   e.preventDefault();
+                   if (tagInput.trim()) {
+                     setTags([...tags, tagInput.trim()]);
+                     setTagInput('');
+                   }
+                 }
+               }}
+               placeholder="Add a tag..."
+             />
+             <Button 
+               variant="secondary" 
+               onClick={() => {
+                 if (tagInput.trim()) {
+                   setTags([...tags, tagInput.trim()]);
+                   setTagInput('');
+                 }
+               }}
+               disabled={!tagInput.trim()}
+             >
+               Add
+             </Button>
+           </div>
+           
+           {tags.length > 0 && (
+             <div className="flex flex-wrap gap-2">
+               {tags.map((tag, idx) => (
+                 <div key={idx} className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs">
+                   <span>#{tag}</span>
+                   <button onClick={() => setTags(tags.filter((_, i) => i !== idx))} className="ml-1 hover:text-destructive">
+                     <Trash2 className="h-3 w-3" />
+                   </button>
+                 </div>
+               ))}
+             </div>
+           )}
         </div>
 
         {/* Common Fields */}

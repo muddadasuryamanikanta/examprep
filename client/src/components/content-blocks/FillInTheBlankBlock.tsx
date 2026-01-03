@@ -1,151 +1,204 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FillInTheBlankBlock } from '../../types/domain';
-import { Card } from '../common/Card';
-import { BlockFooter } from './BlockFooter';
-import { Button } from '../common/Button';
 import { cn } from '../../lib/utils';
-import { RotateCcw, Eye, Send } from 'lucide-react';
+import { Check, X, Send, RotateCcw, Eye } from 'lucide-react';
+import { Card } from '../common/Card';
+import { Button } from '../common/Button';
+import { BlockFooter } from './BlockFooter';
 
 interface FillInTheBlankBlockProps {
-    block: FillInTheBlankBlock;
-    isTest?: boolean;
-    value?: string[];
-    onChange?: (val: string[]) => void;
-    onSubmit?: () => void;
+  block: FillInTheBlankBlock;
+  isTest?: boolean;
+  value?: string[]; // Array of user answers co-indexed with blanks
+  onChange?: (value: string[]) => void;
+  showCorrectValues?: boolean; // For review mode to just SHOW answers in place
+  compareMode?: boolean; // For review mode to compare user vs correct
+  onSubmit?: () => void;
 }
 
-export function FillInTheBlankBlock({ block, isTest = false, value, onChange, onSubmit }: FillInTheBlankBlockProps) {
-    // block.question contains text with blanks like "The capital of France is ___."
-    // or maybe specific markers. Let's assume standard format or regex.
-    // Ideally, the backend provides the segments. If not, we split by `___` or `{{blank}}`.
-    // Prompt implied we need to handle "text for blanks". 
-    // Let's assume the question text has `___` as placeholders for now.
+export function FillInTheBlankBlock({ 
+  block, 
+  value, 
+  onChange,
+  showCorrectValues = false,
+  compareMode = false,
+  isTest = false,
+  onSubmit
+}: FillInTheBlankBlockProps) {
+  
+  // Unified state (local fallbacks if uncontrolled)
+  const [localValue, setLocalValue] = useState<string[]>([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [visibleHints, setVisibleHints] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
 
-    const [localAnswers, setLocalAnswers] = useState<string[]>([]);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [showAnswer, setShowAnswer] = useState(false);
-    const [visibleHints, setVisibleHints] = useState(0);
-    const [showExplanation, setShowExplanation] = useState(false);
+  // Derive current selection from controlled value if present, else local
+  const formState = value !== undefined ? value : localValue;
 
-    // Parse blanks
-    const parts = block.question.split('___');
-    const numBlanks = parts.length - 1;
+  // Parse the question to find parts and blanks
+  // Format assumed: "The capital of France is {{blank}} and Italy is {{blank}}."
+  // Note: We use a distinctive separator.
+  const parts = useMemo(() => {
+    return block.question.split('{{blank}}');
+  }, [block.question]);
 
-    // Initialize state
-    const currentAnswers = value || localAnswers;
+  const blanksCount = parts.length - 1;
 
-    // Prepare correct answers (assuming block.blankAnswers is ordered array)
-    const correctAnswers = block.blankAnswers || [];
+  const handleInputChange = (index: number, val: string) => {
+    // In test mode, we do not block changes unless enforced elsewhere
+    if (isSubmitted && !isTest) return;
 
-    const handleInputChange = (index: number, val: string) => {
-        if (isSubmitted && !isTest) return;
+    const newValue = [...(formState || [])];
+    // Ensure array is long enough
+    while (newValue.length < blanksCount) newValue.push('');
+    
+    newValue[index] = val;
+    
+    if (onChange) {
+      onChange(newValue);
+    } else {
+      setLocalValue(newValue);
+    }
+  };
 
-        const newAnswers = [...currentAnswers];
-        // Fill up to index if sparse
-        while (newAnswers.length <= index) newAnswers.push('');
+  const handleSubmit = () => {
+    setIsSubmitted(true);
+    if (onSubmit) onSubmit();
+  };
 
-        newAnswers[index] = val;
+  const handleReset = () => {
+    if (onChange) onChange([]);
+    else setLocalValue([]);
+    
+    setIsSubmitted(false);
+    setShowAnswer(false);
+    setVisibleHints(0);
+    setShowExplanation(false);
+  };
 
-        if (onChange) onChange(newAnswers);
-        else setLocalAnswers(newAnswers);
-    };
+  const renderPart = (part: string, index: number) => (
+    <span key={`text-${index}`} className="whitespace-pre-wrap leading-loose">{part}</span>
+  );
 
-    const handleSubmit = () => {
-        setIsSubmitted(true);
-        if (onSubmit) onSubmit(); // Trigger parent submit
-    };
+  const renderBlank = (index: number) => {
+    const userAnswer = formState[index] || '';
+    const correctAnswer = block.blankAnswers?.[index];
+    const isCorrect = userAnswer.toLowerCase().trim() === correctAnswer?.toLowerCase().trim();
 
-    const handleReset = () => {
-        if (onChange) onChange([]);
-        else setLocalAnswers([]);
+    // Determine state for display
+    const shouldShowResult = compareMode || (!isTest && (isSubmitted || showAnswer));
 
-        setIsSubmitted(false);
-        setShowAnswer(false);
-        setVisibleHints(0);
-        setShowExplanation(false);
-    };
+    if (shouldShowResult) {
+      // Comparison / Result View
+      
+      // If purely showing answers (Dashboard/ReadOnly), simplified view
+      if (showCorrectValues && !compareMode && !isSubmitted && !showAnswer) {
+         return (
+           <span key={`blank-${index}`} className="mx-1 px-2 py-0.5 rounded bg-muted font-bold border-b-2 border-primary/20 text-primary inline-block min-w-[3rem] text-center align-baseline">
+              {correctAnswer}
+           </span>
+         );
+      }
 
-    // Helper to check correctness per blank
-    const isCorrect = (index: number) => {
-        const userAns = (currentAnswers[index] || '').trim().toLowerCase();
-        const correctAns = (correctAnswers[index] || '').trim().toLowerCase();
-        return userAns === correctAns;
-    };
+      // Detailed Result View (Practice Check or Review Comparison)
+      let displayClass = "";
+      let icon = null;
 
+       if (showAnswer) {
+          displayClass = "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
+       } else if (isCorrect) {
+          displayClass = "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
+          icon = <Check className="w-3 h-3" />;
+       } else {
+          displayClass = "bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 decoration-wavy decoration-red-400";
+          icon = <X className="w-3 h-3" />;
+       }
+
+      return (
+        <span key={`blank-${index}`} className="relative inline-flex items-center align-middle mx-1">
+             <span className={cn(
+                 "px-2 py-0.5 rounded border text-sm font-medium inline-flex items-center gap-1",
+                 displayClass
+             )}>
+                {showAnswer ? (correctAnswer || "No Answer") : (userAnswer || <span className="italic opacity-50 text-xs text-muted-foreground">Empty</span>)}
+                {icon}
+             </span>
+             
+             {/* Show Correct Answer if Wrong and NOT just "Show Answer" mode (implicitly shown above if we wanted) or if explicit compare */}
+             {!isCorrect && !showAnswer && (
+               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-10 bg-black/80 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap pointer-events-none">
+                 {correctAnswer}
+                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45" />
+               </div>
+             )}
+        </span>
+      );
+    }
+    
+    // Default Input Mode
     return (
-        <Card className={cn("transition-shadow", isTest ? "shadow-none border-0 p-0" : "hover:shadow-md")}>
-            <h3 className="text-lg font-medium mb-4 text-foreground flex items-center">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-2 py-1 rounded-sm mr-2 align-middle border border-border shrink-0">
-                    Fill In Blanks
-                </span>
-                <span className="flex-1">Fill in the missing terms:</span>
-            </h3>
-
-            <div className="text-lg leading-loose mb-6">
-                {parts.map((part, i) => (
-                    <span key={i}>
-                        {part}
-                        {i < numBlanks && (
-                            <span className="inline-block mx-1">
-                                <input
-                                    type="text"
-                                    value={currentAnswers[i] || ''}
-                                    onChange={(e) => handleInputChange(i, e.target.value)}
-                                    disabled={!isTest && (isSubmitted || showAnswer)}
-                                    className={cn(
-                                        "border-b-2 bg-transparent px-1 min-w-[100px] text-center focus:outline-none transition-colors",
-                                        (!isTest && (isSubmitted || showAnswer))
-                                            ? isCorrect(i)
-                                                ? "border-success text-success font-bold"
-                                                : "border-destructive text-destructive font-bold"
-                                            : "border-muted-foreground focus:border-primary"
-                                    )}
-                                    placeholder="..."
-                                />
-                                {(!isTest && (isSubmitted || showAnswer) && !isCorrect(i)) && (
-                                    <span className="text-sm text-success font-medium ml-1">
-                                        ({correctAnswers[i]})
-                                    </span>
-                                )}
-                            </span>
-                        )}
-                    </span>
-                ))}
-            </div>
-
-            {!isTest && (
-                <>
-                    <div className="mt-6 flex flex-wrap items-center gap-3">
-                        {!isSubmitted ? (
-                            <Button onClick={handleSubmit}>
-                                <Send className="w-4 h-4 mr-2" /> Submit
-                            </Button>
-                        ) : (isSubmitted || showAnswer || visibleHints > 0 || showExplanation) ? (
-                            <Button variant="outline" onClick={handleReset}>
-                                <RotateCcw className="w-4 h-4 mr-2" /> Reset
-                            </Button>
-                        ) : null}
-
-                        <Button
-                            variant="ghost"
-                            onClick={() => setShowAnswer(!showAnswer)}
-                            className={cn("text-muted-foreground", showAnswer && "text-primary")}
-                        >
-                            <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}
-                        </Button>
-                    </div>
-
-                    <BlockFooter
-                        explanation={block.explanation}
-                        notes={block.notes}
-                        hints={block.hints}
-                        visibleHints={visibleHints}
-                        onNextHint={() => setVisibleHints(prev => prev + 1)}
-                        showExplanation={showExplanation}
-                        onToggleExplanation={() => setShowExplanation(!showExplanation)}
-                    />
-                </>
-            )}
-        </Card>
+      <input
+        key={`input-${index}`}
+        type="text"
+        className="mx-1 bg-background border-b-2 border-input focus:border-primary focus:outline-none px-1 py-0.5 w-32 text-center transition-all bg-muted/20 focus:bg-background rounded-t hover:bg-muted/30"
+        value={userAnswer}
+        onChange={(e) => handleInputChange(index, e.target.value)}
+        placeholder="..."
+        autoComplete="off"
+        disabled={isSubmitted && !isTest}
+      />
     );
+  };
+
+  const hasAnyInput = formState?.length > 0 && formState.some(s => s.trim().length > 0);
+
+  return (
+    <Card className={cn("transition-shadow", isTest ? "shadow-none border-0 p-0" : "hover:shadow-md")}>
+      <div className="text-lg leading-loose">
+        {parts.map((part, index) => (
+          <span key={index}>
+            {renderPart(part, index)}
+            {index < blanksCount && renderBlank(index)}
+          </span>
+        ))}
+      </div>
+
+      {!isTest && (
+         <>
+           <div className="mt-6 flex flex-wrap items-center gap-3">
+               {!isSubmitted && (
+               <Button onClick={handleSubmit} disabled={!hasAnyInput}>
+                   <Send className="w-4 h-4 mr-2" /> Submit
+               </Button>
+               )}
+               
+               {(isSubmitted || showAnswer || visibleHints > 0 || showExplanation) && (
+               <Button variant="outline" onClick={handleReset}>
+                   <RotateCcw className="w-4 h-4 mr-2" /> Reset
+               </Button>
+               )}
+
+               <Button 
+               variant="ghost" 
+               onClick={() => setShowAnswer(!showAnswer)}
+               className={cn("text-muted-foreground", showAnswer && "text-primary")}
+               >
+               <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}
+               </Button>
+           </div>
+
+           <BlockFooter 
+               explanation={block.explanation} 
+               notes={block.notes} 
+               hints={block.hints} 
+               visibleHints={visibleHints}
+               onNextHint={() => setVisibleHints(prev => prev + 1)}
+               showExplanation={showExplanation}
+               onToggleExplanation={() => setShowExplanation(!showExplanation)}
+           />
+         </>
+      )}
+    </Card>
+  );
 }

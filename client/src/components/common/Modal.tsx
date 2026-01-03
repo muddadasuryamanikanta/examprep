@@ -10,14 +10,15 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  hideCloseButton?: boolean;
 }
 
-export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, footer, hideCloseButton }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !hideCloseButton) onClose();
     };
 
     if (isOpen) {
@@ -29,7 +30,7 @@ export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) 
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, hideCloseButton]);
 
   if (!isOpen) return null;
 
@@ -45,9 +46,11 @@ export function Modal({ isOpen, onClose, title, children, footer }: ModalProps) 
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold leading-none tracking-tight">{title}</h2>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
-            <X className="h-4 w-4" />
-          </Button>
+          {!hideCloseButton && (
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         <div className="mb-6">

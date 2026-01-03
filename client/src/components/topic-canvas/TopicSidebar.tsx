@@ -92,7 +92,7 @@ export function TopicSidebar({
       title = block.question;
       preview = 'Multiple Choice Question';
     } else if (block.kind === 'fill_in_the_blank') {
-      title = block.question;
+      title = block.question.replace(/{{blank}}/g, '____');
       preview = 'Fill in the Blank';
     } else {
         title = 'Unknown Block';

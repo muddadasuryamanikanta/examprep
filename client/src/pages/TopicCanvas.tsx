@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { PromptService } from '../services/PromptService';
 import { useParams } from 'react-router-dom';
 import { type ContentBlock, type ContentBlockType } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
@@ -146,15 +147,23 @@ export default function TopicCanvas() {
 
 
   const handleDeleteBlock = async (id: string) => {
-    if (!confirm('Delete this block?')) return;
-    try {
-      await deleteBlock(id);
-      if (selectedBlockId === id) {
-        setSelectedBlockId(null); 
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    PromptService.confirm(
+      'Are you sure you want to delete this block? This cannot be undone.',
+      async () => {
+        try {
+          await deleteBlock(id);
+          if (selectedBlockId === id) {
+            setSelectedBlockId(null); 
+          }
+        } catch (err) {
+          console.error(err);
+          PromptService.error("Failed to delete block.");
+        }
+      },
+      "Delete Block",
+      "Delete",
+      "Cancel"
+    );
   };
 
   const selectedBlock = blocks.find(b => b._id === selectedBlockId);

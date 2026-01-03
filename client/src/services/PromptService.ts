@@ -83,4 +83,35 @@ export class PromptService {
             ]
         });
     }
+
+    /**
+     * Show a confirmation dialog with Confirm/Cancel buttons
+     */
+    static confirm(
+        message: string, 
+        onConfirm: () => void, 
+        title: string = 'Confirm',
+        confirmLabel: string = 'Confirm',
+        cancelLabel: string = 'Cancel'
+    ) {
+        this.show({
+            title,
+            message,
+            actions: [
+                { 
+                    label: cancelLabel, 
+                    onClick: () => this.close(), 
+                    variant: 'ghost' 
+                },
+                { 
+                    label: confirmLabel, 
+                    onClick: () => {
+                        this.close();
+                        onConfirm();
+                    }, 
+                    variant: 'primary' 
+                }
+            ]
+        });
+    }
 }

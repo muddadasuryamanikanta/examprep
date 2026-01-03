@@ -132,30 +132,33 @@ export default function TestScreen() {
     const handlePause = useCallback(async () => {
         if (submitting || !id) return;
 
-        // Confirm pause
-        if (!window.confirm("Are you sure you want to pause? Your progress will be saved and you can resume later.")) {
-            return;
-        }
+        PromptService.confirm(
+            "Are you sure you want to pause? Your progress will be saved and you can resume later.",
+            async () => {
+                setSubmitting(true); // Prevent other actions
+                const finalTimes = captureCurrentTime();
 
-        setSubmitting(true); // Prevent other actions
-        const finalTimes = captureCurrentTime();
-
-        try {
-            await saveProgress(id, {
-                answers,
-                warnings: focusWarnings,
-                timeSpent: finalTimes
-            });
-            // Exit Fullscreen if active
-            if (document.fullscreenElement) {
-                await document.exitFullscreen();
-            }
-            navigate('/tests');
-        } catch (err) {
-            console.error(err);
-            setSubmitting(false);
-            PromptService.error("Failed to save progress.");
-        }
+                try {
+                    await saveProgress(id, {
+                        answers,
+                        warnings: focusWarnings,
+                        timeSpent: finalTimes
+                    });
+                    // Exit Fullscreen if active
+                    if (document.fullscreenElement) {
+                        await document.exitFullscreen();
+                    }
+                    navigate('/tests');
+                } catch (err) {
+                    console.error(err);
+                    setSubmitting(false);
+                    PromptService.error("Failed to save progress.");
+                }
+            },
+            "Pause Test",
+            "Pause & Save",
+            "Resume Test"
+        );
     }, [submitting, id, answers, focusWarnings, saveProgress, captureCurrentTime, navigate]);
 
     const registerWarning = useCallback((reason: string) => {

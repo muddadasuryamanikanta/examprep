@@ -71,6 +71,7 @@ export function QuestionArea({
                             isTest={true}
                             value={userAnswer}
                             onChange={onAnswerChange}
+                            compareMode={isReview}
                         />
                     </div>
 
@@ -83,7 +84,20 @@ export function QuestionArea({
                                     <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Correct Answer</h4>
                                     <div className="font-medium text-sm">
                                         {questionBlock.kind === 'fill_in_the_blank' ? (
-                                            <div className="text-muted-foreground">Fill in the blank answers not yet supported in review.</div>
+                                            <div className="p-3 bg-background rounded border">
+                                                <ContentBlockDisplay 
+                                                    block={questionBlock as any} 
+                                                    isTest={true} 
+                                                    value={userAnswer as string[]} 
+                                                    compareMode={true}
+                                                    />
+                                                <div className="mt-2 text-muted-foreground text-xs uppercase tracking-wide font-bold">Answers:</div>
+                                                <ol className="list-decimal pl-5 space-y-1 mt-1">
+                                                    {questionBlock.blankAnswers?.map((ans: string, i: number) => (
+                                                        <li key={i}>{ans}</li>
+                                                    ))}
+                                                </ol>
+                                            </div>
                                         ) : (
                                             <ul className="list-disc pl-5 space-y-1">
                                                 {questionBlock.options?.filter((o: any) => o.isCorrect).map((o: any) => (

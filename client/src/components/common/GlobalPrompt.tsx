@@ -45,7 +45,8 @@ export function GlobalPrompt() {
     return (
         <Modal
             isOpen={!!options}
-            onClose={handleClose} // Clicking 'X' or backdrop closes it visually, though actions might handle logic
+            onClose={handleClose} 
+            hideCloseButton={true}
             title={options.title || 'Notification'}
             footer={<Footer />}
         >
