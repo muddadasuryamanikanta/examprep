@@ -162,4 +162,26 @@ export class ContentController {
       res.status(500).json({ message: 'Error deleting content block', error });
     }
   }
+  static async bulkCreate(req: Request, res: Response): Promise<void> {
+    try {
+      const { topicId, blocks } = req.body;
+      
+      if (!topicId || !Array.isArray(blocks)) {
+        res.status(400).json({ message: 'Invalid payload: topicId and blocks array required' });
+        return;
+      }
+      
+      // Basic validation of blocks items could be done here or relied on service/mongoose
+      const user = req.user as IUser;
+      const createdBlocks = await ContentService.createMany((user._id as any).toString(), topicId, blocks);
+      
+      res.status(201).json(createdBlocks);
+    } catch (error: any) {
+      if (error.message === 'Access denied to topic') {
+        res.status(403).json({ message: 'Access denied to topic' });
+        return;
+      }
+      res.status(500).json({ message: 'Error creating content blocks', error });
+    }
+  }
 }

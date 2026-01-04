@@ -177,8 +177,18 @@ export function TopicSidebar({
                   transition={{ duration: 0.15, ease: "easeOut" }}
                   className="absolute right-0 top-full mt-2 w-48 bg-popover text-popover-foreground border rounded-xl shadow-xl z-50 overflow-hidden"
                 >
-                  <div className="p-1.5 flex flex-col">
-                    {blockTypes.map(t => (
+                    <div className="p-1.5 flex flex-col">
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-primary"
+                        onClick={() => {
+                          onAddBlock('bulk' as any);
+                          setIsAddMenuOpen(false);
+                        }}
+                      >
+                         Import Excel
+                      </button>
+                      <div className="my-1 border-t" />
+                      {blockTypes.map(t => (
                       <button
                         key={t.type}
                         className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"

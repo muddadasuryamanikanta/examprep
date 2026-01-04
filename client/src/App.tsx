@@ -16,6 +16,7 @@ import TestScreen from './pages/TestScreen';
 import AnkiBoard from './pages/AnkiBoard';
 import { Navbar } from './components/common/Navbar';
 import { GlobalPrompt } from './components/common/GlobalPrompt';
+import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 
 const TitleUpdater = () => {
@@ -120,6 +121,7 @@ function App() {
     <BrowserRouter>
       <TitleUpdater />
       <GlobalPrompt />
+      <Toaster position="bottom-right" />
       <AppContent />
     </BrowserRouter>
   );

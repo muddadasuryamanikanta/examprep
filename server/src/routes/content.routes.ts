@@ -33,6 +33,7 @@ router.delete('/topics/:id', TopicController.delete);
 
 // --- CONTENT BLOCKS ---
 router.get('/topics/:topicId/content', ContentController.getAll);
+router.post('/content/bulk', ContentController.bulkCreate);
 router.post('/content', ContentController.create);
 router.put('/content/:id', ContentController.update);
 router.delete('/content/:id', ContentController.delete);

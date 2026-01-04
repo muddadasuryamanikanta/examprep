@@ -237,6 +237,19 @@ export const useContentStore = create<ContentState>((set, get) => ({
     }
   },
 
+  bulkCreateBlocks: async (topicId: string, blocks: Partial<ContentBlock>[]) => {
+     try {
+       const res = await api.post<ContentBlock[]>('/content/bulk', { topicId, blocks });
+       const newBlocks = res.data;
+       
+       // Append to local state
+       set(state => ({ blocks: [...state.blocks, ...newBlocks] }));
+     } catch (error) {
+       console.error('Bulk create error:', error);
+       throw error;
+     }
+  },
+
   updateBlock: async (id, updates) => {
     // Optimistic
     const previousBlocks = get().blocks;

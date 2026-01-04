@@ -10,6 +10,7 @@ import { ContentBlockModal } from '../components/content-blocks/ContentBlockModa
 import { TopicSidebar } from '../components/topic-canvas/TopicSidebar';
 import { TopicContentArea } from '../components/topic-canvas/TopicContentArea';
 import { MultiSelect } from '../components/common/MultiSelect';
+import { BulkUploadModal } from '../components/content-blocks/BulkUploadModal';
 
 
 export default function TopicCanvas() {
@@ -37,6 +38,8 @@ export default function TopicCanvas() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
 
   const [editingBlock, setEditingBlock] = useState<ContentBlock | null>(null);
   const [modalType, setModalType] = useState<ContentBlockType>('note');
@@ -119,11 +122,15 @@ export default function TopicCanvas() {
   }, [blocks, selectedBlockId]);
 
   const handleAddBlockClick = (type: ContentBlockType | 'bulk') => {
-    /* if (type === 'bulk') return; // Removed */
+    if (type === 'bulk') {
+      setIsBulkModalOpen(true);
+      return;
+    }
     setModalType(type as ContentBlockType);
     setEditingBlock(null);
     setIsModalOpen(true);
   };
+
 
   const handleEditBlockClick = (block: ContentBlock) => {
     setModalType(block.kind);
@@ -144,6 +151,12 @@ export default function TopicCanvas() {
     }
   };
 
+  const { bulkCreateBlocks } = useContentStore();
+
+  const handleBulkUpload = async (blocks: Partial<ContentBlock>[]) => {
+    if (!currentTopic) return;
+    await bulkCreateBlocks(currentTopic._id, blocks);
+  };
 
 
   const handleDeleteBlock = async (id: string) => {
@@ -217,6 +230,13 @@ export default function TopicCanvas() {
         onSave={handleSaveBlock}
         type={modalType}
         initialData={editingBlock || undefined}
+      />
+
+      <BulkUploadModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        onUpload={handleBulkUpload}
+        topicId={currentTopic?._id || ''}
       />
 
 

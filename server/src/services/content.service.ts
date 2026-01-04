@@ -153,4 +153,44 @@ export class ContentService {
 
     return deletedBlock;
   }
+  static async createMany(userId: string, topicId: string, blocksData: Partial<IContentBlock>[]): Promise<IContentBlock[]> {
+    if (!blocksData || blocksData.length === 0) return [];
+
+    // 1. Check Access
+    const hasAccess = await TopicService.checkOwnership(userId, topicId);
+    if (!hasAccess) {
+      throw new Error('Access denied to topic');
+    }
+
+    // 2. Get current position count to append
+    const currentCount = await ContentBlock.countDocuments({ topicId: topicId });
+
+    // 3. Prepare blocks
+    let newQuestionCount = 0;
+    const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive'];
+
+    const blocksToInsert = blocksData.map((data, index) => {
+      if (data.kind && questionKinds.includes(data.kind)) {
+        newQuestionCount++;
+      }
+      return {
+        ...data,
+        topicId: topicId,
+        position: currentCount + index,
+      };
+    });
+
+    // 4. Bulk Insert
+    const insertedBlocks = await ContentBlock.insertMany(blocksToInsert);
+
+    // 5. Update Subject Count
+    if (newQuestionCount > 0) {
+      const topic = await TopicService.findOne(userId, topicId);
+      if (topic) {
+        await Subject.findByIdAndUpdate(topic.subjectId, { $inc: { questionCount: newQuestionCount } });
+      }
+    }
+
+    return insertedBlocks as IContentBlock[];
+  }
 }
