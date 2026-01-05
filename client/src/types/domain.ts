@@ -30,6 +30,7 @@ export interface Topic extends BaseEntity {
   slug: string;
   icon?: string;
   questionCount?: number;
+  dueCount?: number;
 }
 
 export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'fill_in_the_blank';

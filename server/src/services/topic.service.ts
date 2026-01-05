@@ -58,11 +58,25 @@ export class TopicService {
       { $group: { _id: '$topicId', total: { $sum: 1 } } }
     ]));
 
+    // Aggregate DUE counts from Anki (SpacedRepetition)
+    const dueAgg = await import('../models/Anki.ts').then(m => m.default.aggregate([
+      {
+        $match: {
+          userId: new Types.ObjectId(userId),
+          topicId: { $in: topicIds },
+          nextReviewAt: { $lte: new Date() }
+        }
+      },
+      { $group: { _id: '$topicId', total: { $sum: 1 } } }
+    ]));
+
     const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
+    const dueMap = new Map(dueAgg.map((a: any) => [a._id.toString(), a.total]));
 
     return topics.map(t => ({
       ...t.toObject(),
-      questionCount: countMap.get((t._id as any).toString()) || 0
+      questionCount: countMap.get((t._id as any).toString()) || 0,
+      dueCount: dueMap.get((t._id as any).toString()) || 0
     }));
   }
 

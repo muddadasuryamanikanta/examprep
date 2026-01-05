@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
+import { cn } from '../lib/utils';
 import { PromptService } from '../services/PromptService';
 import { type Topic } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
@@ -222,9 +223,18 @@ export default function TopicList() {
                 <TruncatedText as="h3" className="text-lg font-medium">
                   {topic.title}
                 </TruncatedText>
-                <p className="text-sm text-muted-foreground">
-                  {topic.questionCount || 0} Questions
-                </p>
+              </div>
+
+              {/* Stats Block */}
+              <div className="flex flex-col items-end mr-6 px-4 py-1.5 bg-muted/30 rounded-md border border-border/40 min-w-[100px]">
+                <div className="flex items-baseline gap-1">
+                  <span className={cn("text-lg font-bold", (topic.dueCount || 0) > 0 ? "text-primary" : "text-muted-foreground")}>
+                    {topic.dueCount || 0}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    / {topic.questionCount || 0}
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

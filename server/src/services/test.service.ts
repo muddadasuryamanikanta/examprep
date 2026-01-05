@@ -136,15 +136,7 @@ export class TestService {
       ];
     }
 
-    // Debug Logs
-    console.log('--- createTest Debug ---');
-    console.log('Config:', JSON.stringify(config, null, 2));
-    console.log('Effective Types:', effectiveQuestionTypes);
-    console.log('Resolved Topic IDs:', topicObjectIds.map(t => t.toString()));
-    console.log('Pipeline:', JSON.stringify(pipeline, null, 2));
-
     const randomBlocks = await ContentBlock.aggregate(pipeline);
-    console.log('Found Blocks:', randomBlocks.length);
 
     if (randomBlocks.length === 0) {
       throw new Error(`No questions found for the selected criteria.`);
