@@ -18,6 +18,7 @@ const createContentSchema = z.object({
   tags: z.array(z.string()).optional(),
   group: z.string().optional(),
   hints: z.array(z.string()).optional(),
+  blankAnswers: z.array(z.string()).optional(),
   options: z.array(z.object({
     id: z.string(),
     text: z.string(),
@@ -37,6 +38,7 @@ const updateContentSchema = z.object({
   tags: z.array(z.string()).optional(),
   group: z.string().optional(),
   hints: z.array(z.string()).optional(),
+  blankAnswers: z.array(z.string()).optional(),
   options: z.array(z.object({
     id: z.string(),
     text: z.string(),
@@ -71,43 +73,43 @@ export class ContentController {
     try {
       const user = req.user as IUser;
       const { types, tags, search } = req.query;
-      
+
       const filterOptions: { types?: string[]; tags?: string[]; search?: string } = {};
-      
+
       if (types) {
         const typeList = (typeof types === 'string' ? types.split(',') : types as string[])
           .map(t => t.trim())
           .filter(t => t.length > 0);
-        
+
         if (typeList.length > 0) {
           filterOptions.types = typeList;
         }
       }
-      
+
       if (tags) {
-         const tagList = (typeof tags === 'string' ? tags.split(',') : tags as string[])
+        const tagList = (typeof tags === 'string' ? tags.split(',') : tags as string[])
           .map(t => t.trim())
           .filter(t => t.length > 0);
 
-         if (tagList.length > 0) {
-           filterOptions.tags = tagList;
-         }
+        if (tagList.length > 0) {
+          filterOptions.tags = tagList;
+        }
       }
-      
+
       if (search) {
         filterOptions.search = search as string;
       }
-      
+
       const cursor = req.query.cursor ? (req.query.cursor as string) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
 
       const result = await ContentService.findAll(
-        (user._id as any).toString(), 
-        req.params.topicId as string, 
-        { 
-          ...filterOptions, 
+        (user._id as any).toString(),
+        req.params.topicId as string,
+        {
+          ...filterOptions,
           limit,
-          ...(cursor ? { cursor } : {}) 
+          ...(cursor ? { cursor } : {})
         }
       );
       res.json(result);
@@ -125,7 +127,7 @@ export class ContentController {
       const validatedData = updateContentSchema.parse(req.body);
       const user = req.user as IUser;
       const block = await ContentService.update((user._id as any).toString(), req.params.id as string, validatedData as any);
-      
+
       if (!block) {
         res.status(404).json({ message: 'Content block not found' });
         return;
@@ -148,7 +150,7 @@ export class ContentController {
     try {
       const user = req.user as IUser;
       const block = await ContentService.delete((user._id as any).toString(), req.params.id as string);
-      
+
       if (!block) {
         res.status(404).json({ message: 'Content block not found' });
         return;
@@ -165,16 +167,16 @@ export class ContentController {
   static async bulkCreate(req: Request, res: Response): Promise<void> {
     try {
       const { topicId, blocks } = req.body;
-      
+
       if (!topicId || !Array.isArray(blocks)) {
         res.status(400).json({ message: 'Invalid payload: topicId and blocks array required' });
         return;
       }
-      
+
       // Basic validation of blocks items could be done here or relied on service/mongoose
       const user = req.user as IUser;
       const createdBlocks = await ContentService.createMany((user._id as any).toString(), topicId, blocks);
-      
+
       res.status(201).json(createdBlocks);
     } catch (error: any) {
       if (error.message === 'Access denied to topic') {

@@ -38,12 +38,23 @@ export class AnkiController {
             const candidateIds = candidateQuestions.map(c => c._id);
 
             // Step B: Find DUE items from these candidates
+            // "Real Anki" Logic: Learn Ahead Limit (default 20 mins)
+            // If a card is due in 1 min, and we have nothing else, we should show it instead of "Finished".
+            // We fetch cards due up to 20 mins in the future to allow "scanning ahead".
             const now = new Date();
+            const LEARN_AHEAD_MS = 20 * 60 * 1000; // 20 minutes
+            const cutoff = new Date(now.getTime() + LEARN_AHEAD_MS);
+
             const dueReviews = await SpacedRepetition.find({
                 userId,
                 questionId: { $in: candidateIds },
-                nextReviewAt: { $lte: now }
-            }).limit(limitNum).populate('questionId').lean();
+                nextReviewAt: { $lte: cutoff }
+            })
+                // Sort by Due Date ASC so strictly due items appear before "ahead" items
+                .sort({ nextReviewAt: 1 })
+                .limit(limitNum)
+                .populate('questionId')
+                .lean();
 
             // Step C: Find NEW items (Candidates with NO SpacedRepetition doc)
             let responseItems: any[] = [...dueReviews];
@@ -76,10 +87,11 @@ export class AnkiController {
             // ... (keep existing logic for responseItems)
 
             // Step D: Calculate Total Counts (for UI "X / Total")
+            // Consistent with the session fetch, we count everything in the Learn Ahead window as "Due"
             const totalDueCount = await SpacedRepetition.countDocuments({
                 userId,
                 questionId: { $in: candidateIds },
-                nextReviewAt: { $lte: now }
+                nextReviewAt: { $lte: cutoff }
             });
 
             const totalCandidateCount = candidateIds.length;
@@ -146,7 +158,7 @@ export class AnkiController {
                             sr.repetitions = 0;
                             // Ease doesn't change in learning usually, but we can decrement slightly or keep
                             break;
-                            
+
                         case 'Hard':
                             sr.state = 'learning';
                             // Avg of (1m, 10m) = ~5.5m -> 6m
@@ -209,42 +221,42 @@ export class AnkiController {
                             sr.repetitions += 1;
                             break;
                     }
-                    
+
                     if (sr.state === 'relearning') {
-                         sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                        sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
                     } else {
-                         // Review cards are usually scheduled from NOW (or from scheduled time? Anki V2 vs V3).
-                         // Using NOW for simplicity and robustness.
-                         sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                        // Review cards are usually scheduled from NOW (or from scheduled time? Anki V2 vs V3).
+                        // Using NOW for simplicity and robustness.
+                        sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
                     }
                     break;
 
                 case 'relearning':
-                     // --- RELEARNING PHASE ---
-                     // Typically 1 step (10m) -> Back to Review with new Interval
-                     switch(rating) {
-                         case 'Again':
-                             sr.intervalDays = STEP_1; // 1m
-                             // Stay in relearning
-                             break;
-                         case 'Good':
-                             // Exit relearning. 
-                             // New Interval = Old Interval * New Interval % (default 0%)? 
-                             // Or just 1 day?
-                             // Anki default: New Interval = 1 d. 
-                             sr.state = 'review';
-                             sr.intervalDays = 1; 
-                             break;
-                         case 'Easy':
-                             sr.state = 'review';
-                             sr.intervalDays = 4;
-                             break;
-                         case 'Hard':
-                             sr.intervalDays = 6 / (24 * 60);
-                             break;
-                     }
-                     sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
-                     break;
+                    // --- RELEARNING PHASE ---
+                    // Typically 1 step (10m) -> Back to Review with new Interval
+                    switch (rating) {
+                        case 'Again':
+                            sr.intervalDays = STEP_1; // 1m
+                            // Stay in relearning
+                            break;
+                        case 'Good':
+                            // Exit relearning. 
+                            // New Interval = Old Interval * New Interval % (default 0%)? 
+                            // Or just 1 day?
+                            // Anki default: New Interval = 1 d. 
+                            sr.state = 'review';
+                            sr.intervalDays = 1;
+                            break;
+                        case 'Easy':
+                            sr.state = 'review';
+                            sr.intervalDays = 4;
+                            break;
+                        case 'Hard':
+                            sr.intervalDays = 6 / (24 * 60);
+                            break;
+                    }
+                    sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                    break;
             }
 
             sr.easeFactor = Math.min(3.0, Math.max(1.3, sr.easeFactor));

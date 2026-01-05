@@ -136,6 +136,13 @@ export default function TopicList() {
 
   const handleQuickTest = async (mode: 'pending' | 'all', topicOverride?: Topic) => {
     const topicToUse = topicOverride || targetTestTopic;
+    const count = topicToUse ? topicToUse.questionCount : currentSubject?.questionCount;
+
+    if (!count || count === 0) {
+      PromptService.alert("No Questions", "Don't have questions to create test");
+      return;
+    }
+
     if (!currentSpace || !currentSubject) return;
 
     setIsCreatingTest(true);
@@ -215,6 +222,9 @@ export default function TopicList() {
                 <TruncatedText as="h3" className="text-lg font-medium">
                   {topic.title}
                 </TruncatedText>
+                <p className="text-sm text-muted-foreground">
+                  {topic.questionCount || 0} Questions
+                </p>
               </div>
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

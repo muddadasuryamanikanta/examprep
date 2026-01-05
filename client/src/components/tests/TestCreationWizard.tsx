@@ -334,7 +334,7 @@ export function TestCreationWizard({ isOpen, onClose }: TestCreationWizardProps)
                 duration: config.duration,
                 marksPerQuestion: config.marksPerQuestion,
                 negativeMarks: config.negativeMarks,
-                questionTypes: ['single_select_mcq', 'multi_select_mcq']
+                questionTypes: ['single_select_mcq', 'multi_select_mcq', 'fill_in_the_blank']
             });
             onClose();
             navigate(`/tests/${newTest._id}`);

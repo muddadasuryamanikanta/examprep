@@ -36,7 +36,7 @@ export function useTakeTest() {
                 marksPerQuestion: 1,
                 negativeMarks: 0.25,
                 isPending: mode === 'pending',
-                questionTypes: ['single_select_mcq', 'multi_select_mcq']
+                questionTypes: ['single_select_mcq', 'multi_select_mcq', 'fill_in_the_blank']
             };
 
             const newTest = await createTest(payload);

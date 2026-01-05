@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
 import { ToastService } from '../services/ToastService';
+import { PromptService } from '../services/PromptService';
 import { type Subject } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
 import { useTestStore } from '../store/testStore';
@@ -113,6 +114,12 @@ export default function SubjectLibrary() {
 
   const handleQuickTest = async (mode: 'pending' | 'all', subjectOverride?: Subject) => {
     const subjectToUse = subjectOverride || targetTestSubject;
+
+    if (subjectToUse && (!subjectToUse.questionCount || subjectToUse.questionCount === 0)) {
+      PromptService.alert("No Questions", "Don't have questions to create test");
+      return;
+    }
+
     if (!currentSpace || !subjectToUse) return;
 
     setIsCreatingTest(true);

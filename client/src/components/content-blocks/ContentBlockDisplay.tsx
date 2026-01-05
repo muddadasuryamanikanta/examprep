@@ -12,15 +12,15 @@ interface ContentBlockDisplayProps {
   compareMode?: boolean;
 }
 
-export function ContentBlockDisplay({ block, isTest = false, value, onChange, onSubmit }: ContentBlockDisplayProps) {
+export function ContentBlockDisplay({ block, isTest = false, value, onChange, onSubmit, compareMode }: ContentBlockDisplayProps) {
   switch (block.kind) {
     case 'note':
       return <NoteBlock block={block} isTest={isTest} />;
     case 'single_select_mcq':
     case 'multi_select_mcq':
-      return <McqBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} />;
+      return <McqBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} compareMode={compareMode} />;
     case 'fill_in_the_blank':
-      return <FillInTheBlankBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} />;
+      return <FillInTheBlankBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} compareMode={compareMode} />;
     default:
       return (
         <div className="p-4 border border-dashed border-destructive rounded text-destructive bg-destructive/10">

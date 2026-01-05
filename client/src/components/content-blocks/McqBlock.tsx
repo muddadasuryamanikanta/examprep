@@ -12,9 +12,10 @@ interface McqBlockProps {
   value?: string | string[];
   onChange?: (val: any) => void;
   onSubmit?: () => void;
+  compareMode?: boolean;
 }
 
-export function McqBlock({ block, isTest = false, value, onChange, onSubmit }: McqBlockProps) {
+export function McqBlock({ block, isTest = false, value, onChange, onSubmit, compareMode = false }: McqBlockProps) {
   const isMulti = block.kind === 'multi_select_mcq';
 
   // Unified state (local fallbacks if uncontrolled)
@@ -31,7 +32,10 @@ export function McqBlock({ block, isTest = false, value, onChange, onSubmit }: M
 
   const handleSelect = (id: string) => {
     // In test mode, we don't block selection based on 'isSubmitted' unless explicitly enforced elsewhere
-    if (isSubmitted && !isTest) return;
+    if ((isSubmitted || compareMode) && !isTest) return; // Block validation only in Practice
+
+    // In Review Mode (compareMode), interaction should strictly be disabled
+    if (compareMode) return;
 
     let newSelection: string[];
     if (isMulti) {
@@ -103,7 +107,7 @@ export function McqBlock({ block, isTest = false, value, onChange, onSubmit }: M
             );
           }
 
-          if (!isTest && (isSubmitted || showAnswer)) {
+          if (compareMode || (!isTest && (isSubmitted || showAnswer))) {
             containerClass = "cursor-default border-border opacity-60"; // Default dim
 
             if (showAnswer) {

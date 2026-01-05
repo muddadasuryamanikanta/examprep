@@ -32,7 +32,7 @@ export class ContentService {
     const block = new ContentBlock({ ...data, topicId: topicId });
     const savedBlock = await block.save();
     // Increment Subject questionCount if this block is a question
-    const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive'];
+    const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive', 'fill_in_the_blank'];
     if (data.kind && questionKinds.includes(data.kind)) {
       const topic = await TopicService.findOne(userId, topicId);
       if (topic) {
@@ -142,7 +142,7 @@ export class ContentService {
     const deletedBlock = await ContentBlock.findByIdAndDelete(blockId);
 
     if (deletedBlock) {
-      const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive'];
+      const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive', 'fill_in_the_blank'];
       if (deletedBlock.kind && questionKinds.includes(deletedBlock.kind)) {
         const topic = await TopicService.findOne(userId, deletedBlock.topicId.toString());
         if (topic) {
@@ -167,7 +167,7 @@ export class ContentService {
 
     // 3. Prepare blocks
     let newQuestionCount = 0;
-    const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive'];
+    const questionKinds = ['single_select_mcq', 'multi_select_mcq', 'descriptive', 'fill_in_the_blank'];
 
     const blocksToInsert = blocksData.map((data, index) => {
       if (data.kind && questionKinds.includes(data.kind)) {
@@ -191,6 +191,6 @@ export class ContentService {
       }
     }
 
-    return insertedBlocks as IContentBlock[];
+    return insertedBlocks as unknown as IContentBlock[];
   }
 }

@@ -16,16 +16,16 @@ interface FillInTheBlankBlockProps {
   onSubmit?: () => void;
 }
 
-export function FillInTheBlankBlock({ 
-  block, 
-  value, 
+export function FillInTheBlankBlock({
+  block,
+  value,
   onChange,
   showCorrectValues = false,
   compareMode = false,
   isTest = false,
   onSubmit
 }: FillInTheBlankBlockProps) {
-  
+
   // Unified state (local fallbacks if uncontrolled)
   const [localValue, setLocalValue] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -34,7 +34,7 @@ export function FillInTheBlankBlock({
   const [showExplanation, setShowExplanation] = useState(false);
 
   // Derive current selection from controlled value if present, else local
-  const formState = value !== undefined ? value : localValue;
+  const formState = (value !== undefined && Array.isArray(value)) ? value : (value !== undefined ? [] : localValue);
 
   // Parse the question to find parts and blanks
   // Format assumed: "The capital of France is {{blank}} and Italy is {{blank}}."
@@ -52,9 +52,9 @@ export function FillInTheBlankBlock({
     const newValue = [...(formState || [])];
     // Ensure array is long enough
     while (newValue.length < blanksCount) newValue.push('');
-    
+
     newValue[index] = val;
-    
+
     if (onChange) {
       onChange(newValue);
     } else {
@@ -70,7 +70,7 @@ export function FillInTheBlankBlock({
   const handleReset = () => {
     if (onChange) onChange([]);
     else setLocalValue([]);
-    
+
     setIsSubmitted(false);
     setShowAnswer(false);
     setVisibleHints(0);
@@ -91,57 +91,57 @@ export function FillInTheBlankBlock({
 
     if (shouldShowResult) {
       // Comparison / Result View
-      
+
       // If purely showing answers (Dashboard/ReadOnly), simplified view
       if (showCorrectValues && !compareMode && !isSubmitted && !showAnswer) {
-         return (
-           <span key={`blank-${index}`} className="mx-1 px-2 py-0.5 rounded bg-muted font-bold border-b-2 border-primary/20 text-primary inline-block min-w-[3rem] text-center align-baseline">
-              {correctAnswer}
-           </span>
-         );
+        return (
+          <span key={`blank-${index}`} className="mx-1 px-2 py-0.5 rounded bg-muted font-bold border-b-2 border-primary/20 text-primary inline-block min-w-[3rem] text-center align-baseline">
+            {correctAnswer}
+          </span>
+        );
       }
 
       // Detailed Result View (Practice Check or Review Comparison)
       let displayClass = "";
       let icon = null;
 
-       if (showAnswer) {
-          displayClass = "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
-       } else if (isCorrect) {
-          displayClass = "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
-          icon = <Check className="w-3 h-3" />;
-       } else {
-          displayClass = "bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 decoration-wavy decoration-red-400";
-          icon = <X className="w-3 h-3" />;
-       }
+      if (showAnswer) {
+        displayClass = "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
+      } else if (isCorrect) {
+        displayClass = "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
+        icon = <Check className="w-3 h-3" />;
+      } else {
+        displayClass = "bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 decoration-wavy decoration-red-400";
+        icon = <X className="w-3 h-3" />;
+      }
 
       return (
         <span key={`blank-${index}`} className="relative inline-flex items-center align-middle mx-1">
-             <span className={cn(
-                 "px-2 py-0.5 rounded border text-sm font-medium inline-flex items-center gap-1",
-                 displayClass
-             )}>
-                {showAnswer ? (correctAnswer || "No Answer") : (userAnswer || <span className="italic opacity-50 text-xs text-muted-foreground">Empty</span>)}
-                {icon}
-             </span>
-             
-             {/* Show Correct Answer if Wrong and NOT just "Show Answer" mode (implicitly shown above if we wanted) or if explicit compare */}
-             {!isCorrect && !showAnswer && (
-               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-10 bg-black/80 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap pointer-events-none">
-                 {correctAnswer}
-                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45" />
-               </div>
-             )}
+          <span className={cn(
+            "px-2 py-0.5 rounded border text-sm font-medium inline-flex items-center gap-1",
+            displayClass
+          )}>
+            {showAnswer ? (correctAnswer || "No Answer") : (userAnswer || <span className="italic opacity-50 text-xs text-muted-foreground">Empty</span>)}
+            {icon}
+          </span>
+
+          {/* Show Correct Answer if Wrong and NOT just "Show Answer" mode (implicitly shown above if we wanted) or if explicit compare */}
+          {!isCorrect && !showAnswer && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-10 bg-black/80 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap pointer-events-none">
+              {correctAnswer}
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45" />
+            </div>
+          )}
         </span>
       );
     }
-    
+
     // Default Input Mode
     return (
       <input
         key={`input-${index}`}
         type="text"
-        className="mx-1 bg-background border-b-2 border-input focus:border-primary focus:outline-none px-1 py-0.5 w-32 text-center transition-all bg-muted/20 focus:bg-background rounded-t hover:bg-muted/30"
+        className="mx-1.5 inline-block text-center min-w-[120px] px-2 py-1 bg-transparent border-b-2 border-input focus:border-primary focus:outline-none transition-colors text-foreground font-medium placeholder:text-muted-foreground/30 rounded-t-sm focus:bg-accent/10"
         value={userAnswer}
         onChange={(e) => handleInputChange(index, e.target.value)}
         placeholder="..."
@@ -165,39 +165,39 @@ export function FillInTheBlankBlock({
       </div>
 
       {!isTest && (
-         <>
-           <div className="mt-6 flex flex-wrap items-center gap-3">
-               {!isSubmitted && (
-               <Button onClick={handleSubmit} disabled={!hasAnyInput}>
-                   <Send className="w-4 h-4 mr-2" /> Submit
-               </Button>
-               )}
-               
-               {(isSubmitted || showAnswer || visibleHints > 0 || showExplanation) && (
-               <Button variant="outline" onClick={handleReset}>
-                   <RotateCcw className="w-4 h-4 mr-2" /> Reset
-               </Button>
-               )}
+        <>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            {!isSubmitted && (
+              <Button onClick={handleSubmit} disabled={!hasAnyInput}>
+                <Send className="w-4 h-4 mr-2" /> Submit
+              </Button>
+            )}
 
-               <Button 
-               variant="ghost" 
-               onClick={() => setShowAnswer(!showAnswer)}
-               className={cn("text-muted-foreground", showAnswer && "text-primary")}
-               >
-               <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}
-               </Button>
-           </div>
+            {(isSubmitted || showAnswer || visibleHints > 0 || showExplanation) && (
+              <Button variant="outline" onClick={handleReset}>
+                <RotateCcw className="w-4 h-4 mr-2" /> Reset
+              </Button>
+            )}
 
-           <BlockFooter 
-               explanation={block.explanation} 
-               notes={block.notes} 
-               hints={block.hints} 
-               visibleHints={visibleHints}
-               onNextHint={() => setVisibleHints(prev => prev + 1)}
-               showExplanation={showExplanation}
-               onToggleExplanation={() => setShowExplanation(!showExplanation)}
-           />
-         </>
+            <Button
+              variant="ghost"
+              onClick={() => setShowAnswer(!showAnswer)}
+              className={cn("text-muted-foreground", showAnswer && "text-primary")}
+            >
+              <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}
+            </Button>
+          </div>
+
+          <BlockFooter
+            explanation={block.explanation}
+            notes={block.notes}
+            hints={block.hints}
+            visibleHints={visibleHints}
+            onNextHint={() => setVisibleHints(prev => prev + 1)}
+            showExplanation={showExplanation}
+            onToggleExplanation={() => setShowExplanation(!showExplanation)}
+          />
+        </>
       )}
     </Card>
   );

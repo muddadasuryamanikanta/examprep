@@ -41,7 +41,7 @@ export class TestService {
     // Defaults for optional config values
     const effectiveQuestionTypes = questionTypes && questionTypes.length > 0
       ? questionTypes
-      : [ContentBlockType.SINGLE_SELECT_MCQ, ContentBlockType.MULTI_SELECT_MCQ]; // Default to MCQ types
+      : [ContentBlockType.SINGLE_SELECT_MCQ, ContentBlockType.MULTI_SELECT_MCQ, ContentBlockType.FILL_IN_THE_BLANK]; // Default to MCQ & FITB types
     const effectiveDuration = config.duration || 30; // Default 30 minutes
     const effectiveMarksPerQuestion = config.marksPerQuestion || 1;
     const effectiveNegativeMarks = config.negativeMarks || 0;
@@ -136,7 +136,15 @@ export class TestService {
       ];
     }
 
+    // Debug Logs
+    console.log('--- createTest Debug ---');
+    console.log('Config:', JSON.stringify(config, null, 2));
+    console.log('Effective Types:', effectiveQuestionTypes);
+    console.log('Resolved Topic IDs:', topicObjectIds.map(t => t.toString()));
+    console.log('Pipeline:', JSON.stringify(pipeline, null, 2));
+
     const randomBlocks = await ContentBlock.aggregate(pipeline);
+    console.log('Found Blocks:', randomBlocks.length);
 
     if (randomBlocks.length === 0) {
       throw new Error(`No questions found for the selected criteria.`);
@@ -240,12 +248,19 @@ export class TestService {
             isCorrect = correctOptionIds.includes(answer);
           }
         }
-      } else if (block.kind === ContentBlockType.DESCRIPTIVE) {
-        // Cannot auto-grade descriptive strictly, assume manual or skip
-        // For now, treat as 0 or strictly if exact match (rare)
-        // Let's mark it as false/manual for now unless exact string match
-        if (block.answer && answer === block.answer) {
-          isCorrect = true;
+      } else if (block.kind === ContentBlockType.FILL_IN_THE_BLANK) {
+        // FITB Grading Logic
+        if (block.blankAnswers && Array.isArray(answer)) {
+          const userAnswers = answer as string[];
+          const correctAnswers = block.blankAnswers;
+
+          // Check if lengths match and every answer is correct (trim + loose equality)
+          if (userAnswers.length === correctAnswers.length) {
+            isCorrect = userAnswers.every((ans, index) =>
+              ans && correctAnswers[index] &&
+              ans.toString().toLowerCase().trim() === correctAnswers[index].toString().toLowerCase().trim()
+            );
+          }
         }
       }
 
@@ -269,22 +284,30 @@ export class TestService {
       }
 
       // --- Cognitive Grading / Anki Update ---
-      // Apply ONLY if cognitiveRatings has data for this question
+      // Force Update: If cognitiveRatings are provided (Matrix), use them.
+      // If NOT provided (Standard Test), infer from correctness (Correct=Good, Wrong=Again)
+
+      let rating: 'Again' | 'Hard' | 'Good' | 'Easy' | null = null;
+
       if (cognitiveRatings && cognitiveRatings[qId] !== undefined) {
-          const isRecognizable = cognitiveRatings[qId];
-          let rating: 'Again' | 'Hard' | 'Good' | 'Easy' = 'Good';
+        const isRecognizable = cognitiveRatings[qId];
+        // Matrix Logic
+        if (isCorrect) {
+          if (isRecognizable) rating = 'Good';
+          else rating = 'Hard';
+        } else {
+          if (isRecognizable) rating = 'Hard';
+          else rating = 'Again';
+        }
+      } else {
+        // Standard Logic (No self-report)
+        if (isCorrect) rating = 'Good';
+        else rating = 'Again';
+      }
 
-          // Matrix Logic
-          if (isCorrect) {
-              if (isRecognizable) rating = 'Good';
-              else rating = 'Hard';
-          } else {
-              if (isRecognizable) rating = 'Hard';
-              else rating = 'Again';
-          }
-
-          // Queue the update
-           ankiUpdates.push(AnkiService.processReview(userId, qId, rating));
+      // Queue the update if we have a rating
+      if (rating) {
+        ankiUpdates.push(AnkiService.processReview(userId, qId, rating));
       }
     } // End loop
 

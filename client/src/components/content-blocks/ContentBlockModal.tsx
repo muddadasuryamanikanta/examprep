@@ -64,9 +64,14 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
 
           // Re-hydrate brackets for editing: Replace {{blank}} with [answer] sequentially
           let answerIndex = 0;
-          while (editableQuestion.includes('{{blank}}') && answerIndex < answers.length) {
-            editableQuestion = editableQuestion.replace('{{blank}}', `[${answers[answerIndex]}]`);
-            answerIndex++;
+          while (editableQuestion.includes('{{blank}}')) {
+            if (answerIndex < answers.length) {
+              editableQuestion = editableQuestion.replace('{{blank}}', `[${answers[answerIndex]}]`);
+              answerIndex++;
+            } else {
+              // Fallback for missing answer or extra blanks
+              editableQuestion = editableQuestion.replace('{{blank}}', `[]`);
+            }
           }
 
           setQuestion(editableQuestion);
@@ -76,7 +81,7 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
         // Reset defaults
         setContent('');
         setQuestion('');
-        setOptions([{ id: '1', text: '', isCorrect: false }, { id: '2', text: '', isCorrect: false }]);
+        setOptions([]);
         // setBlankAnswers([]);
         setHints([]);
         setTags([]);
@@ -104,6 +109,18 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
         break;
       case 'single_select_mcq':
       case 'multi_select_mcq':
+        if (options.length < 2) {
+          PromptService.alert("Please provide at least 2 options.");
+          return;
+        }
+        if (options.some(o => !o.text.trim())) {
+          PromptService.alert("Options cannot be empty.");
+          return;
+        }
+        if (!options.some(o => o.isCorrect)) {
+          PromptService.alert("Please select at least one correct answer.");
+          return;
+        }
         specificData = { question, options };
         break;
       case 'fill_in_the_blank':
@@ -132,6 +149,9 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
     onClose();
   };
 
+  // Bulk Add State
+  const [bulkOptionsInput, setBulkOptionsInput] = useState('');
+
   const addOption = () => {
     setOptions([...options, { id: Date.now().toString(), text: '', isCorrect: false }]);
   };
@@ -144,6 +164,28 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
     const newOptions = [...options];
     newOptions[idx] = { ...newOptions[idx], [field]: value };
     setOptions(newOptions);
+  };
+
+  const handleBulkAddOptions = () => {
+    if (!bulkOptionsInput.trim()) return;
+
+    // Split by newline or comma, filtering out empty strings
+    const rawOptions = bulkOptionsInput.split(/[\n,]/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    if (rawOptions.length === 0) return;
+
+    const newOptions: McqOption[] = rawOptions.map((text, idx) => ({
+      // Use unique ID for each added option. 
+      // Date.now() might be same for all in simple loop, so add random or index
+      id: `${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 5)}`,
+      text,
+      isCorrect: false
+    }));
+
+    setOptions([...options, ...newOptions]);
+    setBulkOptionsInput('');
   };
 
   return (
@@ -187,6 +229,25 @@ export function ContentBlockModal({ isOpen, onClose, onSave, initialData, type }
 
             <div className="space-y-3">
               <label className="text-sm font-medium">Options</label>
+
+              {/* Bulk Add Section */}
+              <div className="bg-secondary/20 p-3 rounded-md mb-2">
+                <label className="text-xs font-medium mb-1 block text-muted-foreground">
+                  Bulk Add (Paste options separated by commas or new lines)
+                </label>
+                <div className="flex gap-2 items-start">
+                  <textarea
+                    className="flex-1 bg-background border border-input rounded-md p-2 text-sm min-h-[60px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={bulkOptionsInput}
+                    onChange={(e) => setBulkOptionsInput(e.target.value)}
+                    placeholder="Option 1, Option 2, Option 3..."
+                  />
+                  <Button onClick={handleBulkAddOptions} size="sm" className="h-auto py-3">
+                    Add
+                  </Button>
+                </div>
+              </div>
+
               {options.map((opt, idx) => (
                 <div key={opt.id || idx} className="flex items-start gap-2">
                   <input

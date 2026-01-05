@@ -38,10 +38,14 @@ export default function AnkiBoard() {
     // }, []);
     // ---------------------------------
 
+    // State to force remount of ContentBlock when item changes (even if same ID)
+    const [renderKey, setRenderKey] = useState(0);
+
     // Reset local state when item changes
     useEffect(() => {
         setShowAnswer(false);
         setSelectedAnswer(undefined);
+        setRenderKey(prev => prev + 1);
     }, [currentItem]);
 
     const navigate = useNavigate();
@@ -174,7 +178,7 @@ export default function AnkiBoard() {
                 {/* Question Area */}
                 <div className="w-full mb-8">
                     <ContentBlockDisplay
-                        key={currentItem.questionId._id} // CRITICAL: Force remount to reset internal state (isSubmitted, etc.)
+                        key={`${currentItem.questionId._id}-${renderKey}`} // CRITICAL: Force remount to reset internal state (isSubmitted, etc.)
                         block={currentItem.questionId}
                         isTest={false} // Practice Mode
                         value={selectedAnswer}

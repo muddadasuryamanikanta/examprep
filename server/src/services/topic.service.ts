@@ -52,7 +52,7 @@ export class TopicService {
       {
         $match: {
           topicId: { $in: topicIds },
-          kind: { $in: ['single_select_mcq', 'multi_select_mcq', 'descriptive'] }
+          kind: { $in: ['single_select_mcq', 'multi_select_mcq', 'descriptive', 'fill_in_the_blank'] }
         }
       },
       { $group: { _id: '$topicId', total: { $sum: 1 } } }
