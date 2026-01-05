@@ -26,7 +26,6 @@ const StatusBadge = ({ status }: { status: TestUnit['status'] }) => {
 };
 
 export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll, onTakeTest }) => {
-
     const handleAction = (test: TestUnit) => {
         if (test.dueQuestions === 0 && test.space.name !== 'Mains') {
             // Review logic could go here or be handled by parent too if needed
