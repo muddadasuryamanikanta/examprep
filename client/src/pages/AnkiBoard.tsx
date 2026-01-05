@@ -189,6 +189,7 @@ export default function AnkiBoard() {
                             setSelectedAnswer(val); // Sync state for tracking if needed
                         }}
                         onSubmit={() => setShowAnswer(true)}
+                        onShowAnswer={() => setShowAnswer(true)}
                     />
                 </div>
 

@@ -14,6 +14,7 @@ interface FillInTheBlankBlockProps {
     showCorrectValues?: boolean; // For review mode to just SHOW answers in place
     compareMode?: boolean; // For review mode to compare user vs correct
     onSubmit?: () => void;
+    onShowAnswer?: () => void;
 }
 
 export function FillInTheBlankBlock({
@@ -23,7 +24,8 @@ export function FillInTheBlankBlock({
     showCorrectValues = false,
     compareMode = false,
     isTest = false,
-    onSubmit
+    onSubmit,
+    onShowAnswer
 }: FillInTheBlankBlockProps) {
 
     // Unified state (local fallbacks if uncontrolled)
@@ -182,7 +184,13 @@ export function FillInTheBlankBlock({
 
                         <Button
                             variant="ghost"
-                            onClick={() => setShowAnswer(!showAnswer)}
+                            onClick={() => {
+                                const nextState = !showAnswer;
+                                setShowAnswer(nextState);
+                                if (nextState && onShowAnswer) {
+                                    onShowAnswer();
+                                }
+                            }}
                             className={cn("text-muted-foreground", showAnswer && "text-primary")}
                         >
                             <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}

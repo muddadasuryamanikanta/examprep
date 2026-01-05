@@ -13,9 +13,10 @@ interface McqBlockProps {
     onChange?: (val: any) => void;
     onSubmit?: () => void;
     compareMode?: boolean;
+    onShowAnswer?: () => void;
 }
 
-export function McqBlock({ block, isTest = false, value, onChange, onSubmit, compareMode = false }: McqBlockProps) {
+export function McqBlock({ block, isTest = false, value, onChange, onSubmit, compareMode = false, onShowAnswer }: McqBlockProps) {
     const isMulti = block.kind === 'multi_select_mcq';
 
     // Unified state (local fallbacks if uncontrolled)
@@ -71,6 +72,14 @@ export function McqBlock({ block, isTest = false, value, onChange, onSubmit, com
         setShowAnswer(false);
         setVisibleHints(0);
         setShowExplanation(false);
+    };
+
+    const handleToggleShowAnswer = () => {
+        const nextState = !showAnswer;
+        setShowAnswer(nextState);
+        if (nextState && onShowAnswer) {
+            onShowAnswer();
+        }
     };
 
     return (
@@ -173,7 +182,7 @@ export function McqBlock({ block, isTest = false, value, onChange, onSubmit, com
 
                         <Button
                             variant="ghost"
-                            onClick={() => setShowAnswer(!showAnswer)}
+                            onClick={handleToggleShowAnswer}
                             className={cn("text-muted-foreground", showAnswer && "text-primary")}
                         >
                             <Eye className="w-4 h-4 mr-2" /> {showAnswer ? "Hide Answer" : "Show Answer"}

@@ -10,17 +10,18 @@ interface ContentBlockDisplayProps {
     onChange?: (value: any) => void;
     onSubmit?: () => void;
     compareMode?: boolean;
+    onShowAnswer?: () => void;
 }
 
-export function ContentBlockDisplay({ block, isTest = false, value, onChange, onSubmit, compareMode }: ContentBlockDisplayProps) {
+export function ContentBlockDisplay({ block, isTest = false, value, onChange, onSubmit, compareMode, onShowAnswer }: ContentBlockDisplayProps) {
     switch (block.kind) {
         case 'note':
             return <NoteBlock block={block} isTest={isTest} />;
         case 'single_select_mcq':
         case 'multi_select_mcq':
-            return <McqBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} compareMode={compareMode} />;
+            return <McqBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} compareMode={compareMode} onShowAnswer={onShowAnswer} />;
         case 'fill_in_the_blank':
-            return <FillInTheBlankBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} compareMode={compareMode} />;
+            return <FillInTheBlankBlock block={block} isTest={isTest} value={value} onChange={onChange} onSubmit={onSubmit} compareMode={compareMode} onShowAnswer={onShowAnswer} />;
         default:
             return (
                 <div className="p-4 border border-dashed border-destructive rounded text-destructive bg-destructive/10">
