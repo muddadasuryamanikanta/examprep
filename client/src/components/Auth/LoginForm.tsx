@@ -31,9 +31,9 @@ export const LoginForm = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
-  };
+  // const handleGoogleLogin = () => {
+  //   window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+  // };
 
   return (
     <div className="w-full max-w-md p-8 space-y-6 border border-border/40 rounded-xl bg-background/50 backdrop-blur-md shadow-xl">
@@ -66,7 +66,7 @@ export const LoginForm = () => {
           Sign In
         </Button>
       </form>
-      <div className="flex items-center gap-4">
+      {/* <div className="flex items-center gap-4">
         <div className="flex-1 border-t border-border"></div>
         <span className="text-xs uppercase text-neutral-500">Or continue with</span>
         <div className="flex-1 border-t border-border"></div>
@@ -91,7 +91,7 @@ export const LoginForm = () => {
           />
         </svg>
         Google
-      </Button>
+      </Button> */}
       <p className="text-center text-sm text-neutral-500">
         Don't have an account?{' '}
         <Link to="/register" className="text-primary hover:underline font-medium">

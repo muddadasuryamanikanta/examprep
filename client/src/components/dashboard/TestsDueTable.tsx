@@ -7,6 +7,7 @@ import { CheckCircle, Clock, PauseCircle, PlayCircle, AlertCircle } from 'lucide
 interface TestsDueTableProps {
     tests: TestUnit[];
     onScroll?: () => void;
+    onTakeTest?: (test: TestUnit) => void;
 }
 
 const StatusBadge = ({ status }: { status: TestUnit['status'] }) => {
@@ -26,13 +27,18 @@ const StatusBadge = ({ status }: { status: TestUnit['status'] }) => {
     }
 };
 
-export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll }) => {
+export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll, onTakeTest }) => {
     const { startTest } = useTakeTest();
     const [creatingTestId, setCreatingTestId] = React.useState<string | null>(null);
 
     const handleAction = async (test: TestUnit) => {
         if (test.dueQuestions === 0) {
             // Review logic (placeholder)
+            return;
+        }
+
+        if (onTakeTest) {
+            onTakeTest(test);
             return;
         }
 
