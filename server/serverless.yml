@@ -1,0 +1,60 @@
+service: examprep-server
+frameworkVersion: '3'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  memorySize: 512
+  timeout: 10
+  environment:
+    NODE_ENV: production
+    MONGODB_URI: ${env:MONGODB_URI, ''}
+    JWT_SECRET: ${env:JWT_SECRET, ''}
+    CLIENT_URL: ${env:CLIENT_URL, ''}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY, ''}
+    GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID, ''}
+    GOOGLE_CLIENT_SECRET: ${env:GOOGLE_CLIENT_SECRET, ''}
+    GOOGLE_CALLBACK_URL: ${env:GOOGLE_CALLBACK_URL, ''}
+    SMTP_HOST: ${env:SMTP_HOST, ''}
+    SMTP_PORT: ${env:SMTP_PORT, ''}
+    SMTP_USER: ${env:SMTP_USER, ''}
+    SMTP_PASS: ${env:SMTP_PASS, ''}
+    SMTP_FROM: ${env:SMTP_FROM, ''}
+    OPENROUTER_API_KEY: ${env:OPENROUTER_API_KEY, ''}
+    ADMIN_EMAIL: ${env:ADMIN_EMAIL, ''}
+
+functions:
+  api:
+    handler: src/index.handler
+    events:
+      - httpApi: '*'
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+  - serverless-plugin-warmup
+
+custom:
+  warmup:
+    default:
+      enabled: true
+      folderName: '.warmup'
+      memorySize: 128
+      name: 'warmer-default'
+      events:
+        - schedule: 'rate(5 minutes)'
+      timeout: 20
+      prewarm: true
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: 'node18'
+    platform: 'node'
+    concurrency: 10
+    resolveExtensions: ['.ts', '.js', '.json', '.mjs']
+    external: ['@aws-sdk/client-lambda']
+    watch:
+      pattern: ['src/**/*.ts']
