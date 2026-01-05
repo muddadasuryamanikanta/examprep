@@ -59,15 +59,31 @@ export class TopicService {
     ]));
 
     // Aggregate DUE counts from Anki (SpacedRepetition)
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
     const dueAgg = await import('../models/Anki.ts').then(m => m.default.aggregate([
       {
         $match: {
           userId: new Types.ObjectId(userId),
-          topicId: { $in: topicIds },
-          nextReviewAt: { $lte: new Date() }
+          nextReviewAt: { $lte: today }
         }
       },
-      { $group: { _id: '$topicId', total: { $sum: 1 } } }
+      {
+        $lookup: {
+          from: 'contentblocks',
+          localField: 'questionId',
+          foreignField: '_id',
+          as: 'block'
+        }
+      },
+      { $unwind: '$block' },
+      {
+        $match: {
+          'block.topicId': { $in: topicIds }
+        }
+      },
+      { $group: { _id: '$block.topicId', total: { $sum: 1 } } }
     ]));
 
     const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
