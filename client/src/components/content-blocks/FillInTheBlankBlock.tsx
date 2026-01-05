@@ -116,7 +116,8 @@ export function FillInTheBlankBlock({
             }
 
             return (
-                <span key={`blank-${index}`} className="relative inline-flex items-center align-middle mx-1">
+                <span key={`blank-${index}`} className="inline-flex items-center align-middle mx-1 gap-1">
+                    {/* User Answer (Red if wrong) */}
                     <span className={cn(
                         "px-2 py-0.5 rounded border text-sm font-medium inline-flex items-center gap-1",
                         displayClass
@@ -125,12 +126,12 @@ export function FillInTheBlankBlock({
                         {icon}
                     </span>
 
-                    {/* Show Correct Answer if Wrong and NOT just "Show Answer" mode (implicitly shown above if we wanted) or if explicit compare */}
+                    {/* Correct Answer (Green, shown next to wrong answer) */}
                     {!isCorrect && !showAnswer && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-10 bg-black/80 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap pointer-events-none">
-                            {correctAnswer}
-                            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/80 rotate-45" />
-                        </div>
+                        <span className="px-2 py-0.5 rounded border text-sm font-medium inline-flex items-center gap-1 bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300">
+                             <Check className="w-3 h-3" />
+                             {correctAnswer}
+                        </span>
                     )}
                 </span>
             );

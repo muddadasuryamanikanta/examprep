@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { Upload, FileUp, Download, Loader2 } from 'lucide-react';
+import { Upload, FileUp, Download, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
-import { type ContentBlockType, type ContentBlock } from '../../types/domain';
+import { type ContentBlock } from '../../types/domain';
 import { PromptService } from '../../services/PromptService';
+import { BulkUploadValidator, type ValidationError } from '../../services/BulkUploadValidator';
 
 interface BulkUploadModalProps {
   isOpen: boolean;
@@ -16,17 +17,18 @@ interface BulkUploadModalProps {
 export function BulkUploadModal({ isOpen, onClose, onUpload, topicId }: BulkUploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [parsedBlocks, setParsedBlocks] = useState<Partial<ContentBlock>[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDownloadTemplate = () => {
-    const headers = ['Type', 'Question', 'Option 1', 'Option 2', 'Option 3', 'Option 4', 'Correct Answer', 'Explanation', 'Tags', 'Note Content'];
+    const headers = ['Type', 'Question', 'Option 1', 'Option 2', 'Option 3', 'Option 4', 'Correct Answer', 'Explanation', 'Hint', 'Tags', 'Note Content'];
     const data = [
-      ['single_select_mcq', 'What is the capital of France?', 'London', 'Berlin', 'Paris', 'Madrid', 'Paris', 'It is Paris.', 'geography, europe', ''],
-      ['multi_select_mcq', 'Select prime numbers', '2', '4', '5', '9', '2, 5', '2 and 5 are prime.', 'math, numbers', ''],
-      ['fill_in_the_blank', 'The sun rises in the {{blank}}.', '', '', '', '', 'east', 'Direction', 'science', ''],
-      ['note', '', '', '', '', '', '', '', 'study-tip', '# Key Concept\nRemember this.'],
+      ['single_select_mcq', 'What is the capital of France?', 'London', 'Berlin', 'Paris', 'Madrid', '3', 'It is Paris.', 'Look at the map.', 'geography, europe', ''],
+      ['multi_select_mcq', 'Select prime numbers', '2', '4', '5', '9', '1, 3', '2 and 5 are prime.', 'They have only 2 factors.', 'math, numbers', ''],
+      ['fill_in_the_blank', 'The sun rises in the {{blank}}.', '', '', '', '', 'east', 'Direction', 'Opposite of west, Solar system fact', 'science', ''],
+      ['note', '', '', '', '', '', '', '', '', 'study-tip', '# Key Concept\nRemember this.'],
     ];
 
     const wb = XLSX.utils.book_new();
@@ -37,70 +39,23 @@ export function BulkUploadModal({ isOpen, onClose, onUpload, topicId }: BulkUplo
 
   const parseExcel = async (file: File) => {
     setIsParsing(true);
+    setValidationErrors([]);
+    setParsedBlocks([]);
+
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-
-      // Remove header
-      const rows = jsonData.slice(1);
       
-      const blocks: Partial<ContentBlock>[] = [];
+      const { blocks, errors } = BulkUploadValidator.parseAndValidate(worksheet, topicId);
+      
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        setParsedBlocks([]);
+      } else {
+        setParsedBlocks(blocks);
+      }
 
-      rows.forEach((row) => {
-        if (!row[0]) return; // Skip empty rows
-
-        const kind = row[0] as ContentBlockType;
-        const question = row[1] != null ? String(row[1]) : '';
-        const opt1 = row[2];
-        const opt2 = row[3];
-        const opt3 = row[4];
-        const opt4 = row[5];
-        const correctRaw = row[6];
-        const explanation = row[7] != null ? String(row[7]) : '';
-        const tags = row[8] ? row[8].toString().split(',').map((t: string) => t.trim()) : [];
-        const content = row[9] != null ? String(row[9]) : ''; // For notes
-
-        // Cast to any to construct the object dynamically
-        const block: any = {
-          kind,
-          tags,
-          topicId
-        };
-
-        if (kind === 'note') {
-          block.content = content || question || 'New Note';
-        } else if (['single_select_mcq', 'multi_select_mcq'].includes(kind)) {
-          block.question = question;
-          block.explanation = explanation;
-          
-          const options = [];
-          if (opt1 != null && String(opt1).trim()) options.push({ id: '1', text: String(opt1), isCorrect: false });
-          if (opt2 != null && String(opt2).trim()) options.push({ id: '2', text: String(opt2), isCorrect: false });
-          if (opt3 != null && String(opt3).trim()) options.push({ id: '3', text: String(opt3), isCorrect: false });
-          if (opt4 != null && String(opt4).trim()) options.push({ id: '4', text: String(opt4), isCorrect: false });
-
-          // Set correct answer
-          if (correctRaw != null) {
-             const corrects = String(correctRaw).toString().split(',').map((s: string) => s.trim().toLowerCase());
-             options.forEach((opt: any) => {
-                if (corrects.includes(String(opt.text).toLowerCase()) || corrects.includes(opt.id)) {
-                   opt.isCorrect = true;
-                }
-             });
-          }
-          block.options = options;
-        } else if (kind === 'fill_in_the_blank') {
-           block.question = question;
-           block.explanation = explanation;
-           block.blankAnswers = correctRaw != null ? String(correctRaw).toString().split(',').map((s: string) => s.trim()) : [];
-        }
-
-        blocks.push(block as Partial<ContentBlock>);
-      });
-
-      setParsedBlocks(blocks);
     } catch (err) {
       console.error(err);
       PromptService.error("Failed to parse Excel file. Please ensure it matches the template.");
@@ -126,6 +81,7 @@ export function BulkUploadModal({ isOpen, onClose, onUpload, topicId }: BulkUplo
       onClose();
       setFile(null);
       setParsedBlocks([]);
+      setValidationErrors([]);
     } catch (err) {
         console.error(err);
         PromptService.error("Failed to upload blocks.");
@@ -143,7 +99,7 @@ export function BulkUploadModal({ isOpen, onClose, onUpload, topicId }: BulkUplo
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={isUploading}>Cancel</Button>
-          <Button onClick={handleUpload} disabled={parsedBlocks.length === 0 || isUploading}>
+          <Button onClick={handleUpload} disabled={parsedBlocks.length === 0 || isUploading || validationErrors.length > 0}>
             {isUploading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
             Upload {parsedBlocks.length > 0 ? `(${parsedBlocks.length})` : ''}
           </Button>
@@ -194,8 +150,38 @@ export function BulkUploadModal({ isOpen, onClose, onUpload, topicId }: BulkUplo
             </div>
         </div>
 
+        {/* Validation Errors */}
+        {validationErrors.length > 0 && (
+            <div className="border rounded-md overflow-hidden border-destructive/50">
+                <div className="bg-destructive/10 px-4 py-2 border-b border-destructive/20 text-xs font-medium flex justify-between items-center text-destructive">
+                    <span className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        Found {validationErrors.length} errors
+                    </span>
+                </div>
+                <div className="max-h-[200px] overflow-y-auto p-0">
+                    <table className="w-full text-xs">
+                         <thead className="bg-destructive/5 text-destructive font-semibold">
+                            <tr>
+                                <th className="p-2 text-left w-16">Row</th>
+                                <th className="p-2 text-left">Error</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-destructive/10">
+                            {validationErrors.map((err, idx) => (
+                                <tr key={idx} className="hover:bg-destructive/5">
+                                    <td className="p-2 font-mono text-center">{err.row}</td>
+                                    <td className="p-2 text-destructive">{err.message}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+
         {/* Preview */}
-        {file && (
+        {file && validationErrors.length === 0 && (
            <div className="border rounded-md overflow-hidden">
              <div className="bg-muted/50 px-4 py-2 border-b text-xs font-medium flex justify-between items-center">
                 <span>Preview: {file.name}</span>
