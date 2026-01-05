@@ -177,117 +177,127 @@ export default function TopicList() {
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-7xl">
-      <div className="mb-6">
-        <Breadcrumbs
-          items={[
-            { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceSlug}/library` },
-            { label: currentSubject?.title || <div className="h-4 w-32 bg-muted animate-pulse rounded" /> }
-          ]}
-        />
-      </div>
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex-none bg-background z-10 px-8 pt-8 pb-0">
+        <div className="container mx-auto max-w-7xl">
+          <div className="mb-6">
+            <Breadcrumbs
+              items={[
+                { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" />, href: `/spaces/${spaceSlug}/library` },
+                { label: currentSubject?.title || <div className="h-4 w-32 bg-muted animate-pulse rounded" /> }
+              ]}
+            />
+          </div>
 
-      <div className="flex items-center justify-between mb-8">
-        <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
-          {currentSubject?.title}
-        </TruncatedText>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={(e) => openTakeTestModal(null, e)}>
-            Take Test
-          </Button>
-          <Button onClick={openCreateModal}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Topic
-          </Button>
+          <div className="flex items-center justify-between mb-8">
+            <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
+              {currentSubject?.title}
+            </TruncatedText>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={(e) => openTakeTestModal(null, e)}>
+                Take Test
+              </Button>
+              <Button onClick={openCreateModal}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Topic
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {topics.length === 0 ? (
-        <EmptyState
-          title="No topics yet"
-          description="Create a topic to start adding content."
-          action={<Button onClick={openCreateModal}>Add Topic</Button>}
-        />
-      ) : (
-        <div className="space-y-4">
-          {topics.map((topic) => (
-            <div
-              key={topic._id}
-              onClick={() => handleTopicClick(topic)}
-              className="group flex items-center justify-between p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
-            >
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className={`h-10 w-10 rounded-md flex items-center justify-center text-lg font-bold shrink-0 ${getDeterministicColor(topic._id)}`}>
-                  <DynamicIcon name={topic.icon || 'Hash'} className="h-5 w-5" />
-                </div>
-                <TruncatedText as="h3" className="text-lg font-medium">
-                  {topic.title}
-                </TruncatedText>
-              </div>
-
-              {/* Stats Block */}
-              <div className="flex flex-col items-end mr-6 px-4 py-1.5 bg-muted/30 rounded-md border border-border/40 min-w-[100px]">
-                <div className="flex items-baseline gap-1">
-                  <span className={cn("text-lg font-bold", (topic.dueCount || 0) > 0 ? "text-primary" : "text-muted-foreground")}>
-                    {topic.dueCount || 0}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    / {topic.questionCount || 0}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/recall/topic/${topic._id}`);
-                  }}
+      <div className="flex-1 overflow-y-auto px-8 pb-8">
+        <div className="container mx-auto max-w-7xl">
+          {topics.length === 0 ? (
+            <EmptyState
+              title="No topics yet"
+              description="Create a topic to start adding content."
+              action={<Button onClick={openCreateModal}>Add Topic</Button>}
+            />
+          ) : (
+            <div className="space-y-4">
+              {topics.map((topic) => (
+                <div
+                  key={topic._id}
+                  onClick={() => handleTopicClick(topic)}
+                  className="group flex items-center justify-between p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
                 >
-                  RECALL
-                </Button>
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className={`h-10 w-10 rounded-md flex items-center justify-center text-lg font-bold shrink-0 ${getDeterministicColor(topic._id)}`}>
+                      <DynamicIcon name={topic.icon || 'Hash'} className="h-5 w-5" />
+                    </div>
+                    <TruncatedText as="h3" className="text-lg font-medium">
+                      {topic.title}
+                    </TruncatedText>
+                  </div>
 
-                <div className="flex items-center gap-1">
-                  {/* Note: Original code didn't have a bg-secondary/50 wrapper for TopicList actions in the snippet I saw, but I'll check if I should add it or just keep them inline. 
+                  {/* Stats Block */}
+                  <div className="flex flex-col items-end mr-6 px-4 py-1.5 bg-muted/30 rounded-md border border-border/40 min-w-[100px]">
+                    <div className="flex items-baseline gap-1">
+                      <span className={cn("text-lg font-bold", (topic.dueCount || 0) > 0 ? "text-primary" : "text-muted-foreground")}>
+                        {topic.dueCount || 0}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        / {topic.questionCount || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/recall/topic/${topic._id}`);
+                      }}
+                    >
+                      RECALL
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                      {/* Note: Original code didn't have a bg-secondary/50 wrapper for TopicList actions in the snippet I saw, but I'll check if I should add it or just keep them inline. 
                        Looking at previous read, TopicList buttons were just in a flex div. 
                        I will group the others to match SubjectLibrary if appropriate, or just leave them.
                        The previous code had them separated by dividers (w-px). 
                        I'll group the secondary actions for consistency if they were grouped before or just lay them out.
                        Actually looking at the TargetContent, they were just in a div with gap-2. 
                    */}
-                  <Tooltip content="Take Test" delay={0}>
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                      onClick={(e) => openTakeTestModal(topic, e)}
-                    >
-                      <Play className="h-4 w-4 fill-current" />
-                    </Button>
-                  </Tooltip>
-                  <div className="w-px h-4 bg-border mx-1" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => openEditModal(topic, e)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={(e) => openDeleteModal(topic, e)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                      <Tooltip content="Take Test" delay={0}>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                          onClick={(e) => openTakeTestModal(topic, e)}
+                        >
+                          <Play className="h-4 w-4 fill-current" />
+                        </Button>
+                      </Tooltip>
+                      <div className="w-px h-4 bg-border mx-1" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => openEditModal(topic, e)}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => openDeleteModal(topic, e)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* Create Modal */}
         </div>
-      )}
+      </div>
 
       {/* Create Modal */}
       <Modal

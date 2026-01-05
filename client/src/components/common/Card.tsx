@@ -12,7 +12,7 @@ export function Card({ children, className, onClick }: CardProps) {
     <div
       onClick={onClick}
       className={cn(
-        'rounded-[var(--radius)] border border-border bg-background p-6',
+        'rounded-[var(--radius)] border-2 border-border bg-background p-6',
         'transition-colors duration-200',
         onClick && 'cursor-pointer hover:bg-accent/50',
         className

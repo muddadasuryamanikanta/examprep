@@ -166,114 +166,124 @@ export default function SubjectLibrary() {
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-7xl">
-      <div className="mb-6">
-        <Breadcrumbs
-          items={[
-            { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" /> }
-          ]}
-        />
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex-none bg-background z-10 px-8 pt-8 pb-0">
+        <div className="container mx-auto max-w-7xl">
+          <div className="mb-6">
+            <Breadcrumbs
+              items={[
+                { label: currentSpace?.name || <div className="h-4 w-24 bg-muted animate-pulse rounded" /> }
+              ]}
+            />
+          </div>
+
+          <div className="flex items-center justify-between mb-8">
+            <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
+              {currentSpace?.name ? `${currentSpace.name} Library` : 'Library'}
+            </TruncatedText>
+            <Button onClick={openCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Subject
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mb-8">
-        <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
-          {currentSpace?.name ? `${currentSpace.name} Library` : 'Library'}
-        </TruncatedText>
-        <Button onClick={openCreateModal}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Subject
-        </Button>
-      </div>
+      <div className="flex-1 overflow-y-auto px-8 pb-8">
+        <div className="container mx-auto max-w-7xl">
+          {subjects.length === 0 ? (
+            <EmptyState
+              title="No subjects yet"
+              description="Create a subject to start adding topics."
+              action={<Button onClick={openCreateModal}>Add Subject</Button>}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {subjects.map((subject) => (
+                <div
+                  key={subject._id}
+                  onClick={() => handleSubjectClick(subject)}
+                  className="group relative flex flex-col justify-between p-6 rounded-xl border border-border bg-card hover:shadow-md cursor-pointer transition-all hover:border-primary/50"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className={`p-3 rounded-xl ${getDeterministicColor(subject._id)}`}>
+                        <DynamicIcon name={subject.icon || 'Book'} className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold mb-1">{subject.title}</h3>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            {subject.topicCount || 0} Topics
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {subject.questionCount || 0} Questions
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-      {subjects.length === 0 ? (
-        <EmptyState
-          title="No subjects yet"
-          description="Create a subject to start adding topics."
-          action={<Button onClick={openCreateModal}>Add Subject</Button>}
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {subjects.map((subject) => (
-            <div
-              key={subject._id}
-              onClick={() => handleSubjectClick(subject)}
-              className="group relative flex flex-col justify-between p-6 rounded-xl border border-border bg-card hover:shadow-md cursor-pointer transition-all hover:border-primary/50"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl ${getDeterministicColor(subject._id)}`}>
-                    <DynamicIcon name={subject.icon || 'Book'} className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold mb-1">{subject.title}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                        </svg>
-                        {subject.topicCount || 0} Topics
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {subject.questionCount || 0} Questions
-                      </span>
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/recall/subject/${subject._id}`);
+                        }}
+                      >
+                        RECALL
+                      </Button>
+
+                      <div className="flex items-center bg-secondary/50 rounded-lg">
+                        <Tooltip content="Take Test" delay={0}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={(e) => openTakeTestModal(subject, e)}
+                          >
+                            <Play className="h-4 w-4 fill-current" />
+                          </Button>
+                        </Tooltip>
+                        <div className="w-px h-4 bg-border" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => openEditModal(subject, e)}
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <div className="w-px h-4 bg-border" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => openDeleteModal(subject, e)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                  {/* Progress bar removed as per request "here no need of that progress" */}
                 </div>
-
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/recall/subject/${subject._id}`);
-                    }}
-                  >
-                    RECALL
-                  </Button>
-
-                  <div className="flex items-center bg-secondary/50 rounded-lg">
-                    <Tooltip content="Take Test" delay={0}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                        onClick={(e) => openTakeTestModal(subject, e)}
-                      >
-                        <Play className="h-4 w-4 fill-current" />
-                      </Button>
-                    </Tooltip>
-                    <div className="w-px h-4 bg-border" />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => openEditModal(subject, e)}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <div className="w-px h-4 bg-border" />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => openDeleteModal(subject, e)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              {/* Progress bar removed as per request "here no need of that progress" */}
+              ))}
             </div>
-          ))}
-        </div>
-      )
-      }
+          )
+          }
 
-      {/* Create/Edit Modal Reuse structure */}
+          {/* Create/Edit Modal Reuse structure */}
+        </div>
+      </div>
+
+      {/* Modals */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={closeModals}
