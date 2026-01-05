@@ -187,9 +187,11 @@ export default function SubjectLibrary() {
           </div>
 
           <div className="flex items-center justify-between mb-8">
-            <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
-              {currentSpace?.name ? `${currentSpace.name} Library` : 'Library'}
-            </TruncatedText>
+            <div className="flex-1 min-w-0 mr-4">
+              <TruncatedText as="h1" className="text-3xl font-bold tracking-tight" title={currentSpace?.name ? `${currentSpace.name} Library` : 'Library'}>
+                {currentSpace?.name ? `${currentSpace.name} Library` : 'Library'}
+              </TruncatedText>
+            </div>
             <Button onClick={openCreateModal}>
               <Plus className="mr-2 h-4 w-4" />
               Add Subject
@@ -215,12 +217,14 @@ export default function SubjectLibrary() {
                   className="group relative flex flex-col justify-between p-6 rounded-xl border border-border bg-card hover:shadow-md cursor-pointer transition-all hover:border-primary/50"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-xl ${getDeterministicColor(subject._id)}`}>
+                    <div className="flex items-start gap-4 flex-1 min-w-0 mr-4">
+                      <div className={`p-3 rounded-xl ${getDeterministicColor(subject._id)} shrink-0`}>
                         <DynamicIcon name={subject.icon || 'Book'} className="h-6 w-6" />
                       </div>
-                      <div>
-                        <h3 className="text-xl font-semibold mb-1">{subject.title}</h3>
+                      <div className="min-w-0 flex-1">
+                        <TruncatedText as="h3" className="text-xl font-semibold mb-1" lines={1} title={subject.title}>
+                          {subject.title}
+                        </TruncatedText>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -238,7 +242,7 @@ export default function SubjectLibrary() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Button
                         className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
                         onClick={(e) => {

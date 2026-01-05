@@ -127,7 +127,7 @@ export default function SpaceList() {
                   onClick={() => navigate(`/spaces/${space.slug}/library`)}
                   className="group relative flex flex-col justify-between h-56 hover:border-primary/50 transition-all hover:shadow-md cursor-pointer p-6"
                 >
-                  <div className="flex flex-col h-full">
+                  <div className="flex flex-col h-full min-w-0">
                     <div className="flex justify-between items-start mb-4">
                       <div className={`p-3 rounded-xl ${getDeterministicColor(space._id)}`}>
                         <DynamicIcon name={space.icon} className="h-6 w-6" />

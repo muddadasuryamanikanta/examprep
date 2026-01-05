@@ -10,22 +10,34 @@ interface TruncatedTextProps {
   title?: string;
 }
 
-export function TruncatedText({ 
-  children, 
-  lines = 1, 
-  className, 
+export function TruncatedText({
+  children,
+  lines = 1,
+  className,
   as: Component = 'span',
   title
 }: TruncatedTextProps) {
   // We prefer the passed title, but if not provided and children is a string, use that.
   const tooltipText = title || (typeof children === 'string' ? children : undefined);
-  
+
+  // Map for line-clamp classes to ensure Tailwind JIT picks them up
+  const lineClampClasses: Record<number, string> = {
+    1: 'line-clamp-1',
+    2: 'line-clamp-2',
+    3: 'line-clamp-3',
+    4: 'line-clamp-4',
+    5: 'line-clamp-5',
+    6: 'line-clamp-6',
+  };
+
   // Base classes for truncation
-  const truncationClass = lines === 1 ? 'truncate' : `line-clamp-${lines}`;
+  // If lines is 1, we prefer 'truncate' for simple single-line ellipsis
+  // Otherwise try to check lineClamp map, default to nothing if not found or style manually
+  const truncationClass = lines === 1 ? 'truncate' : (lineClampClasses[lines] || `line-clamp-[${lines}]`);
 
   const component = (
-    <Component 
-      className={cn(truncationClass, className)} 
+    <Component
+      className={cn(truncationClass, className)}
     >
       {children}
     </Component>
@@ -41,8 +53,8 @@ export function TruncatedText({
             However, Tooltip wraps in a div. 
             Let's make the wrapper fit the flow. 
         */}
-        <Component 
-          className={cn(truncationClass, "w-full")} // Ensure inner text takes width
+        <Component
+          className={cn(truncationClass, "w-full", className)} // Ensure inner text takes width and receives styling
         >
           {children}
         </Component>

@@ -190,10 +190,12 @@ export default function TopicList() {
           </div>
 
           <div className="flex items-center justify-between mb-8">
-            <TruncatedText as="h1" className="text-3xl font-bold tracking-tight">
-              {currentSubject?.title}
-            </TruncatedText>
-            <div className="flex gap-2">
+            <div className="flex-1 min-w-0 mr-4">
+              <TruncatedText as="h1" className="text-3xl font-bold tracking-tight" title={currentSubject?.title}>
+                {currentSubject?.title}
+              </TruncatedText>
+            </div>
+            <div className="flex gap-2 shrink-0">
               <Button variant="secondary" onClick={(e) => openTakeTestModal(null, e)}>
                 Take Test
               </Button>
