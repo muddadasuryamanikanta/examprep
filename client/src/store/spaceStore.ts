@@ -10,8 +10,8 @@ interface SpaceState {
 
   fetchSpaces: () => Promise<void>;
   fetchSpace: (id: string) => Promise<void>;
-  createSpace: (data: { name: string; description: string }) => Promise<void>;
-  updateSpace: (id: string, data: { name: string; description: string }) => Promise<void>;
+  createSpace: (data: { name: string; description: string; icon?: string }) => Promise<void>;
+  updateSpace: (id: string, data: { name: string; description: string; icon?: string }) => Promise<void>;
   deleteSpace: (id: string) => Promise<void>;
   setCurrentSpace: (space: Space | null) => void;
 }

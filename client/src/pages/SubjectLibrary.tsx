@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Play, Sparkles } from 'lucide-react';
 import { ToastService } from '../services/ToastService';
 import { PromptService } from '../services/PromptService';
+import { AiIconService } from '../services/AiIconService';
 import { type Subject } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
 import { useTestStore } from '../store/testStore';
@@ -36,7 +37,15 @@ export default function SubjectLibrary() {
 
   const [isCreating, setIsCreating] = useState(false);
 
-  const [formData, setFormData] = useState({ title: '' });
+
+
+  const [formData, setFormData] = useState({ title: '', icon: '' });
+
+  const handleGenerateIcon = () => {
+    if (!formData.title) return;
+    const suggested = AiIconService.suggestIcon(formData.title);
+    setFormData(prev => ({ ...prev, icon: suggested }));
+  };
 
   useEffect(() => {
     if (spaceSlug) {
@@ -49,7 +58,7 @@ export default function SubjectLibrary() {
     if (!spaceSlug) return;
     setIsCreating(true);
     try {
-      await createSubject(spaceSlug, formData.title);
+      await createSubject(spaceSlug, formData.title, formData.icon);
       closeModals();
     } catch (err) {
       console.error(err);
@@ -61,7 +70,7 @@ export default function SubjectLibrary() {
   const handleUpdate = async () => {
     if (!targetSubject) return;
     try {
-      await updateSubject(targetSubject._id, formData.title);
+      await updateSubject(targetSubject._id, formData.title, formData.icon);
       closeModals();
     } catch (err) {
       console.error(err);
@@ -79,14 +88,14 @@ export default function SubjectLibrary() {
   };
 
   const openCreateModal = () => {
-    setFormData({ title: '' });
+    setFormData({ title: '', icon: '' });
     setIsCreateModalOpen(true);
   };
 
   const openEditModal = (subject: Subject, e: React.MouseEvent) => {
     e.stopPropagation();
     setTargetSubject(subject);
-    setFormData({ title: subject.title });
+    setFormData({ title: subject.title, icon: subject.icon || '' });
     setIsEditModalOpen(true);
   };
 
@@ -297,21 +306,35 @@ export default function SubjectLibrary() {
           </>
         }
       >
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Title</label>
-          <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            placeholder="e.g. Algebra"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleCreate();
-              }
-            }}
-            autoFocus
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Title</label>
+            <div className="flex gap-2">
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="e.g. Algebra"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+                autoFocus
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleGenerateIcon}
+                title="Auto-generate Icon"
+                type="button"
+                className="shrink-0"
+              >
+                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
         </div>
       </Modal>
 
@@ -328,19 +351,33 @@ export default function SubjectLibrary() {
           </>
         }
       >
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Title</label>
-          <input
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleUpdate();
-              }
-            }}
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Title</label>
+            <div className="flex gap-2">
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleUpdate();
+                  }
+                }}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleGenerateIcon}
+                title="Auto-generate Icon"
+                type="button"
+                className="shrink-0"
+              >
+                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
         </div>
       </Modal>
 

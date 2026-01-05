@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Sparkles } from 'lucide-react';
 import { type Space } from '../types/domain';
 import { useSpaceStore } from '../store/spaceStore';
+import { AiIconService } from '../services/AiIconService';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Modal } from '../components/common/Modal';
@@ -20,8 +21,14 @@ export default function SpaceList() {
   const [currentSpace, setCurrentSpace] = useState<Space | null>(null);
 
   // Form states
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', icon: '' });
   const createDescriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleGenerateIcon = () => {
+    if (!formData.name) return;
+    const suggested = AiIconService.suggestIcon(formData.name);
+    setFormData(prev => ({ ...prev, icon: suggested }));
+  };
   const editDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -58,14 +65,14 @@ export default function SpaceList() {
   };
 
   const openCreateModal = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', icon: '' });
     setIsCreateModalOpen(true);
   };
 
   const openEditModal = (space: Space, e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentSpace(space);
-    setFormData({ name: space.name, description: space.description || '' });
+    setFormData({ name: space.name, description: space.description || '', icon: space.icon || '' });
     setIsEditModalOpen(true);
   };
 
@@ -205,19 +212,31 @@ export default function SpaceList() {
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Name</label>
-            <input
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="e.g. Mathematics"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  createDescriptionRef.current?.focus();
-                }
-              }}
-              autoFocus
-            />
+            <div className="flex gap-2">
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="e.g. Mathematics"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    createDescriptionRef.current?.focus();
+                  }
+                }}
+                autoFocus
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleGenerateIcon}
+                title="Auto-generate Icon"
+                type="button"
+                className="shrink-0"
+              >
+                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
@@ -255,17 +274,29 @@ export default function SpaceList() {
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Name</label>
-            <input
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  editDescriptionRef.current?.focus();
-                }
-              }}
-            />
+            <div className="flex gap-2">
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    editDescriptionRef.current?.focus();
+                  }
+                }}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleGenerateIcon}
+                title="Auto-generate Icon"
+                type="button"
+                className="shrink-0"
+              >
+                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>

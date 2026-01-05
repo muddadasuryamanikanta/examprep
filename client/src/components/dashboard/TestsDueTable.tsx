@@ -1,12 +1,11 @@
 import React from 'react';
 import type { TestUnit } from '../../types/dashboard';
-import { useTakeTest } from '../../hooks/useTakeTest';
-import { PromptService } from '../../services/PromptService';
 import { CheckCircle, Clock, PauseCircle, PlayCircle, AlertCircle } from 'lucide-react';
 
 interface TestsDueTableProps {
     tests: TestUnit[];
     onScroll?: () => void;
+    onTakeTest: (test: TestUnit) => void;
 }
 
 const StatusBadge = ({ status }: { status: TestUnit['status'] }) => {
@@ -26,31 +25,18 @@ const StatusBadge = ({ status }: { status: TestUnit['status'] }) => {
     }
 };
 
-export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll }) => {
-    const { startTest } = useTakeTest();
-    const [creatingTestId, setCreatingTestId] = React.useState<string | null>(null);
+export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll, onTakeTest }) => {
 
-    const handleAction = async (test: TestUnit) => {
-        if (test.dueQuestions === 0) {
-            // Review logic (placeholder)
+    const handleAction = (test: TestUnit) => {
+        if (test.dueQuestions === 0 && test.space.name !== 'Mains') {
+            // Review logic could go here or be handled by parent too if needed
+            // For now, if dueQuestions is 0, we might strictly want to 'Review'
+            // The original code passed 'test' to handleAction which did async startTest.
+            // Now we just pass to parent.
+            onTakeTest(test);
             return;
         }
-
-        try {
-            setCreatingTestId(test.topic._id);
-            // Create a test session for this topic
-            await startTest({
-                spaceId: test.space._id,
-                subjectId: test.subject._id,
-                topicId: test.topic._id,
-                mode: 'pending'
-            });
-        } catch (error) {
-            console.error('Failed to start test:', error);
-            PromptService.error('Failed to start test. Please try again.');
-        } finally {
-            setCreatingTestId(null);
-        }
+        onTakeTest(test);
     };
 
     return (
@@ -100,20 +86,13 @@ export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll })
                                             <div className="flex items-center justify-center">
                                                 <button
                                                     onClick={() => handleAction(test)}
-                                                    disabled={creatingTestId === test.topic._id || (test.dueQuestions === 0 && test.space.name !== 'Mains')}
+                                                    disabled={(test.dueQuestions === 0 && test.space.name !== 'Mains')}
                                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95 ${test.dueQuestions === 0
-                                                        ? 'bg-muted text-muted-foreground cursor-not-allowed hidden' // Or muted/disabled
+                                                        ? 'bg-muted text-muted-foreground cursor-not-allowed hidden'
                                                         : 'bg-primary text-primary-foreground hover:bg-primary/90'
                                                         }`}
                                                 >
-                                                    {creatingTestId === test.topic._id ? (
-                                                        <span className="flex items-center gap-2">
-                                                            <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                                                            Starting...
-                                                        </span>
-                                                    ) : (
-                                                        test.space.name === 'Mains' ? 'Write' : (test.dueQuestions === 0 ? 'Review' : 'Take Test')
-                                                    )}
+                                                    {test.space.name === 'Mains' ? 'Write' : (test.dueQuestions === 0 ? 'Review' : 'Take Test')}
                                                 </button>
 
                                                 {test.dueQuestions === 0 && (
@@ -136,3 +115,4 @@ export const TestsDueTable: React.FC<TestsDueTableProps> = ({ tests, onScroll })
         </div>
     );
 };
+

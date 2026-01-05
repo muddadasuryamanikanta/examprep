@@ -16,15 +16,15 @@ interface ContentState {
   // Subjects
   fetchSubjects: (spaceId: string) => Promise<void>;
   fetchSubject: (subjectId: string) => Promise<void>;
-  createSubject: (spaceId: string, title: string) => Promise<void>;
-  updateSubject: (id: string, title: string) => Promise<void>;
+  createSubject: (spaceId: string, title: string, icon?: string) => Promise<void>;
+  updateSubject: (id: string, title: string, icon?: string) => Promise<void>;
   deleteSubject: (id: string) => Promise<void>;
   setCurrentSubject: (subject: Subject | null) => void;
 
   // Topics
   fetchTopics: (subjectId: string) => Promise<void>;
-  createTopic: (subjectId: string, title: string) => Promise<void>;
-  updateTopic: (id: string, title: string) => Promise<void>;
+  createTopic: (subjectId: string, title: string, icon?: string) => Promise<void>;
+  updateTopic: (id: string, title: string, icon?: string) => Promise<void>;
   deleteTopic: (id: string) => Promise<void>;
   setCurrentTopic: (topic: Topic | null) => void;
 
@@ -78,9 +78,9 @@ export const useContentStore = create<ContentState>((set, get) => ({
     }
   },
 
-  createSubject: async (spaceId, title) => {
+  createSubject: async (spaceId, title, icon) => {
     try {
-      await api.post('/subjects', { spaceId, title });
+      await api.post('/subjects', { spaceId, title, icon });
       await get().fetchSubjects(spaceId);
     } catch (error) {
       console.error('Create subject error:', error);
@@ -88,11 +88,11 @@ export const useContentStore = create<ContentState>((set, get) => ({
     }
   },
 
-  updateSubject: async (id, title) => {
+  updateSubject: async (id, title, icon) => {
     try {
-      await api.put(`/subjects/${id}`, { title });
+      await api.put(`/subjects/${id}`, { title, icon });
       set(state => ({
-        subjects: state.subjects.map(s => s._id === id ? { ...s, title } : s),
+        subjects: state.subjects.map(s => s._id === id ? { ...s, title, icon: icon || s.icon } : s),
         currentSubject: state.currentSubject?._id === id ? { ...state.currentSubject, title } : state.currentSubject
       }));
     } catch (error) {
@@ -128,9 +128,9 @@ export const useContentStore = create<ContentState>((set, get) => ({
     }
   },
 
-  createTopic: async (subjectId, title) => {
+  createTopic: async (subjectId, title, icon) => {
     try {
-      await api.post('/topics', { subjectId, title });
+      await api.post('/topics', { subjectId, title, icon });
       await get().fetchTopics(subjectId);
     } catch (error) {
       console.error('Create topic error:', error);
@@ -138,11 +138,11 @@ export const useContentStore = create<ContentState>((set, get) => ({
     }
   },
 
-  updateTopic: async (id, title) => {
+  updateTopic: async (id, title, icon) => {
     try {
-      await api.put(`/topics/${id}`, { title });
+      await api.put(`/topics/${id}`, { title, icon });
       set(state => ({
-        topics: state.topics.map(t => t._id === id ? { ...t, title } : t),
+        topics: state.topics.map(t => t._id === id ? { ...t, title, icon: icon || t.icon } : t),
         currentTopic: state.currentTopic?._id === id ? { ...state.currentTopic, title } : state.currentTopic
       }));
     } catch (error) {
