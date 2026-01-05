@@ -13,12 +13,12 @@ import { TruncatedText } from '../components/common/TruncatedText';
 export default function SpaceList() {
   const navigate = useNavigate();
   const { spaces, isLoading, fetchSpaces, createSpace, updateSpace, deleteSpace } = useSpaceStore();
-  
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentSpace, setCurrentSpace] = useState<Space | null>(null);
-  
+
   // Form states
   const [formData, setFormData] = useState({ name: '', description: '' });
   const createDescriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -149,13 +149,13 @@ export default function SpaceList() {
                 </div>
 
                 <div>
-                  <TruncatedText 
+                  <TruncatedText
                     as="h3"
                     className="text-xl font-semibold mb-2 bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text"
                   >
                     {space.name}
                   </TruncatedText>
-                  <TruncatedText 
+                  <TruncatedText
                     as="p"
                     lines={3}
                     className="text-sm text-muted-foreground leading-relaxed"
@@ -167,15 +167,15 @@ export default function SpaceList() {
               </div>
             </Card>
           ))}
-          
+
           <button
             onClick={openCreateModal}
             className="group relative flex flex-col items-center justify-center h-56 border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50 rounded-xl transition-all cursor-pointer p-6"
           >
-             <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Plus className="h-6 w-6 text-primary" />
-             </div>
-             <span className="font-semibold text-foreground">Add New Space</span>
+            <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Plus className="h-6 w-6 text-primary" />
+            </div>
+            <span className="font-semibold text-foreground">Add New Space</span>
           </button>
         </div>
       )}
@@ -239,12 +239,12 @@ export default function SpaceList() {
           <>
             <Button variant="secondary" onClick={closeModals}>Cancel</Button>
             <Button onClick={handleUpdate} disabled={isLoading}>
-               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
             </Button>
           </>
         }
       >
-         <div className="space-y-4">
+        <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Name</label>
             <input
@@ -286,7 +286,7 @@ export default function SpaceList() {
           <>
             <Button variant="secondary" onClick={closeModals}>Cancel</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete Space'}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete Space'}
             </Button>
           </>
         }

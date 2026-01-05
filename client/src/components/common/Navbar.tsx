@@ -59,13 +59,13 @@ export function Navbar() {
             <>
               <Link
                 to="/tests"
-                className="hidden md:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="hidden md:inline-flex items-center text-sm font-medium text-foreground/90 hover:text-primary transition-colors"
               >
                 Test Center
               </Link>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center text-sm font-medium text-foreground/90 hover:text-primary transition-colors"
               >
                 Dashboard
               </Link>

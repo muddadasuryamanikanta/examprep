@@ -28,8 +28,8 @@ export const useSpaceStore = create<SpaceState>((set, get) => ({
       const res = await api.get<Space[]>('/spaces');
       set({ spaces: res.data, isLoading: false });
     } catch (error) {
-       console.error('Fetch spaces error:', error);
-       set({ error: 'Failed to fetch spaces', isLoading: false });
+      console.error('Fetch spaces error:', error);
+      set({ error: 'Failed to fetch spaces', isLoading: false });
     }
   },
 
@@ -70,7 +70,7 @@ export const useSpaceStore = create<SpaceState>((set, get) => ({
       await get().fetchSpaces();
       // If updating current space, refresh it too
       if (get().currentSpace?._id === id) {
-          await get().fetchSpace(id);
+        await get().fetchSpace(id);
       }
       set({ isLoading: false });
     } catch (error) {
@@ -95,6 +95,6 @@ export const useSpaceStore = create<SpaceState>((set, get) => ({
       throw error;
     }
   },
-  
+
   setCurrentSpace: (space) => set({ currentSpace: space }),
 }));
