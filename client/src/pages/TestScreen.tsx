@@ -123,9 +123,9 @@ export default function TestScreen() {
             ...prev,
             [currentQ.blockId]: isRecognizable
         }));
-        
+
         // Auto advance
-        handleSaveAndNext(); 
+        handleSaveAndNext();
     };
 
     const handleSubmitTest = useCallback(async (finalWarnings = focusWarnings, finalTimeSpent = questionTimes) => {
@@ -136,14 +136,14 @@ export default function TestScreen() {
         try {
             // Stop timer
             // if (timerRef.current) clearInterval(timerRef.current);
-            
+
             await submitTest(id, {
                 answers,
                 warnings: finalWarnings,
                 timeSpent: finalTimeSpent,
                 cognitiveRatings // <--- Send this to backend
             });
-            setShowTestCompleted(true);
+            // setShowTestCompleted(true);
         } catch (error: any) {
             console.error('Failed to submit test:', error);
             PromptService.alert('Submission Failed', `Error: ${error.message || 'Unknown error'}`);

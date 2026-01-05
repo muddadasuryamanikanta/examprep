@@ -30,12 +30,12 @@ export default function AnkiBoard() {
 
     // --- LEARNING STEP CHECK STATE ---
     // Moved to top level to comply with React Rules of Hooks
-    const [now, setNow] = useState(Date.now());
+    // const [now, setNow] = useState(Date.now());
 
-    useEffect(() => {
-        const timer = setInterval(() => setNow(Date.now()), 1000);
-        return () => clearInterval(timer);
-    }, []);
+    // useEffect(() => {
+    //     const timer = setInterval(() => setNow(Date.now()), 1000);
+    //     return () => clearInterval(timer);
+    // }, []);
     // ---------------------------------
 
     // Reset local state when item changes
@@ -116,7 +116,7 @@ export default function AnkiBoard() {
         // Use implicit state detection if state field isn't populated on frontend type yet
         // But we should try to use the raw item logic 
         const isNewOrLearning = !currentItem._id || currentItem.repetitions === 0; // Fallback
-        
+
         // Constants matching Backend
         const TEN_MIN = 10 / (24 * 60);
 
@@ -147,7 +147,7 @@ export default function AnkiBoard() {
         // we assume standard Review behavior if repetitions > 0.
         // For accurate Relearning labels, we'd need to add 'state' to the frontend interface.
         // For now, this is a close approximation.
-        
+
         if (rating === 'Hard') return fmt(Math.max(1, currentInt * 1.2));
         if (rating === 'Good') return fmt(currentInt * ef);
         if (rating === 'Easy') return fmt(currentInt * ef * 1.3);
