@@ -95,14 +95,14 @@ const Dashboard = () => {
 
             // Handle both new paginated response { data: [], meta: {} } and legacy array response []
             let data: TestUnit[] = [];
-            let total = 0;
+
 
             if (Array.isArray(response.data)) {
                 data = response.data;
-                total = data.length;
+                // total = data.length;
             } else if (response.data && Array.isArray(response.data.data)) {
                 data = response.data.data;
-                total = response.data.meta?.total || 0;
+                // total = response.data.meta?.total || 0;
             }
 
             if (isNewFilter) {

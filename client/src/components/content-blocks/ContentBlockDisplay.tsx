@@ -12,7 +12,7 @@ interface ContentBlockDisplayProps {
   compareMode?: boolean;
 }
 
-export function ContentBlockDisplay({ block, isTest = false, value, onChange, onSubmit, compareMode }: ContentBlockDisplayProps) {
+export function ContentBlockDisplay({ block, isTest = false, value, onChange, onSubmit }: ContentBlockDisplayProps) {
   switch (block.kind) {
     case 'note':
       return <NoteBlock block={block} isTest={isTest} />;
