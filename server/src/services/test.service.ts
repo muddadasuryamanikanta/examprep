@@ -8,6 +8,7 @@ import { ContentBlockType } from '../models/ContentBlock.js';
 import Subject from '../models/Subject.js';
 import Topic from '../models/Topic.js';
 import SpacedRepetition from '../models/Anki.js';
+import AnkiService from './anki.service.js';
 
 export class TestService {
   /**
@@ -189,7 +190,7 @@ export class TestService {
   /**
    * Submit test and calculate score
    */
-  async submitTest(testId: string, userId: string, answers: Record<string, any>, warnings: any[], timeSpent?: Record<string, number>): Promise<ITest> {
+  async submitTest(testId: string, userId: string, answers: Record<string, any>, warnings: any[], timeSpent?: Record<string, number>, cognitiveRatings?: Record<string, boolean>): Promise<ITest> {
     const test = await Test.findOne({ _id: testId, userId });
     if (!test) throw new Error('Test not found');
 
@@ -202,7 +203,9 @@ export class TestService {
     const negativeMarks = test.config.negativeMarks || 0;
 
     // Process answers
-    test.questions.forEach((q: any) => {
+    const ankiUpdates: Promise<any>[] = [];
+
+    for (const q of test.questions) {
       const qId = q.blockId.toString();
       const answer = answers[qId];
       q.userAnswer = answer;
@@ -264,7 +267,29 @@ export class TestService {
           q.marksObtained = 0;
         }
       }
-    });
+
+      // --- Cognitive Grading / Anki Update ---
+      // Apply ONLY if cognitiveRatings has data for this question
+      if (cognitiveRatings && cognitiveRatings[qId] !== undefined) {
+          const isRecognizable = cognitiveRatings[qId];
+          let rating: 'Again' | 'Hard' | 'Good' | 'Easy' = 'Good';
+
+          // Matrix Logic
+          if (isCorrect) {
+              if (isRecognizable) rating = 'Good';
+              else rating = 'Hard';
+          } else {
+              if (isRecognizable) rating = 'Hard';
+              else rating = 'Again';
+          }
+
+          // Queue the update
+           ankiUpdates.push(AnkiService.processReview(userId, qId, rating));
+      }
+    } // End loop
+
+    // Wait for all Anki updates
+    await Promise.all(ankiUpdates);
 
     test.score = score;
     test.status = TestStatus.COMPLETED;

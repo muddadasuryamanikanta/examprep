@@ -35,7 +35,7 @@ export function useTakeTest() {
                 duration: 30,      // Defaulting to 30 as per TopicList
                 marksPerQuestion: 1,
                 negativeMarks: 0.25,
-                onlyDue: mode === 'pending',
+                isPending: mode === 'pending',
                 questionTypes: ['single_select_mcq', 'multi_select_mcq']
             };
 

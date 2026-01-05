@@ -120,6 +120,7 @@ export class AnkiController {
                 sr = new SpacedRepetition({
                     userId,
                     questionId,
+                    state: 'new',
                     easeFactor: 2.5,
                     intervalDays: 0,
                     repetitions: 0,
@@ -127,73 +128,130 @@ export class AnkiController {
                 });
             }
 
-            switch (rating) {
-                case 'Again':
-                    if (sr.repetitions === 0) {
-                        sr.intervalDays = 1 / (24 * 60); // 1 minute
-                    } else {
-                        sr.repetitions = 0; // Reset
-                        sr.intervalDays = 1 / (24 * 60); // Re-learning step 1
-                    }
-                    sr.easeFactor = Math.max(1.3, sr.easeFactor - 0.2);
-                    sr.nextReviewAt = now; // Due immediately (or +1 min)
-                    break;
+            // Defaults matching Anki
+            const STEP_1 = 1 / (24 * 60); // 1 min
+            const STEP_2 = 10 / (24 * 60); // 10 min
+            const GRADUATING_IVL = 1;
+            const EASY_IVL = 4;
+            const NEW_INTERVAL = 0; // Config for lapsed cards logic if needed
 
-                case 'Hard':
-                    if (sr.repetitions === 0) {
-                        // New Card - "Hard" = 10m step
-                        sr.intervalDays = 10 / (24 * 60); // 10 minutes
-                        sr.repetitions = 0; // Still learning
-                    } else {
-                        // Review Card
-                        sr.repetitions += 1;
-                        if (sr.intervalDays < 0.01) sr.intervalDays = 1; // Was re-learning?
-                        else sr.intervalDays = Math.max(1, sr.intervalDays * 1.2);
-                    }
+            switch (sr.state) {
+                case 'new':
+                case 'learning':
+                    // --- LEARNING PHASE ---
+                    switch (rating) {
+                        case 'Again':
+                            sr.state = 'learning';
+                            sr.intervalDays = STEP_1;
+                            sr.repetitions = 0;
+                            // Ease doesn't change in learning usually, but we can decrement slightly or keep
+                            break;
+                            
+                        case 'Hard':
+                            sr.state = 'learning';
+                            // Avg of (1m, 10m) = ~5.5m -> 6m
+                            sr.intervalDays = 6 / (24 * 60);
+                            break;
 
-                    sr.easeFactor = Math.max(1.3, sr.easeFactor - 0.15);
+                        case 'Good':
+                            if (sr.intervalDays < STEP_2 - 0.0001) {
+                                // Step 1 -> Step 2
+                                sr.state = 'learning';
+                                sr.intervalDays = STEP_2;
+                            } else {
+                                // Graduate
+                                sr.state = 'review';
+                                sr.intervalDays = GRADUATING_IVL;
+                                sr.repetitions = 1;
+                            }
+                            break;
+
+                        case 'Easy':
+                            // Graduate Immediately
+                            sr.state = 'review';
+                            sr.intervalDays = EASY_IVL;
+                            sr.repetitions = 1;
+                            break;
+                    }
+                    // Next review relative to NOW for learning steps
                     sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
                     break;
 
-                case 'Good':
-                    if (sr.repetitions === 0) {
-                        // New Card - "Good" = Graduate to 1 day
-                        sr.intervalDays = 1;
-                        sr.repetitions = 1; // Graduated
-                    } else {
-                        // Review Card
-                        sr.repetitions += 1;
-                        if (sr.intervalDays < 0.01) sr.intervalDays = 1;
-                        else sr.intervalDays = Math.round(sr.intervalDays * sr.easeFactor);
-                    }
-                    sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
-                    break;
+                case 'review':
+                    // --- REVIEW PHASE ---
+                    switch (rating) {
+                        case 'Again':
+                            // LAPSE -> Relearning
+                            sr.state = 'relearning';
+                            sr.intervalDays = STEP_2; // Relearn default is 10m in standard Anki
+                            sr.easeFactor = Math.max(1.3, sr.easeFactor - 0.2);
+                            sr.repetitions = 0; // Reset count? Or keep lapse count? Anki tracks lapses.
+                            // In this simple model, we reset reps for "streak", but keeps High Level details in Ease
+                            break;
 
-                case 'Easy':
-                    if (sr.repetitions === 0) {
-                        // New Card - "Easy" = Graduate to 4 days
-                        sr.intervalDays = 4;
-                        sr.repetitions = 1; // Graduated
-                    } else {
-                        // Review Card
-                        sr.repetitions += 1;
-                        if (sr.intervalDays < 0.01) sr.intervalDays = 4;
-                        else {
-                            // Standard Anki: Interval * Ease * EasyBonus (1.3)
+                        case 'Hard':
+                            sr.state = 'review';
+                            sr.intervalDays = Math.max(1, sr.intervalDays * 1.2);
+                            sr.easeFactor = Math.max(1.3, sr.easeFactor - 0.15);
+                            sr.repetitions += 1;
+                            break;
+
+                        case 'Good':
+                            sr.state = 'review';
+                            sr.intervalDays = Math.round(sr.intervalDays * sr.easeFactor);
+                            sr.repetitions += 1;
+                            break;
+
+                        case 'Easy':
+                            sr.state = 'review';
                             sr.intervalDays = Math.round(sr.intervalDays * sr.easeFactor * 1.3);
                             sr.easeFactor += 0.15;
-                        }
+                            sr.repetitions += 1;
+                            break;
                     }
-                    sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                    
+                    if (sr.state === 'relearning') {
+                         sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                    } else {
+                         // Review cards are usually scheduled from NOW (or from scheduled time? Anki V2 vs V3).
+                         // Using NOW for simplicity and robustness.
+                         sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                    }
                     break;
+
+                case 'relearning':
+                     // --- RELEARNING PHASE ---
+                     // Typically 1 step (10m) -> Back to Review with new Interval
+                     switch(rating) {
+                         case 'Again':
+                             sr.intervalDays = STEP_1; // 1m
+                             // Stay in relearning
+                             break;
+                         case 'Good':
+                             // Exit relearning. 
+                             // New Interval = Old Interval * New Interval % (default 0%)? 
+                             // Or just 1 day?
+                             // Anki default: New Interval = 1 d. 
+                             sr.state = 'review';
+                             sr.intervalDays = 1; 
+                             break;
+                         case 'Easy':
+                             sr.state = 'review';
+                             sr.intervalDays = 4;
+                             break;
+                         case 'Hard':
+                             sr.intervalDays = 6 / (24 * 60);
+                             break;
+                     }
+                     sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
+                     break;
             }
 
-            sr.easeFactor = Math.min(3.0, sr.easeFactor);
+            sr.easeFactor = Math.min(3.0, Math.max(1.3, sr.easeFactor));
             sr.lastReviewedAt = now;
             await sr.save();
 
             res.status(200).json(sr);
-
         } catch (error) {
             console.error('Review Submit Error:', error);
             res.status(500).json({ message: 'Failed to submit review' });

@@ -131,7 +131,7 @@ export default function SubjectLibrary() {
         selections,
         questionCount: 15,
         duration: 30,
-        onlyDue: mode === 'pending'
+        isPending: mode === 'pending'
       });
 
       setIsTakeTestModalOpen(false);

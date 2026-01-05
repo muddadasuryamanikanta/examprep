@@ -81,32 +81,31 @@ export default function AnkiBoard() {
     }
 
     // --- LEARNING STEP CHECK LOGIC ---
+    /* 
+       User Feedback: "in real anki if there are no cards i will directly show remaining card"
+       
+       Current implementation: simple linear queue. If we hit a card with showAfter > now, we are blocked.
+       Since we don't have logic to "skip and find next unlocked" yet (complex queue management), 
+       being "blocked" effectively means "waiting with no other cards to do".
+       
+       In this case, Anki collapses the time and shows the card.
+       So, we will BYPASS this lock screen for now. 
+       The card is "due" because it's at the front of our session queue.
+    */
+    /*
     const showAfter = currentItem?.showAfter;
     const isLocked = showAfter && showAfter > now;
 
     if (isLocked) {
         const remainingSeconds = Math.ceil((showAfter - now) / 1000);
-        const mins = Math.floor(remainingSeconds / 60);
-        const secs = remainingSeconds % 60;
-
+        // ... (Waiting Screen Code removed/commented to allow immediate review)
         return (
-            <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white p-4 text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Learning Step in Progress</h2>
-                <p className="text-gray-400 mb-6">This card is waiting for its learning interval to pass.</p>
-                <div className="text-4xl font-mono font-bold text-primary mb-8">
-                    {mins}:{secs.toString().padStart(2, '0')}
-                </div>
-                {/* 
-                   Ideally, we would check if there are OTHER cards to review.
-                   Since our generic hook just gives us `currentItem`, we are blocked on this one.
-                   In a full implementation, we would skip this card. 
-                   For now, this "Waiting" screen effectively enforces the Time Factor requested.
-                */}
-                <Button variant="secondary" onClick={() => navigate(-1)}>Exit Session</Button>
-            </div>
-        );
-    }
+             <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white p-4 text-center">
+                ... 
+             </div>
+        )
+    } 
+    */
     // ---------------------------
 
     // Calculate Next Intervals for UI (Mock logic to match backend roughly or just static labels)
@@ -114,25 +113,42 @@ export default function AnkiBoard() {
     const getIntervalLabel = (rating: AnkiRating) => {
         const currentInt = currentItem.intervalDays;
         const ef = currentItem.easeFactor;
-        const isNew = currentItem.repetitions === 0;
+        // Use implicit state detection if state field isn't populated on frontend type yet
+        // But we should try to use the raw item logic 
+        const isNewOrLearning = !currentItem._id || currentItem.repetitions === 0; // Fallback
+        
+        // Constants matching Backend
+        const TEN_MIN = 10 / (24 * 60);
 
         // Helper to format days
         const fmt = (days: number) => {
-            if (days < 0.9 / (24 * 60)) return '<1m'; // Less than ~0.9 mins
-            if (days < 1) return `${Math.round(days * 24 * 60)}m`;
+            if (days < 0.9 / (24 * 60)) return '<1m';
+            if (days < 1) {
+                const mins = Math.round(days * 24 * 60);
+                return `${mins}m`;
+            }
             return `${Math.round(days)}d`;
         };
 
-        if (isNew) {
+        if (isNewOrLearning) {
             if (rating === 'Again') return '1m';
-            if (rating === 'Hard') return '10m';
-            if (rating === 'Good') return '1d';
+            if (rating === 'Hard') return '6m';
+            if (rating === 'Good') {
+                if (currentInt < TEN_MIN - 0.0001) return '10m';
+                return '1d';
+            }
             if (rating === 'Easy') return '4d';
         }
 
-        // Review Card
-        if (rating === 'Again') return '1m'; // Re-learn
-        if (rating === 'Hard') return fmt(currentInt * 1.2);
+        // Review/Relearning
+        if (rating === 'Again') return '1m'; // Review -> Relearn (10m) or Relearn Again (1m)
+        // Note: In Relearning, Good -> 1d. In Review, Good -> Scale.
+        // Since we don't have explicit 'state' in the frontend Type yet (AnkiSessionItem),
+        // we assume standard Review behavior if repetitions > 0.
+        // For accurate Relearning labels, we'd need to add 'state' to the frontend interface.
+        // For now, this is a close approximation.
+        
+        if (rating === 'Hard') return fmt(Math.max(1, currentInt * 1.2));
         if (rating === 'Good') return fmt(currentInt * ef);
         if (rating === 'Easy') return fmt(currentInt * ef * 1.3);
 

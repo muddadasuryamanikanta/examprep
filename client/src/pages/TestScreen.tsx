@@ -110,24 +110,46 @@ export default function TestScreen() {
         return finalTimes;
     }, [test, currentQuestionIndex, questionTimes]);
 
-    const handleSubmitTest = useCallback(async (finalWarnings = focusWarnings) => {
-        if (submitting || !id) return;
+    // --- Cognitive Grading ---
+    const [cognitiveRatings, setCognitiveRatings] = useState<Record<string, boolean>>({});
+
+    const handleCognitiveRating = async (isRecognizable: boolean) => {
+        if (!test) return;
+        const currentQ = test.questions[currentQuestionIndex];
+        if (!currentQ) return;
+
+        // --- TEST TAKING MODE: Defer Update ---
+        setCognitiveRatings(prev => ({
+            ...prev,
+            [currentQ.blockId]: isRecognizable
+        }));
+        
+        // Auto advance
+        handleSaveAndNext(); 
+    };
+
+    const handleSubmitTest = useCallback(async (finalWarnings = focusWarnings, finalTimeSpent = questionTimes) => {
+        if (!id) return;
+        if (submitting) return;
+
         setSubmitting(true);
-
-        const finalTimes = captureCurrentTime();
-
         try {
+            // Stop timer
+            // if (timerRef.current) clearInterval(timerRef.current);
+            
             await submitTest(id, {
                 answers,
                 warnings: finalWarnings,
-                timeSpent: finalTimes
+                timeSpent: finalTimeSpent,
+                cognitiveRatings // <--- Send this to backend
             });
-        } catch (err) {
-            console.error(err);
-            setSubmitting(false);
-            PromptService.error("Failed to submit test. Please try again.");
+            setShowTestCompleted(true);
+        } catch (error: any) {
+            console.error('Failed to submit test:', error);
+            PromptService.alert('Submission Failed', `Error: ${error.message || 'Unknown error'}`);
+            setSubmitting(false); // Re-enable if failed
         }
-    }, [submitting, id, focusWarnings, answers, submitTest, captureCurrentTime]);
+    }, [id, focusWarnings, answers, questionTimes, submitting, cognitiveRatings, submitTest]);
 
     const handlePause = useCallback(async () => {
         if (submitting || !id) return;
@@ -359,6 +381,8 @@ export default function TestScreen() {
                     isReview={isReviewMode}
                     timeSpent={questionTimes[currentQuestion.blockId] || 0}
                     isAnswerCorrect={currentQuestion.isCorrect}
+                    onCognitiveRating={handleCognitiveRating}
+                    isPending={test.config?.isPending}
                 />
 
                 <TestSidebar

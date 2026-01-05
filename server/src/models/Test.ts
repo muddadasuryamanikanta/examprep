@@ -17,6 +17,7 @@ export interface ITestConfig {
   duration: number; // in minutes
   marksPerQuestion: number;
   negativeMarks: number;
+  isPending?: boolean;
 }
 
 export interface IWarning {
@@ -56,7 +57,8 @@ const TestSchema: Schema = new Schema({
     questionCount: { type: Number, required: true },
     duration: { type: Number, required: true },
     marksPerQuestion: { type: Number, required: true, default: 1 },
-    negativeMarks: { type: Number, required: true, default: 0 }
+    negativeMarks: { type: Number, required: true, default: 0 },
+    isPending: { type: Boolean, default: false }
   },
   questions: [{
     _id: false,

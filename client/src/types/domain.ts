@@ -96,6 +96,7 @@ export interface Test extends BaseEntity {
   config: {
     questionCount: number;
     duration: number; // in minutes
+    isPending?: boolean;
   };
   warnings?: Array<{ timestamp: Date; reason: string }>;
 }
