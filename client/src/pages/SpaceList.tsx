@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { type Space } from '../types/domain';
 import { useSpaceStore } from '../store/spaceStore';
-import { AiIconService } from '../services/AiIconService';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Modal } from '../components/common/Modal';
@@ -21,14 +20,9 @@ export default function SpaceList() {
   const [currentSpace, setCurrentSpace] = useState<Space | null>(null);
 
   // Form states
-  const [formData, setFormData] = useState({ name: '', description: '', icon: '' });
+  const [formData, setFormData] = useState({ name: '', description: '' });
   const createDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleGenerateIcon = () => {
-    if (!formData.name) return;
-    const suggested = AiIconService.suggestIcon(formData.name);
-    setFormData(prev => ({ ...prev, icon: suggested }));
-  };
   const editDescriptionRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -65,14 +59,14 @@ export default function SpaceList() {
   };
 
   const openCreateModal = () => {
-    setFormData({ name: '', description: '', icon: '' });
+    setFormData({ name: '', description: '' });
     setIsCreateModalOpen(true);
   };
 
   const openEditModal = (space: Space, e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentSpace(space);
-    setFormData({ name: space.name, description: space.description || '', icon: space.icon || '' });
+    setFormData({ name: space.name, description: space.description || '' });
     setIsEditModalOpen(true);
   };
 
@@ -226,16 +220,6 @@ export default function SpaceList() {
                 }}
                 autoFocus
               />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleGenerateIcon}
-                title="Auto-generate Icon"
-                type="button"
-                className="shrink-0"
-              >
-                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
-              </Button>
             </div>
           </div>
           <div className="space-y-2">
@@ -286,16 +270,6 @@ export default function SpaceList() {
                   }
                 }}
               />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleGenerateIcon}
-                title="Auto-generate Icon"
-                type="button"
-                className="shrink-0"
-              >
-                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
-              </Button>
             </div>
           </div>
           <div className="space-y-2">

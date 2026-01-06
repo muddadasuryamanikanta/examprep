@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Loader2, Play, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
 import { ToastService } from '../services/ToastService';
 import { PromptService } from '../services/PromptService';
-import { AiIconService } from '../services/AiIconService';
 import { type Subject } from '../types/domain';
 import { useContentStore } from '../store/contentStore';
 import { useTestStore } from '../store/testStore';
@@ -39,13 +38,8 @@ export default function SubjectLibrary() {
 
 
 
-  const [formData, setFormData] = useState({ title: '', icon: '' });
+  const [formData, setFormData] = useState({ title: '' });
 
-  const handleGenerateIcon = () => {
-    if (!formData.title) return;
-    const suggested = AiIconService.suggestIcon(formData.title);
-    setFormData(prev => ({ ...prev, icon: suggested }));
-  };
 
   useEffect(() => {
     if (spaceSlug) {
@@ -58,7 +52,7 @@ export default function SubjectLibrary() {
     if (!spaceSlug) return;
     setIsCreating(true);
     try {
-      await createSubject(spaceSlug, formData.title, formData.icon);
+      await createSubject(spaceSlug, formData.title);
       closeModals();
     } catch (err) {
       console.error(err);
@@ -70,7 +64,7 @@ export default function SubjectLibrary() {
   const handleUpdate = async () => {
     if (!targetSubject) return;
     try {
-      await updateSubject(targetSubject._id, formData.title, formData.icon);
+      await updateSubject(targetSubject._id, formData.title);
       closeModals();
     } catch (err) {
       console.error(err);
@@ -88,14 +82,14 @@ export default function SubjectLibrary() {
   };
 
   const openCreateModal = () => {
-    setFormData({ title: '', icon: '' });
+    setFormData({ title: '' });
     setIsCreateModalOpen(true);
   };
 
   const openEditModal = (subject: Subject, e: React.MouseEvent) => {
     e.stopPropagation();
     setTargetSubject(subject);
-    setFormData({ title: subject.title, icon: subject.icon || '' });
+    setFormData({ title: subject.title });
     setIsEditModalOpen(true);
   };
 
@@ -327,16 +321,6 @@ export default function SubjectLibrary() {
                 }}
                 autoFocus
               />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleGenerateIcon}
-                title="Auto-generate Icon"
-                type="button"
-                className="shrink-0"
-              >
-                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
-              </Button>
             </div>
           </div>
         </div>
@@ -370,16 +354,6 @@ export default function SubjectLibrary() {
                   }
                 }}
               />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleGenerateIcon}
-                title="Auto-generate Icon"
-                type="button"
-                className="shrink-0"
-              >
-                {formData.icon ? <DynamicIcon name={formData.icon} className="h-4 w-4 text-primary" /> : <Sparkles className="h-4 w-4" />}
-              </Button>
             </div>
           </div>
         </div>

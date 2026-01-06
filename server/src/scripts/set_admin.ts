@@ -8,26 +8,18 @@ async function migrate() {
     await mongoose.connect(ENV.MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // 1. Set the specific user as Admin and Approved
-    const adminUpdate = await User.updateOne(
-      { email: ENV.ADMIN_EMAIL },
+    const adminEmails = ENV.ADMIN_EMAILS;
+    
+    const adminUpdate = await User.updateMany(
+      { email: { $in: adminEmails } },
       { $set: { role: 'admin', isApproved: true } }
     );
     console.log(`Admin update result:`, adminUpdate);
-
-    if (adminUpdate.matchedCount === 0) {
-      console.error(`WARNING: User with email ${ENV.ADMIN_EMAIL} not found!`);
-    } else {
-        console.log(`Successfully promoted ${ENV.ADMIN_EMAIL} to Admin.`);
+    console.log(`Promoted ${adminUpdate.modifiedCount} users to Admin (Matched: ${adminUpdate.matchedCount}).`);
+    
+    if (adminUpdate.matchedCount < adminEmails.length) {
+         console.warn(`WARNING: Attempted to promote ${adminEmails.length} admins, but only found ${adminUpdate.matchedCount} in the database.`);
     }
-
-    // 2. Set all OTHER users as User and Unapproved
-    const othersUpdate = await User.updateMany(
-      { email: { $ne: ENV.ADMIN_EMAIL } },
-      { $set: { role: 'user', isApproved: false } }
-    );
-    console.log(`Others update result:`, othersUpdate);
-    console.log(`Reset ${othersUpdate.modifiedCount} other users to pending status.`);
 
   } catch (err) {
     console.error('Migration failed:', err);

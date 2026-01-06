@@ -43,41 +43,48 @@ export function Navbar() {
       .slice(0, 2);
   };
 
+  const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => {
+    const isActive = location.pathname.startsWith(to);
+    return (
+      <Link
+        to={to}
+        className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+          isActive
+            ? 'text-primary bg-primary/10 shadow-sm'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+        }`}
+      >
+        {children}
+        {isActive && (
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-primary rounded-full md:hidden" />
+        )}
+      </Link>
+    );
+  };
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between w-full px-4">
         {/* Logo Section */}
-        <Link to="/" className="flex items-center space-x-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Link to="/" className="flex items-center space-x-2.5 hover:opacity-90 transition-opacity">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary/20 to-primary/10 text-primary ring-1 ring-primary/20 shadow-sm">
             <GraduationCap className="h-6 w-6" />
           </div>
-          <span className="text-xl font-bold tracking-tight">UPSC Prep</span>
+          <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+            UPSC Prep
+          </span>
         </Link>
 
         <div className="flex items-center gap-2 md:gap-4">
           {isAuthenticated && (
-            <>
-              <Link
-                to="/tests"
-                className="hidden md:inline-flex items-center text-sm font-medium text-foreground/90 hover:text-primary transition-colors"
-              >
-                Test Center
-              </Link>
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center text-sm font-medium text-foreground/90 hover:text-primary transition-colors"
-              >
-                Dashboard
-              </Link>
+            <div className="hidden md:flex items-center gap-1 mr-4">
+              <NavLink to="/spaces">Spaces</NavLink>
+              <NavLink to="/tests">Test Center</NavLink>
+              <NavLink to="/dashboard">Dashboard</NavLink>
               {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="inline-flex items-center text-sm font-medium text-foreground/90 hover:text-primary transition-colors"
-                >
-                  Admin
-                </Link>
+                <NavLink to="/admin">Admin</NavLink>
               )}
-            </>
+            </div>
           )}
           <Button
             variant="ghost"
