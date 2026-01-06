@@ -1,6 +1,6 @@
 service: examprep-server
 frameworkVersion: '3'
-useDotenv: true
+
 
 provider:
   name: aws
@@ -33,6 +33,7 @@ functions:
 
 plugins:
   - serverless-esbuild
+  - serverless-dotenv-plugin
   - serverless-offline
   - serverless-plugin-warmup
 

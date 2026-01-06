@@ -16,6 +16,8 @@ export class AuthController {
           id: (user as any)._id,
           name: (user as any).name,
           email: (user as any).email,
+          role: (user as any).role,
+          isApproved: (user as any).isApproved,
         },
       });
     } catch (err: any) {
@@ -32,6 +34,11 @@ export class AuthController {
       const { email, password } = req.body;
       const { user, token } = await AuthService.login(email, password);
 
+      if (!(user as any).isApproved) {
+        res.status(403).json({ message: 'Account Pending Approval' });
+        return;
+      }
+
       const userData = user.toObject() as any;
       res.status(200).json({
         token,
@@ -40,6 +47,7 @@ export class AuthController {
           name: userData.name,
           email: userData.email,
           avatar: userData.avatar,
+          role: userData.role,
         },
       });
     } catch (err: any) {

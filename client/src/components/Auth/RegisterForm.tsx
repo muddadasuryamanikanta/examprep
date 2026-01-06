@@ -25,7 +25,7 @@ export const RegisterForm = () => {
         password,
       });
       setAuth(response.data.user, response.data.token);
-      navigate('/');
+      navigate('/pending-approval');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {

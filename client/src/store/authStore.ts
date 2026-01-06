@@ -6,6 +6,8 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
+  role?: 'user' | 'admin';
+  isApproved?: boolean;
 }
 
 interface AuthState {

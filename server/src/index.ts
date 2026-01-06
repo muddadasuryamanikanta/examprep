@@ -16,14 +16,16 @@ import contentRoutes from './routes/content.routes.ts';
 import aiRoutes from './routes/ai.routes.ts';
 import dashboardRoutes from './routes/dashboard.routes.ts';
 import ankiRoutes from './routes/anki.routes.ts';
+import adminRoutes from './routes/admin.routes.ts';
+import { ENV } from './config/env.ts';
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = ENV.PORT;
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: process.env.CLIENT_URL?.split(',').map(url => url.trim()), credentials: true }));
+app.use(cors({ origin: ENV.CLIENT_URL?.split(',').map(url => url.trim()), credentials: true }));
 app.use(helmet());
 app.use(morgan('dev'));
 
@@ -40,6 +42,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/tests', testRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/anki', ankiRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error Handling
 import { errorHandler } from './middleware/error.middleware.ts';
@@ -50,7 +53,7 @@ app.get('/', (req, res) => {
 });
 
 // Database connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/examprep';
+const MONGODB_URI = ENV.MONGODB_URI;
 
 mongoose
   .connect(MONGODB_URI)
@@ -59,7 +62,7 @@ mongoose
     // Only listen if not running in a lambda environment (proxied by the absence of aws-lambda related vars or explicit check)
     // or if we strictly want to support "node src/index.ts" usage.
     // serverless-offline also doesn't necessarily set AWS_LAMBDA_FUNCTION_NAME locally unless properly mocked.
-    if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    if (!ENV.IS_LAMBDA) {
       app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
       });

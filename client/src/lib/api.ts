@@ -14,4 +14,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403) {
+      if (error.response.data?.message?.includes('Pending Approval')) {
+         window.location.href = '/pending-approval';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

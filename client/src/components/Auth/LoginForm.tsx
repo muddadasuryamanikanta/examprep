@@ -58,7 +58,15 @@ export const LoginForm = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && (
+          <div className={`p-3 rounded-lg text-sm ${
+            error.includes('Pending Approval') 
+              ? 'bg-warning/15 text-warning border border-warning/20' 
+              : 'bg-destructive/15 text-destructive border border-destructive/20'
+          }`}>
+            {error}
+          </div>
+        )}
         <div className="flex justify-end">
           <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
         </div>

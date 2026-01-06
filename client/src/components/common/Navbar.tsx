@@ -69,6 +69,14 @@ export function Navbar() {
               >
                 Dashboard
               </Link>
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center text-sm font-medium text-foreground/90 hover:text-primary transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
             </>
           )}
           <Button

@@ -9,6 +9,8 @@ export interface IUser extends Document {
   jwtSecureCode: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  role: 'user' | 'admin';
+  isApproved: boolean;
   createdAt: Date;
 }
 
@@ -21,6 +23,8 @@ const UserSchema: Schema = new Schema({
   jwtSecureCode: { type: String, required: true },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  isApproved: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 
