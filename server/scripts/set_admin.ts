@@ -1,7 +1,7 @@
 
 import mongoose from 'mongoose';
-import User from '../models/User.ts';
-import { ENV } from '../config/env.ts';
+import User from '../src/models/User.ts';
+import { ENV } from '../src/config/env.ts';
 
 async function migrate() {
   try {

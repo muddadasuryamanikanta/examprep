@@ -31,23 +31,29 @@ functions:
     events:
       - httpApi: '*'
 
+# plugins:
+#   - serverless-esbuild
+#   - serverless-dotenv-plugin
+#   - serverless-offline
+#   - serverless-plugin-warmup
+
 plugins:
   - serverless-esbuild
   - serverless-dotenv-plugin
   - serverless-offline
-  - serverless-plugin-warmup
+  # - serverless-plugin-warmup
 
 custom:
-  warmup:
-    default:
-      enabled: true
-      folderName: '.warmup'
-      memorySize: 128
-      name: 'warmer-default'
-      events:
-        - schedule: 'rate(5 minutes)'
-      timeout: 20
-      prewarm: true
+  # warmup:
+  #   default:
+  #     enabled: true
+  #     folderName: '.warmup'
+  #     memorySize: 128
+  #     name: 'warmer-default'
+  #     events:
+  #       - schedule: 'rate(5 minutes)'
+  #     timeout: 20
+  #     prewarm: true
   esbuild:
     bundle: true
     minify: false

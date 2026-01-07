@@ -9,7 +9,8 @@
     "seed": "tsx scripts/seed.ts",
     "seed-dashboard": "tsx scripts/seed-dashboard.ts",
     "backfill-slugs": "tsx scripts/backfill-slugs.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npx serverless deploy --stage production"
   },
   "keywords": [],
   "author": "",
