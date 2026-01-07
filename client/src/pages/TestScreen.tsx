@@ -219,7 +219,7 @@ export default function TestScreen() {
 
     // Full screen enforcement & Focus tracking
     useEffect(() => {
-        if (!test || test.status === 'COMPLETED' || isReviewMode) return;
+        if (!test || test.status === 'COMPLETED' || isReviewMode || !isFullscreen) return;
 
         const handleFocusLoss = () => {
             if (document.visibilityState === 'hidden' || !document.hasFocus()) {
@@ -243,7 +243,7 @@ export default function TestScreen() {
             document.removeEventListener('visibilitychange', handleFocusLoss);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
-    }, [test, registerWarning, isReviewMode]);
+    }, [test, registerWarning, isReviewMode, isFullscreen]);
 
     // Timer Logic
     useEffect(() => {
