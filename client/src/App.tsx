@@ -136,7 +136,7 @@ function App() {
     <BrowserRouter>
       <TitleUpdater />
       <GlobalPrompt />
-      <Toaster position="bottom-right" />
+      <Toaster position="top-right" />
       <AppContent />
     </BrowserRouter>
   );

@@ -48,6 +48,7 @@ export class AuthController {
           email: userData.email,
           avatar: userData.avatar,
           role: userData.role,
+          isApproved: userData.isApproved,
         },
       });
     } catch (err: any) {
