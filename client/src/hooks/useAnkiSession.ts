@@ -81,6 +81,19 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
                     showAfter: Date.now() + 10 * 60 * 1000 // 10 minutes from now 
                 };
                 nextQueue.push(learningItem);
+            } else if (rating === 'Good' && currentItem.repetitions === 0) {
+                // "Good": Check if moving to next learning step (10m)
+                // If interval < 10m (approx), it stays in learning (10m step)
+                const TEN_MIN = 10 / (24 * 60);
+                if (currentItem.intervalDays < TEN_MIN - 0.0001) {
+                    const learningItem = {
+                        ...currentItem,
+                        intervalDays: TEN_MIN, // Update step locally to avoid infinite loop
+                        isRetry: true,
+                        showAfter: Date.now() + 10 * 60 * 1000 // 10 minutes
+                    };
+                    nextQueue.push(learningItem);
+                }
             }
 
             setQueue(nextQueue);
