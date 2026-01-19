@@ -98,9 +98,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             if (user) {
               user.set('googleId', profile.id);
               user.set('avatar', profile.photos?.[0]?.value);
-              if (!user.jwtSecureCode) {
-                user.set('jwtSecureCode', uuidv4());
-              }
+              user.set('jwtSecureCode', uuidv4());
               await user.save();
             } else {
               user = await User.create({

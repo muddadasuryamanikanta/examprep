@@ -20,7 +20,14 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 403) {
       if (error.response.data?.message?.includes('Pending Approval')) {
-         window.location.href = '/pending-approval';
+        window.location.href = '/pending-approval';
+      }
+    }
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      // Only redirect if not already on login page to avoid loops/unnecessary reloads
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

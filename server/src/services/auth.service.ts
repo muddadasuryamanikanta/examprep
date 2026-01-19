@@ -35,7 +35,7 @@ export class AuthService {
     if (!user) {
       throw new Error('Invalid credentials');
     }
-    
+
     // Check if user has password (local auth)
     const userData = user.toObject() as any;
     if (!userData.password) {
@@ -43,13 +43,17 @@ export class AuthService {
     }
 
     if (!password) {
-       throw new Error('Password required');
+      throw new Error('Password required');
     }
 
     const isMatch = await bcrypt.compare(password, userData.password);
     if (!isMatch) {
       throw new Error('Invalid credentials');
     }
+
+    // Rotate security code to invalidate other sessions
+    user.jwtSecureCode = uuidv4();
+    await user.save();
 
     const token = this.generateToken(user);
     return { user, token };
@@ -73,7 +77,7 @@ export class AuthService {
     // Send email via Nodemailer
     try {
       const nodemailer = await import('nodemailer');
-      
+
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.ethereal.email',
         port: parseInt(process.env.SMTP_PORT || '587'),
@@ -109,7 +113,7 @@ export class AuthService {
 
   static async resetPassword(token: string, newPassword?: string): Promise<{ user: IUser; token: string }> {
     if (!newPassword) throw new Error('Password is required');
-    
+
     const crypto = await import('crypto');
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -128,7 +132,7 @@ export class AuthService {
     user.set('resetPasswordExpires', undefined);
     // Rotate security code mostly just in case
     user.jwtSecureCode = uuidv4();
-    
+
     await user.save();
 
     const jwtToken = this.generateToken(user);
@@ -139,7 +143,7 @@ export class AuthService {
     return jwt.sign(
       { id: (user as any)._id, jwtSecureCode: (user as any).jwtSecureCode },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '6h' }
     );
   }
 }
