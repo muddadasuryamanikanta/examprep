@@ -42,7 +42,7 @@ export function FillInTheBlankBlock({
     // Format assumed: "The capital of France is {{blank}} and Italy is {{blank}}."
     // Note: We use a distinctive separator.
     const parts = useMemo(() => {
-        return block.question.split('{{blank}}');
+        return (block.question || '').split('{{blank}}');
     }, [block.question]);
 
     const blanksCount = parts.length - 1;

@@ -11,7 +11,7 @@ import ContentBlock, { ContentBlockType } from '../src/models/ContentBlock.ts';
 // Based on previous file explorations, .env is in server/.env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-const TARGET_USER_ID = '6947a4a4fb83f332d3314cb8';
+const TARGET_USER_ID = '69746ebae050e501c485d050';
 
 const connectDB = async () => {
     try {
@@ -71,11 +71,19 @@ const generateContentBlock = (topicId: mongoose.Types.ObjectId, groupName: strin
                     { id: 'd', text: `Option D ${Math.random().toString(36).substring(7)}`, isCorrect: false },
                 ],
             };
-        case ContentBlockType.DESCRIPTIVE:
+        case ContentBlockType.FILL_IN_THE_BLANK:
+            // Generate a sentence with blanks
+            const part1 = randomText(20);
+            const answer1 = "answer1";
+            const part2 = randomText(20);
+            const answer2 = "answer2";
+            const part3 = randomText(10);
+            
             return {
                 ...baseBlock,
-                question: `Descriptive Question: ${randomText(40)}?`,
-                answer: `Model Answer: ${randomText(100)}`,
+                question: `${part1} {{blank}} ${part2} {{blank}} ${part3}.`,
+                blankAnswers: [answer1, answer2],
+                hints: [`Hint 1 for ${answer1}`, `Hint 2 for ${answer2}`],
             };
         default:
             return {

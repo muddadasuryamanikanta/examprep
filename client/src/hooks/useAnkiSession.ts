@@ -58,41 +58,55 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
 
         try {
             // 1. Submit to backend
-            await AnkiService.submitReview(currentItem.questionId._id, rating);
-
-            // 2. Logic for Queue
-            let nextQueue = [...queue];
-
-            if (rating === 'Again') {
-                // "Again" (1m): Re-insert shortly
-                const reinsertOffset = 3;
-                const insertIndex = Math.min(nextQueue.length, currentIndex + 1 + reinsertOffset);
-                const retryItem = {
-                    ...currentItem,
+            const updatedItem = await AnkiService.submitReview(currentItem.questionId._id, rating);
+            
+            // 2. Logic for Queue - FSRS Aware
+            const nextQueue = [...queue];
+            
+            // Check if we should re-queue in this session
+            // Criteria: 
+            // - It's "Again" (always re-queue for short term)
+            // - OR it's in Learning/Relearning state AND due very soon (e.g. < 20 mins)
+            
+            const now = Date.now();
+            const nextReview = updatedItem.nextReviewAt ? new Date(updatedItem.nextReviewAt).getTime() : 0;
+            const diffMins = (nextReview - now) / 60000;
+            
+            // FSRS States: 0=New, 1=Learning, 2=Review, 3=Relearning
+            // We re-queue if it's due within the "Learn Ahead" window (e.g. 20 mins)
+            // This covers "Again" (usually 1m) and next learning steps (e.g. 10m)
+            
+            if (updatedItem.nextReviewAt && diffMins <= 20) {
+                // Determine insertion point roughly based on due time
+                // Simple: if < 1 min, insert near front (offset 1-2)
+                // if > 1 min (e.g. 10m), insert further back or append
+                
+                const showAfter = nextReview; // Absolute time
+                
+                const itemToRequeue = {
+                    ...currentItem, // Keep original data (question, etc)
+                    ...updatedItem, // Update stats
                     isRetry: true,
-                    showAfter: Date.now() + 60 * 1000 // 1 minute from now
+                    showAfter
                 };
-                nextQueue.splice(insertIndex, 0, retryItem);
-            } else if (rating === 'Hard' && currentItem.repetitions === 0) {
-                // "Hard" (10m): Re-queue at end
-                const learningItem = {
-                    ...currentItem,
-                    isRetry: true,
-                    showAfter: Date.now() + 10 * 60 * 1000 // 10 minutes from now 
-                };
-                nextQueue.push(learningItem);
-            } else if (rating === 'Good' && currentItem.repetitions === 0) {
-                // "Good": Check if moving to next learning step (10m)
-                // If interval < 10m (approx), it stays in learning (10m step)
-                const TEN_MIN = 10 / (24 * 60);
-                if (currentItem.intervalDays < TEN_MIN - 0.0001) {
-                    const learningItem = {
-                        ...currentItem,
-                        intervalDays: TEN_MIN, // Update step locally to avoid infinite loop
-                        isRetry: true,
-                        showAfter: Date.now() + 10 * 60 * 1000 // 10 minutes
-                    };
-                    nextQueue.push(learningItem);
+
+                // Remove the current item from head (it will be shifted by setCurrentIndex below effectively? No, we handle index.)
+                // Actually we just append/splice.
+                // Current item is at currentIndex. We are moving past it.
+                // So we insert into nextQueue which ALREADY contains currentItem at currentIndex.
+                // WE SHOULD NOT MODIFY index or removed items yet.
+                // Ideally, we move currentIndex forward. Re-queued item appears LATER.
+                
+                if (diffMins <= 1.5) {
+                    // Insert shortly after
+                    const reinsertOffset = 3;
+                    const insertIndex = Math.min(nextQueue.length, currentIndex + 1 + reinsertOffset);
+                    nextQueue.splice(insertIndex, 0, itemToRequeue);
+                } else {
+                    // Append to end (or simple queue logic)
+                    // If queue is huge, appending might be too late? 
+                    // But usually session is limited (20 items). Appending is fine.
+                    nextQueue.push(itemToRequeue);
                 }
             }
 

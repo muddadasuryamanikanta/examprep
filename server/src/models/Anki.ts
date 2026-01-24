@@ -7,6 +7,14 @@ export interface ISpacedRepetition extends Document {
     easeFactor: number;
     intervalDays: number;
     repetitions: number;
+    
+    // FSRS Fields
+    stability: number;
+    difficulty: number;
+    elapsedDays: number;
+    scheduledDays: number;
+    lapses: number;
+
     lastReviewedAt?: Date;
     nextReviewAt: Date;
     createdAt: Date;
@@ -22,9 +30,17 @@ const SpacedRepetitionSchema = new Schema(
       enum: ['new', 'learning', 'review', 'relearning'], 
       default: 'new' 
     },
-    easeFactor: { type: Number, default: 2.5, min: 1.3, max: 3.0 },
+    easeFactor: { type: Number, default: 2.5, min: 1.3, max: 3.0 }, // Keep for legacy/SM-2 compat
     intervalDays: { type: Number, default: 0 }, // Allow fractional days (0 allowed)
     repetitions: { type: Number, default: 0, min: 0 },
+    
+    // FSRS Fields
+    stability: { type: Number, default: 0 },
+    difficulty: { type: Number, default: 0 },
+    elapsedDays: { type: Number, default: 0 },
+    scheduledDays: { type: Number, default: 0 },
+    lapses: { type: Number, default: 0 },
+
     lastReviewedAt: { type: Date },
     nextReviewAt: { type: Date, default: () => { const d = new Date(); d.setDate(d.getDate() + 1); return d; } }
   },

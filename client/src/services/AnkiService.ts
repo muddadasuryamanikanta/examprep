@@ -11,6 +11,14 @@ export interface AnkiSessionItem {
     repetitions: number;
     nextReviewAt?: string;
     lastReviewedAt?: string;
+    // FSRS Fields
+    state?: number; // 0=New, 1=Learning, 2=Review, 3=Relearning
+    stability?: number;
+    difficulty?: number;
+    elapsedDays?: number;
+    scheduledDays?: number;
+    lapses?: number;
+    
     // Local state for queue management
     isRetry?: boolean;
     showAfter?: number;

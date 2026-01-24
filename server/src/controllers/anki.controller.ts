@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import SpacedRepetition from '../models/Anki.ts';
 import ContentBlock, { ContentBlockType } from '../models/ContentBlock.ts';
 import Topic from '../models/Topic.ts';
+import { createEmptyCard, FSRS, Rating, State, generatorParameters } from 'ts-fsrs';
+import type { Card } from 'ts-fsrs';
 
 export class AnkiController {
 
@@ -84,8 +86,6 @@ export class AnkiController {
                 responseItems = [...responseItems, ...newItemsMapped];
             }
 
-            // ... (keep existing logic for responseItems)
-
             // Step D: Calculate Total Counts (for UI "X / Total")
             // Consistent with the session fetch, we count everything in the Learn Ahead window as "Due"
             const totalDueCount = await SpacedRepetition.countDocuments({
@@ -127,140 +127,93 @@ export class AnkiController {
             let sr = await SpacedRepetition.findOne({ userId, questionId });
             const now = new Date();
 
+            // 1. Initialize FSRS
+            const params = generatorParameters({ enable_fuzz: true }); // Default Anki parameters
+            const fsrs = new FSRS(params);
+
+            let card: Card;
+
             if (!sr) {
-                // CREATE NEW
+                // Should not happen theoretically if flow is correct, but handle NEW card case
+                // Create a clean "New" card
+                card = createEmptyCard(now);
+                // We must create the document too
                 sr = new SpacedRepetition({
                     userId,
                     questionId,
-                    state: 'new',
-                    easeFactor: 2.5,
-                    intervalDays: 0,
-                    repetitions: 0,
-                    createdAt: now
+                    state: 'new', // Legacy sync
+                    createdAt: now,
+                    // FSRS defaults
+                    stability: 0,
+                    difficulty: 0,
+                    elapsedDays: 0,
+                    scheduledDays: 0,
+                    lapses: 0,
+                    repetitions: 0
                 });
+            } else {
+                // Reconstruct Card from DB
+                // Map legacy state string to FSRS State Enum if needed, or rely on stored values
+                // If FSRS fields are 0 (never used), FSRS will treat as New or handle gracefully if we set State correctly.
+                
+                let state = State.New;
+                if (sr.state === 'learning' || sr.state === 'relearning') state = State.Learning;
+                if (sr.state === 'review') state = State.Review;
+                
+                // If we have strict FSRS state stored in DB (as number) we could use that, 
+                // but for now we map string -> enum to be safe with hybrid data.
+                
+                card = createEmptyCard(now); // Start with default
+                card.due = sr.nextReviewAt;
+                if (sr.lastReviewedAt) {
+                    card.last_review = sr.lastReviewedAt;
+                }
+                card.reps = sr.repetitions;
+                card.stability = sr.stability || 0;
+                card.difficulty = sr.difficulty || 0;
+                card.elapsed_days = sr.elapsedDays || 0;
+                card.scheduled_days = sr.scheduledDays || 0;
+                card.lapses = sr.lapses || 0;
+                card.state = state;
             }
 
-            // Defaults matching Anki
-            const STEP_1 = 1 / (24 * 60); // 1 min
-            const STEP_2 = 10 / (24 * 60); // 10 min
-            const GRADUATING_IVL = 1;
-            const EASY_IVL = 4;
-            const NEW_INTERVAL = 0; // Config for lapsed cards logic if needed
-
-            switch (sr.state) {
-                case 'new':
-                case 'learning':
-                    // --- LEARNING PHASE ---
-                    switch (rating) {
-                        case 'Again':
-                            sr.state = 'learning';
-                            sr.intervalDays = STEP_1;
-                            sr.repetitions = 0;
-                            // Ease doesn't change in learning usually, but we can decrement slightly or keep
-                            break;
-
-                        case 'Hard':
-                            sr.state = 'learning';
-                            // Avg of (1m, 10m) = ~5.5m -> 6m
-                            sr.intervalDays = 6 / (24 * 60);
-                            break;
-
-                        case 'Good':
-                            if (sr.intervalDays < STEP_2 - 0.0001) {
-                                // Step 1 -> Step 2
-                                sr.state = 'learning';
-                                sr.intervalDays = STEP_2;
-                            } else {
-                                // Graduate
-                                sr.state = 'review';
-                                sr.intervalDays = GRADUATING_IVL;
-                                sr.repetitions = 1;
-                            }
-                            break;
-
-                        case 'Easy':
-                            // Graduate Immediately
-                            sr.state = 'review';
-                            sr.intervalDays = EASY_IVL;
-                            sr.repetitions = 1;
-                            break;
-                    }
-                    // Next review relative to NOW for learning steps
-                    sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
-                    break;
-
-                case 'review':
-                    // --- REVIEW PHASE ---
-                    switch (rating) {
-                        case 'Again':
-                            // LAPSE -> Relearning
-                            sr.state = 'relearning';
-                            sr.intervalDays = STEP_2; // Relearn default is 10m in standard Anki
-                            sr.easeFactor = Math.max(1.3, sr.easeFactor - 0.2);
-                            sr.repetitions = 0; // Reset count? Or keep lapse count? Anki tracks lapses.
-                            // In this simple model, we reset reps for "streak", but keeps High Level details in Ease
-                            break;
-
-                        case 'Hard':
-                            sr.state = 'review';
-                            sr.intervalDays = Math.max(1, sr.intervalDays * 1.2);
-                            sr.easeFactor = Math.max(1.3, sr.easeFactor - 0.15);
-                            sr.repetitions += 1;
-                            break;
-
-                        case 'Good':
-                            sr.state = 'review';
-                            sr.intervalDays = Math.round(sr.intervalDays * sr.easeFactor);
-                            sr.repetitions += 1;
-                            break;
-
-                        case 'Easy':
-                            sr.state = 'review';
-                            sr.intervalDays = Math.round(sr.intervalDays * sr.easeFactor * 1.3);
-                            sr.easeFactor += 0.15;
-                            sr.repetitions += 1;
-                            break;
-                    }
-
-                    if (sr.state === 'relearning') {
-                        sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
-                    } else {
-                        // Review cards are usually scheduled from NOW (or from scheduled time? Anki V2 vs V3).
-                        // Using NOW for simplicity and robustness.
-                        sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
-                    }
-                    break;
-
-                case 'relearning':
-                    // --- RELEARNING PHASE ---
-                    // Typically 1 step (10m) -> Back to Review with new Interval
-                    switch (rating) {
-                        case 'Again':
-                            sr.intervalDays = STEP_1; // 1m
-                            // Stay in relearning
-                            break;
-                        case 'Good':
-                            // Exit relearning. 
-                            // New Interval = Old Interval * New Interval % (default 0%)? 
-                            // Or just 1 day?
-                            // Anki default: New Interval = 1 d. 
-                            sr.state = 'review';
-                            sr.intervalDays = 1;
-                            break;
-                        case 'Easy':
-                            sr.state = 'review';
-                            sr.intervalDays = 4;
-                            break;
-                        case 'Hard':
-                            sr.intervalDays = 6 / (24 * 60);
-                            break;
-                    }
-                    sr.nextReviewAt = new Date(now.getTime() + sr.intervalDays * 24 * 60 * 60 * 1000);
-                    break;
+            // 2. Map Rating
+            let fsrsRating = Rating.Good;
+            switch(rating) {
+                case 'Again': fsrsRating = Rating.Again; break;
+                case 'Hard': fsrsRating = Rating.Hard; break;
+                case 'Good': fsrsRating = Rating.Good; break;
+                case 'Easy': fsrsRating = Rating.Easy; break;
             }
 
-            sr.easeFactor = Math.min(3.0, Math.max(1.3, sr.easeFactor));
-            sr.lastReviewedAt = now;
+            // 3. Schedule
+            // If the card is incorrectly marked as 'New' in DB but has history, `repeat` handles it?
+            // FSRS expects `repeat` to be called with the card and the review time
+            const schedulingCards = fsrs.repeat(card, now);
+            
+            // schedulingCards[rating] gives the specific result RecordLogItem
+            // We want the new Card state from it.
+            const resultRecord = schedulingCards[fsrsRating];
+            const newCard = resultRecord.card;
+
+            // 4. Update DB
+            sr.nextReviewAt = newCard.due;
+            sr.lastReviewedAt = newCard.last_review || now; // If undefined, fallback or keep? Usually has value after review.
+            sr.repetitions = newCard.reps;
+            sr.stability = newCard.stability;
+            sr.difficulty = newCard.difficulty;
+            sr.elapsedDays = newCard.elapsed_days;
+            sr.scheduledDays = newCard.scheduled_days;
+            sr.lapses = newCard.lapses;
+            
+            // Sync Legacy State String
+            switch(newCard.state) {
+                case State.New: sr.state = 'new'; break;
+                case State.Learning: sr.state = 'learning'; break;
+                case State.Review: sr.state = 'review'; break;
+                case State.Relearning: sr.state = 'relearning'; break;
+            }
+
             await sr.save();
 
             res.status(200).json(sr);

@@ -25,7 +25,10 @@ export function ContentBlockDisplay({ block, isTest = false, value, onChange, on
         default:
             return (
                 <div className="p-4 border border-dashed border-destructive rounded text-destructive bg-destructive/10">
-                    Unknown block type: {(block as any).kind}
+                    Unknown block type: {(block as any).kind} <br/>
+                    <pre className="text-xs mt-2 whitespace-pre-wrap">
+                        {JSON.stringify(block, null, 2)}
+                    </pre>
                 </div>
             );
     }

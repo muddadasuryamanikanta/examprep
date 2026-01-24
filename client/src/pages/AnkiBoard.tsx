@@ -1,53 +1,18 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAnkiSession } from '../hooks/useAnkiSession';
-import { ContentBlockDisplay } from '../components/content-blocks/ContentBlockDisplay';
 import { Button } from '../components/common/Button';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { cn } from '../lib/utils'; // Assuming utils
-import type { AnkiRating } from '../services/AnkiService';
+import { Loader2 } from 'lucide-react';
+import { AnkiCardView } from '../components/anki/AnkiCardView';
 
 export default function AnkiBoard() {
     const { type, id } = useParams(); // type: 'subject' | 'topic', id: slug or ID
-    // Wait, existing routing uses slugs mostly. IDs might be safer if we can resolve them.
-    // Implementation Plan said: useAnkiSession accepts IDs.
-    // If the URL has IDs, great. If Slugs, we need to resolve.
-    // For simplicity, let's assume the router passes IDs or we'll modify the router to accept IDs for this "Recall" feature.
-    // Or `useAnkiSession` can take slugs? No, backend expects IDs usually or we need to lookup.
-    // Let's assume we pass IDs in the URL for now: `/recall/topic/:topicId`.
 
     const context = {
         topicId: type === 'topic' ? id : undefined,
         subjectId: type === 'subject' ? id : undefined
-        // Space not supported in UI entry yet
     };
 
     const { currentItem, currentIndex, queueLength, isLoading, isFinished, handleRating, refresh, stats } = useAnkiSession(context);
-
-    // State for interaction
-    const [showAnswer, setShowAnswer] = useState(false);
-    const [selectedAnswer, setSelectedAnswer] = useState<any>(undefined); // For interaction tracking
-
-    // --- LEARNING STEP CHECK STATE ---
-    // Moved to top level to comply with React Rules of Hooks
-    // const [now, setNow] = useState(Date.now());
-
-    // useEffect(() => {
-    //     const timer = setInterval(() => setNow(Date.now()), 1000);
-    //     return () => clearInterval(timer);
-    // }, []);
-    // ---------------------------------
-
-    // State to force remount of ContentBlock when item changes (even if same ID)
-    const [renderKey, setRenderKey] = useState(0);
-
-    // Reset local state when item changes
-    useEffect(() => {
-        setShowAnswer(false);
-        setSelectedAnswer(undefined);
-        setRenderKey(prev => prev + 1);
-    }, [currentItem]);
-
     const navigate = useNavigate();
 
     if (isLoading) {
@@ -84,203 +49,14 @@ export default function AnkiBoard() {
         );
     }
 
-    // --- LEARNING STEP CHECK LOGIC ---
-    /* 
-       User Feedback: "in real anki if there are no cards i will directly show remaining card"
-       
-       Current implementation: simple linear queue. If we hit a card with showAfter > now, we are blocked.
-       Since we don't have logic to "skip and find next unlocked" yet (complex queue management), 
-       being "blocked" effectively means "waiting with no other cards to do".
-       
-       In this case, Anki collapses the time and shows the card.
-       So, we will BYPASS this lock screen for now. 
-       The card is "due" because it's at the front of our session queue.
-    */
-    /*
-    const showAfter = currentItem?.showAfter;
-    const isLocked = showAfter && showAfter > now;
-
-    if (isLocked) {
-        const remainingSeconds = Math.ceil((showAfter - now) / 1000);
-        // ... (Waiting Screen Code removed/commented to allow immediate review)
-        return (
-             <div className="flex h-screen flex-col items-center justify-center bg-gray-900 text-white p-4 text-center">
-                ... 
-             </div>
-        )
-    } 
-    */
-    // ---------------------------
-
-    // Calculate Next Intervals for UI (Mock logic to match backend roughly or just static labels)
-    // Calculate Next Intervals for UI (Mock logic to match backend roughly or just static labels)
-    const getIntervalLabel = (rating: AnkiRating) => {
-        const currentInt = currentItem.intervalDays;
-        const ef = currentItem.easeFactor;
-        // Use implicit state detection if state field isn't populated on frontend type yet
-        // But we should try to use the raw item logic 
-        const isNewOrLearning = !currentItem._id || currentItem.repetitions === 0; // Fallback
-
-        // Constants matching Backend
-        const TEN_MIN = 10 / (24 * 60);
-
-        // Helper to format days
-        const fmt = (days: number) => {
-            if (days < 0.9 / (24 * 60)) return '<1m';
-            if (days < 1) {
-                const mins = Math.round(days * 24 * 60);
-                return `${mins}m`;
-            }
-            return `${Math.round(days)}d`;
-        };
-
-        if (isNewOrLearning) {
-            if (rating === 'Again') return '1m';
-            if (rating === 'Hard') return '6m';
-            if (rating === 'Good') {
-                if (currentInt < TEN_MIN - 0.0001) return '10m';
-                return '1d';
-            }
-            if (rating === 'Easy') return '4d';
-        }
-
-        // Review/Relearning
-        if (rating === 'Again') return '1m'; // Review -> Relearn (10m) or Relearn Again (1m)
-        // Note: In Relearning, Good -> 1d. In Review, Good -> Scale.
-        // Since we don't have explicit 'state' in the frontend Type yet (AnkiSessionItem),
-        // we assume standard Review behavior if repetitions > 0.
-        // For accurate Relearning labels, we'd need to add 'state' to the frontend interface.
-        // For now, this is a close approximation.
-
-        if (rating === 'Hard') return fmt(Math.max(1, currentInt * 1.2));
-        if (rating === 'Good') return fmt(currentInt * ef);
-        if (rating === 'Easy') return fmt(currentInt * ef * 1.3);
-
-        return '?';
-    };
-
     return (
-        <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300">
-            {/* Header */}
-            <div className="p-4 flex justify-between items-center text-sm text-muted-foreground">
-                <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Exit
-                </Button>
-                <div className="bg-secondary px-3 py-1 rounded-full text-secondary-foreground font-medium">
-                    Questions Left: {Math.max(queueLength, stats?.total || 0) - currentIndex}
-                </div>
-                <div />
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center max-w-4xl mx-auto w-full p-6 pt-10">
-
-                {/* Question Area */}
-                <div className="w-full mb-8">
-                    <ContentBlockDisplay
-                        key={`${currentItem.questionId._id}-${renderKey}`} // CRITICAL: Force remount to reset internal state (isSubmitted, etc.)
-                        block={currentItem.questionId}
-                        isTest={false} // Practice Mode
-                        value={selectedAnswer}
-                        onChange={(val) => {
-                            // Logic:
-                            // Single MCQ: Selecting IS the interaction. Auto-submit handled by Block -> call onSubmit.
-                            // Multi/FITB: Selecting just updates state. Submit button in block calls onSubmit.
-                            setSelectedAnswer(val); // Sync state for tracking if needed
-                        }}
-                        onSubmit={() => setShowAnswer(true)}
-                        onShowAnswer={() => setShowAnswer(true)}
-                    />
-                </div>
-
-                {/* Footer / Controls */}
-                <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border p-6 z-10">
-                    <div className="max-w-4xl mx-auto flex items-center justify-between">
-                        {!showAnswer ? (
-                            /* Only show Global "Show Answer" if the block doesn't have its own primary interaction (like Note) 
-                               OR as a fallback? 
-                               User said: "keep submit button". Multi/FITB have their own.
-                               Single MCQ auto-submits.
-                               So mostly we DON'T need this button for Questions, only for Notes/Flashcards?
-                               But let's keep it for "Flashcard" style usage or if they want to give up?
-                               No, User implied for proper questions, use the proper flow.
-                               Let's hide it for Multi/FITB to force use of their Submit button.
-                            */
-                            currentItem.questionId.kind === 'note' ? (
-                                <Button
-                                    className="w-full h-12 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
-                                    onClick={() => setShowAnswer(true)}
-                                >
-                                    Show Answer
-                                </Button>
-                            ) : null
-                            /* If null, user uses the Block's UI. 
-                               Wait, what if they get stuck? The Block's submit button should enable. 
-                               Multi requires selection. FITB requires input.
-                               If they can't answer, they are stuck? 
-                               Maybe add a small "Give Up / Show Answer" text button?
-                               Let's stick to strict flow for now as requested.
-                            */
-                        ) : (
-                            <div className="w-full grid grid-cols-4 gap-4">
-                                <RatingButton
-                                    label="Again"
-                                    subLabel={getIntervalLabel('Again')}
-                                    color="text-destructive"
-                                    hoverBg="hover:bg-destructive/10"
-                                    onClick={() => handleRating('Again')}
-                                />
-                                <RatingButton
-                                    label="Hard"
-                                    subLabel={getIntervalLabel('Hard')}
-                                    color="text-warning"
-                                    hoverBg="hover:bg-warning/10"
-                                    onClick={() => handleRating('Hard')}
-                                />
-                                <RatingButton
-                                    label="Good"
-                                    subLabel={getIntervalLabel('Good')}
-                                    color="text-success"
-                                    hoverBg="hover:bg-success/10"
-                                    border="border-t-4 border-success bg-secondary/50" // Highlight default
-                                    onClick={() => handleRating('Good')}
-                                />
-                                <RatingButton
-                                    label="Easy"
-                                    subLabel={getIntervalLabel('Easy')}
-                                    color="text-blue-500 dark:text-blue-400"
-                                    hoverBg="hover:bg-blue-500/10"
-                                    onClick={() => handleRating('Easy')}
-                                />
-                            </div>
-                        )}
-                    </div>
-                    {/* Shortcuts hint */}
-                    {showAnswer && (
-                        <div className="text-center text-xs text-muted-foreground mt-2">
-                            Shortcuts: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
-                        </div>
-                    )}
-                </div>
-                {/* Spacer for fixed footer */}
-                <div className="h-24" />
-            </div>
-        </div>
+        <AnkiCardView
+            key={currentItem.questionId._id}
+            currentItem={currentItem}
+            questionsLeft={Math.max(queueLength, stats?.total || 0) - currentIndex}
+            onRating={handleRating}
+            onExit={() => navigate(-1)}
+        />
     );
 }
 
-function RatingButton({ label, subLabel, color, hoverBg, onClick, border = "border border-border bg-card" }: any) {
-    return (
-        <button
-            onClick={onClick}
-            className={cn(
-                "flex flex-col items-center justify-center py-3 rounded-lg transition-all",
-                border,
-                hoverBg
-            )}
-        >
-            <span className="text-xs text-muted-foreground mb-1">{subLabel}</span>
-            <span className={cn("text-lg font-bold", color)}>{label}</span>
-        </button>
-    );
-}

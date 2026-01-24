@@ -86,20 +86,22 @@ export function TopicSidebar({
     let preview = '';
 
     if (block.kind === 'note') {
-      title = block.content.split('\n')[0].replace(/^#+\s*/, '') || 'Untitled Note';
-      preview = block.content.slice(0, 80).replace(/\n/g, ' ') + '...';
+      const content = block.content || '';
+      title = content.split('\n')[0].replace(/^#+\s*/, '') || 'Untitled Note';
+      preview = content.slice(0, 80).replace(/\n/g, ' ') + '...';
     } else if (block.kind === 'single_select_mcq' || block.kind === 'multi_select_mcq') {
-      title = block.question;
+      title = block.question || 'Untitled Question';
       preview = 'Multiple Choice Question';
     } else if (block.kind === 'fill_in_the_blank') {
-      title = block.question.replace(/{{blank}}/g, '____');
+      const question = block.question || '';
+      title = question.replace(/{{blank}}/g, '____') || 'Untitled Question';
       preview = 'Fill in the Blank';
     } else {
         title = 'Unknown Block';
         preview = 'Unknown content';
     }
 
-    if (title.length > 40) title = title.substring(0, 40) + '...';
+    if (title && title.length > 40) title = title.substring(0, 40) + '...';
     return { title, preview };
   };
 

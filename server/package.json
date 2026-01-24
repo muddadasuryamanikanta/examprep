@@ -12,7 +12,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "npx serverless deploy --stage production",
     "check-free-trial": "aws cloudwatch get-metric-statistics --namespace AWS/Lambda --metric-name Invocations --dimensions Name=FunctionName,Value=examprep-server-production-api --start-time $(date -v-30d +%Y-%m-%dT%H:%M:%S) --end-time $(date +%Y-%m-%dT%H:%M:%S) --period 2592000 --statistics Sum --region ap-south-1"
-
   },
   "keywords": [],
   "author": "",
@@ -68,6 +67,7 @@
     "passport-local": "^1.0.0",
     "serverless-http": "^4.0.0",
     "slugify": "^1.6.6",
+    "ts-fsrs": "^5.2.3",
     "uuid": "^13.0.0"
   }
 }
