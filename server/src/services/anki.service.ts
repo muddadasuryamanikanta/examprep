@@ -1,4 +1,4 @@
-import SpacedRepetition from '../models/Anki.js';
+import SpacedRepetition from '@/models/Anki.js';
 
 class AnkiService {
   /**

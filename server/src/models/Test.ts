@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { ContentBlockType } from './ContentBlock.ts';
+import { ContentBlockType } from '@/models/ContentBlock.ts';
 
 export enum TestStatus {
   CREATED = 'CREATED',

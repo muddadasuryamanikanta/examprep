@@ -1,9 +1,9 @@
 
 import type { Request, Response } from 'express';
-import { SpaceService } from '../services/space.service.ts';
+import { SpaceService } from '@/services/space.service.ts';
 import { z } from 'zod';
-import type { IUser } from '../models/User.ts';
-import { generateIconForSubject } from '../utils/common.ts';
+import type { IUser } from '@/models/User.ts';
+import { generateIconForSubject } from '@/utils/common.ts';
 
 // Zod schemas
 const createSpaceSchema = z.object({

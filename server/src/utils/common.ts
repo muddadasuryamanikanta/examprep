@@ -1,4 +1,4 @@
-import openRouter from '../config/openrouter.ts';
+import openRouter from '@/config/openrouter.ts';
 
 export const generateIconForSubject = async (subjectName: string): Promise<string> => {
   try {

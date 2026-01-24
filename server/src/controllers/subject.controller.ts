@@ -1,8 +1,8 @@
 
 import type { Request, Response } from 'express';
-import { SubjectService } from '../services/subject.service.ts';
+import { SubjectService } from '@/services/subject.service.ts';
 import { z } from 'zod';
-import type { IUser } from '../models/User.ts';
+import type { IUser } from '@/models/User.ts';
 
 const createSubjectSchema = z.object({
   title: z.string().min(1, 'Title is required').trim(),

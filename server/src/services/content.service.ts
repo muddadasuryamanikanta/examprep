@@ -1,7 +1,7 @@
 
-import ContentBlock, { type IContentBlock } from '../models/ContentBlock.ts';
-import Subject from '../models/Subject.ts';
-import { TopicService } from './topic.service.ts';
+import ContentBlock, { type IContentBlock } from '@/models/ContentBlock.ts';
+import Subject from '@/models/Subject.ts';
+import { TopicService } from '@/services/topic.service.ts';
 import { Types } from 'mongoose';
 
 export class ContentService {

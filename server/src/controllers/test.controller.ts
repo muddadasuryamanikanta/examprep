@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import TestService from '../services/test.service.js';
+import TestService from '@/services/test.service.js';
 
 export const getAvailableQuestionCounts = async (req: Request, res: Response) => {
   try {

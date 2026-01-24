@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategyCtor } from 'passport-google-oauth20';
 import { Strategy as LocalStrategyCtor } from 'passport-local';
 import bcrypt from 'bcryptjs';
-import User, { type IUser } from '../models/User.ts';
+import User, { type IUser } from '@/models/User.ts';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';

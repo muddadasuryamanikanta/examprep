@@ -1,7 +1,7 @@
 
 import passport from 'passport';
 import type { Request, Response, NextFunction } from 'express';
-import type { IUser } from '../models/User.ts';
+import type { IUser } from '@/models/User.ts';
 
 const requireApproval = (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as IUser;

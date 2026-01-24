@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getTestsDueToday } from '../controllers/dashboard.controller.js';
-import { authMiddleware as protect } from '../middleware/auth.middleware.js';
+import { getTestsDueToday } from '@/controllers/dashboard.controller.js';
+import { authMiddleware as protect } from '@/middleware/auth.middleware.js';
 
 const router = Router();
 

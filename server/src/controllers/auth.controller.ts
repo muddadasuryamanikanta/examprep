@@ -1,7 +1,7 @@
 
 import type { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service.ts';
-import type { IUser } from '../models/User.ts';
+import { AuthService } from '@/services/auth.service.ts';
+import type { IUser } from '@/models/User.ts';
 
 export class AuthController {
   

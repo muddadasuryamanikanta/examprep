@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import DashboardService from '../services/dashboard.service.js';
+import DashboardService from '@/services/dashboard.service.js';
 
 // Helper to parse array from query (e.g. ?spaceIds=id1,id2 or ?spaceIds[]=id1&spaceIds[]=id2)
 const parseArray = (input: any): string[] => {

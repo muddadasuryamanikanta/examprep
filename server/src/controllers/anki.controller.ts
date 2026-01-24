@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import SpacedRepetition from '../models/Anki.ts';
-import ContentBlock, { ContentBlockType } from '../models/ContentBlock.ts';
-import Topic from '../models/Topic.ts';
+import SpacedRepetition from '@/models/Anki.ts';
+import ContentBlock, { ContentBlockType } from '@/models/ContentBlock.ts';
+import Topic from '@/models/Topic.ts';
 import { createEmptyCard, FSRS, Rating, State, generatorParameters } from 'ts-fsrs';
 import type { Card } from 'ts-fsrs';
 

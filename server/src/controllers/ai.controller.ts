@@ -1,7 +1,7 @@
 
 import type { Request, Response } from 'express';
-import openRouter from '../config/openrouter.ts';
-import { ContentBlockType } from '../models/ContentBlock.ts';
+import openRouter from '@/config/openrouter.ts';
+import { ContentBlockType } from '@/models/ContentBlock.ts';
 
 export class AiController {
 

@@ -10,14 +10,14 @@ import passport from 'passport';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import './config/passport.ts';
-import authRoutes from './routes/auth.routes.ts';
-import contentRoutes from './routes/content.routes.ts';
-import aiRoutes from './routes/ai.routes.ts';
-import dashboardRoutes from './routes/dashboard.routes.ts';
-import ankiRoutes from './routes/anki.routes.ts';
-import adminRoutes from './routes/admin.routes.ts';
-import { ENV } from './config/env.ts';
+import '@/config/passport.ts';
+import authRoutes from '@/routes/auth.routes.ts';
+import contentRoutes from '@/routes/content.routes.ts';
+import aiRoutes from '@/routes/ai.routes.ts';
+import dashboardRoutes from '@/routes/dashboard.routes.ts';
+import ankiRoutes from '@/routes/anki.routes.ts';
+import adminRoutes from '@/routes/admin.routes.ts';
+import { ENV } from '@/config/env.ts';
 
 const app = express();
 const PORT = ENV.PORT;
@@ -33,7 +33,7 @@ app.use(morgan('dev'));
 app.use(passport.initialize());
 
 // Routes
-import testRoutes from './routes/test.routes.js';
+import testRoutes from '@/routes/test.routes.js';
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -45,7 +45,7 @@ app.use('/api/anki', ankiRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Error Handling
-import { errorHandler } from './middleware/error.middleware.ts';
+import { errorHandler } from '@/middleware/error.middleware.ts';
 app.use(errorHandler);
 
 app.get('/', (req, res) => {

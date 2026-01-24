@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { SpaceController } from '../controllers/space.controller.ts';
-import { SubjectController } from '../controllers/subject.controller.ts';
-import { TopicController } from '../controllers/topic.controller.ts';
-import { ContentController } from '../controllers/content.controller.ts';
-import { authMiddleware } from '../middleware/auth.middleware.ts';
+import { SpaceController } from '@/controllers/space.controller.ts';
+import { SubjectController } from '@/controllers/subject.controller.ts';
+import { TopicController } from '@/controllers/topic.controller.ts';
+import { ContentController } from '@/controllers/content.controller.ts';
+import { authMiddleware } from '@/middleware/auth.middleware.ts';
 
 const router: Router = Router();
 

@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
-import Test from '../models/Test.js';
-import type { ITest, ITestConfig } from '../models/Test.js';
-import { TestStatus } from '../models/Test.js';
-import ContentBlock from '../models/ContentBlock.js';
-import type { IContentBlock } from '../models/ContentBlock.js';
-import { ContentBlockType } from '../models/ContentBlock.js';
-import Subject from '../models/Subject.js';
-import Topic from '../models/Topic.js';
-import SpacedRepetition from '../models/Anki.js';
-import AnkiService from './anki.service.js';
+import Test from '@/models/Test.js';
+import type { ITest, ITestConfig } from '@/models/Test.js';
+import { TestStatus } from '@/models/Test.js';
+import ContentBlock from '@/models/ContentBlock.js';
+import type { IContentBlock } from '@/models/ContentBlock.js';
+import { ContentBlockType } from '@/models/ContentBlock.js';
+import Subject from '@/models/Subject.js';
+import Topic from '@/models/Topic.js';
+import SpacedRepetition from '@/models/Anki.js';
+import AnkiService from '@/services/anki.service.js';
 
 export class TestService {
   /**

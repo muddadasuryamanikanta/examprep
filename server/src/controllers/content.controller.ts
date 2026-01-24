@@ -1,9 +1,9 @@
 
 import type { Request, Response } from 'express';
-import { ContentService } from '../services/content.service.ts';
+import { ContentService } from '@/services/content.service.ts';
 import { z } from 'zod';
-import type { IUser } from '../models/User.ts';
-import { ContentBlockType } from '../models/ContentBlock.ts';
+import type { IUser } from '@/models/User.ts';
+import { ContentBlockType } from '@/models/ContentBlock.ts';
 
 // Basic Zod schema for ContentBlock - can be improved with discriminated unions
 const createContentSchema = z.object({

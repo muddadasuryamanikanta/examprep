@@ -1,5 +1,5 @@
 
-import Space, { type ISpace } from '../models/Space.ts';
+import Space, { type ISpace } from '@/models/Space.ts';
 import { Types } from 'mongoose';
 
 export class SpaceService {

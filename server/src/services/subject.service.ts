@@ -1,8 +1,8 @@
-import Subject, { type ISubject } from '../models/Subject.ts';
-import Space from '../models/Space.ts';
-import { SpaceService } from './space.service.ts';
+import Subject, { type ISubject } from '@/models/Subject.ts';
+import Space from '@/models/Space.ts';
+import { SpaceService } from '@/services/space.service.ts';
 import { Types } from 'mongoose';
-import { generateIconForSubject } from '../utils/common.ts';
+import { generateIconForSubject } from '@/utils/common.ts';
 
 export class SubjectService {
 

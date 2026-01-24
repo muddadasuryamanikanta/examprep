@@ -1,8 +1,8 @@
-import Topic, { type ITopic } from '../models/Topic.ts';
-import Subject from '../models/Subject.ts';
-import { SubjectService } from './subject.service.ts';
+import Topic, { type ITopic } from '@/models/Topic.ts';
+import Subject from '@/models/Subject.ts';
+import { SubjectService } from '@/services/subject.service.ts';
 import { Types } from 'mongoose';
-import { generateIconForSubject } from '../utils/common.ts';
+import { generateIconForSubject } from '@/utils/common.ts';
 
 export class TopicService {
 

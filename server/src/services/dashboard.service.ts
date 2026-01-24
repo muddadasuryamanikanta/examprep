@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import SpacedRepetition from '../models/Anki.js';
+import SpacedRepetition from '@/models/Anki.js';
 
 export class DashboardService {
     /**

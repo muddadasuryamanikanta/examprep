@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import passport from 'passport';
-import { AuthController } from '../controllers/auth.controller.ts';
-import { authMiddleware } from '../middleware/auth.middleware.ts';
+import { AuthController } from '@/controllers/auth.controller.ts';
+import { authMiddleware } from '@/middleware/auth.middleware.ts';
 
 const router: Router = Router();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';

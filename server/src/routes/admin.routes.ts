@@ -1,8 +1,8 @@
 
 import { Router } from 'express';
-import { AdminController } from '../controllers/admin.controller.ts';
-import { authMiddleware } from '../middleware/auth.middleware.ts';
-import { isAdmin } from '../middleware/admin.middleware.ts';
+import { AdminController } from '@/controllers/admin.controller.ts';
+import { authMiddleware } from '@/middleware/auth.middleware.ts';
+import { isAdmin } from '@/middleware/admin.middleware.ts';
 
 const router = Router();
 
