@@ -1,5 +1,7 @@
 import Topic, { type ITopic } from '@/models/Topic.ts';
 import Subject from '@/models/Subject.ts';
+import ContentBlock from '@/models/ContentBlock.ts';
+import Anki from '@/models/Anki.ts';
 import { SubjectService } from '@/services/subject.service.ts';
 import { Types } from 'mongoose';
 import { generateIconForSubject } from '@/utils/common.ts';
@@ -48,7 +50,7 @@ export class TopicService {
 
     // Aggregate question counts for these topics
     const topicIds = topics.map(s => s._id);
-    const agg = await import('../models/ContentBlock.ts').then(m => m.default.aggregate([
+    const agg = await ContentBlock.aggregate([
       {
         $match: {
           topicId: { $in: topicIds },
@@ -56,13 +58,13 @@ export class TopicService {
         }
       },
       { $group: { _id: '$topicId', total: { $sum: 1 } } }
-    ]));
+    ]);
 
     // Aggregate DUE counts from Anki (SpacedRepetition)
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
-    const dueAgg = await import('../models/Anki.ts').then(m => m.default.aggregate([
+    const dueAgg = await Anki.aggregate([
       {
         $match: {
           userId: new Types.ObjectId(userId),
@@ -84,7 +86,7 @@ export class TopicService {
         }
       },
       { $group: { _id: '$block.topicId', total: { $sum: 1 } } }
-    ]));
+    ]);
 
     const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
     const dueMap = new Map(dueAgg.map((a: any) => [a._id.toString(), a.total]));

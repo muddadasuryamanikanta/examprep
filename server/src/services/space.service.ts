@@ -1,5 +1,5 @@
-
 import Space, { type ISpace } from '@/models/Space.ts';
+import Subject from '@/models/Subject.ts';
 import { Types } from 'mongoose';
 
 export class SpaceService {
@@ -14,10 +14,10 @@ export class SpaceService {
 
     // Aggregate question counts for these spaces
     const spaceIds = spaces.map(s => s._id);
-    const agg = await import('../models/Subject.ts').then(m => m.default.aggregate([
+    const agg = await Subject.aggregate([
       { $match: { spaceId: { $in: spaceIds } } },
       { $group: { _id: '$spaceId', total: { $sum: '$questionCount' } } }
-    ])); // Using dynamic import to avoid circular dependency if any, or just import Subject at top
+    ]);
 
     const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
 
