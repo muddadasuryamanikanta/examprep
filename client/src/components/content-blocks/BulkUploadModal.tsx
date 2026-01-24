@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Upload, FileUp, Download, Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '../common/Button';
-import { Modal } from '../common/Modal';
-import { type ContentBlock } from '../../types/domain';
-import { PromptService } from '../../services/PromptService';
-import { BulkUploadValidator, type ValidationError } from '../../services/BulkUploadValidator';
+import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
+import { type ContentBlock } from '@/types/domain';
+import { PromptService } from '@/services/PromptService';
+import { BulkUploadValidator, type ValidationError } from '@/services/BulkUploadValidator';
 
 interface BulkUploadModalProps {
   isOpen: boolean;

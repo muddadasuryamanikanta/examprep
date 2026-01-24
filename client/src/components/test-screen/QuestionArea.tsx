@@ -1,5 +1,5 @@
-import { Button } from '../common/Button';
-import { ContentBlockDisplay } from '../content-blocks/ContentBlockDisplay';
+import { Button } from '@/components/common/Button';
+import { ContentBlockDisplay } from '@/components/content-blocks/ContentBlockDisplay';
 import { ArrowRight, Bookmark, Trash2, Save } from 'lucide-react';
 
 interface QuestionAreaProps {

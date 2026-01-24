@@ -1,5 +1,5 @@
 import { Maximize2, ArrowLeft } from 'lucide-react';
-import { Button } from '../common/Button';
+import { Button } from '@/components/common/Button';
 
 interface FullScreenWarningProps {
     onEnterFullscreen: () => void;

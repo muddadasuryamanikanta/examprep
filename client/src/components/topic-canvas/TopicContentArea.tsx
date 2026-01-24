@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Search, Pencil, Trash2, Tag } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../common/Button';
-import { Modal } from '../common/Modal';
-import type { ContentBlock, ContentBlockType } from '../../types/domain';
-import { ContentBlockDisplay } from '../content-blocks/ContentBlockDisplay';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
+import type { ContentBlock, ContentBlockType } from '@/types/domain';
+import { ContentBlockDisplay } from '@/components/content-blocks/ContentBlockDisplay';
 
 interface TopicContentAreaProps {
   selectedBlock: ContentBlock | undefined;

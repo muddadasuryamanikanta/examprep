@@ -1,5 +1,5 @@
-import { LoginForm } from '../components/Auth/LoginForm';
-import Squares from '../components/common/Squares';
+import { LoginForm } from '@/components/Auth/LoginForm';
+import Squares from '@/components/common/Squares';
 
 export const LoginPage = () => {
   return (

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import type { FillInTheBlankBlock } from '../../types/domain';
-import { cn } from '../../lib/utils';
+import type { FillInTheBlankBlock } from '@/types/domain';
+import { cn } from '@/lib/utils';
 import { Check, X, Send, RotateCcw, Eye } from 'lucide-react';
-import { Card } from '../common/Card';
-import { Button } from '../common/Button';
-import { BlockFooter } from './BlockFooter';
+import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
+import { BlockFooter } from '@/components/content-blocks/BlockFooter';
 
 interface FillInTheBlankBlockProps {
     block: FillInTheBlankBlock;

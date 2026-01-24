@@ -1,6 +1,6 @@
 
-import { useAuthStore } from '../store/authStore';
-import { Button } from '../components/common/Button';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/common/Button';
 import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

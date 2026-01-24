@@ -1,6 +1,6 @@
 import { User } from 'lucide-react';
-import { Button } from '../common/Button';
-import { cn } from '../../lib/utils';
+import { Button } from '@/components/common/Button';
+import { cn } from '@/lib/utils';
 
 export type QuestionStatus = 'answered' | 'not_answered' | 'marked' | 'marked_answered' | 'not_visited' | 'correct' | 'incorrect';
 

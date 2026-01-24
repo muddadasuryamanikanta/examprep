@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { PromptService } from '../services/PromptService';
-import { type Topic } from '../types/domain';
-import { useContentStore } from '../store/contentStore';
-import { useTakeTest } from '../hooks/useTakeTest';
+import { cn } from '@/lib/utils';
+import { PromptService } from '@/services/PromptService';
+import { type Topic } from '@/types/domain';
+import { useContentStore } from '@/store/contentStore';
+import { useTakeTest } from '@/hooks/useTakeTest';
 
 
-import { useSpaceStore } from '../store/spaceStore';
-import { Button } from '../components/common/Button';
-import { Modal } from '../components/common/Modal';
-import { Tooltip } from '../components/common/Tooltip';
-import { EmptyState } from '../components/common/EmptyState';
-import { Breadcrumbs } from '../components/common/Breadcrumbs';
-import { DynamicIcon, getDeterministicColor } from '../components/UI/DynamicIcon';
-import { TruncatedText } from '../components/common/TruncatedText';
+import { useSpaceStore } from '@/store/spaceStore';
+import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
+import { Tooltip } from '@/components/common/Tooltip';
+import { EmptyState } from '@/components/common/EmptyState';
+import { Breadcrumbs } from '@/components/common/Breadcrumbs';
+import { DynamicIcon, getDeterministicColor } from '@/components/UI/DynamicIcon';
+import { TruncatedText } from '@/components/common/TruncatedText';
 
 export default function TopicList() {
   const { spaceSlug, subjectSlug } = useParams();

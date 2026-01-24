@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ContentBlockDisplay } from '../content-blocks/ContentBlockDisplay';
-import { Button } from '../common/Button';
+import { ContentBlockDisplay } from '@/components/content-blocks/ContentBlockDisplay';
+import { Button } from '@/components/common/Button';
 import { ArrowLeft } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import type { AnkiRating, AnkiSessionItem } from '../../services/AnkiService';
+import { cn } from '@/lib/utils';
+import type { AnkiRating, AnkiSessionItem } from '@/services/AnkiService';
 import { createEmptyCard, FSRS, Rating, State, generatorParameters } from 'ts-fsrs';
 
 interface AnkiCardViewProps {

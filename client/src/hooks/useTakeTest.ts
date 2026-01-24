@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTestStore } from '../store/testStore';
+import { useTestStore } from '@/store/testStore';
 
 interface UseTakeTestParams {
     spaceId: string;

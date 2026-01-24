@@ -2,16 +2,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
-import { useTestStore } from '../store/testStore';
-import { useAuthStore } from '../store/authStore';
+import { useTestStore } from '@/store/testStore';
+import { useAuthStore } from '@/store/authStore';
 
 // Components
-import { TestHeader } from '../components/test-screen/TestHeader';
-import { TestSidebar } from '../components/test-screen/TestSidebar';
-import { QuestionArea } from '../components/test-screen/QuestionArea';
-import { FullScreenWarning } from '../components/test-screen/FullScreenWarning';
-import { TestCompleted } from '../components/test-screen/TestCompleted';
-import { PromptService } from '../services/PromptService';
+import { TestHeader } from '@/components/test-screen/TestHeader';
+import { TestSidebar } from '@/components/test-screen/TestSidebar';
+import { QuestionArea } from '@/components/test-screen/QuestionArea';
+import { FullScreenWarning } from '@/components/test-screen/FullScreenWarning';
+import { TestCompleted } from '@/components/test-screen/TestCompleted';
+import { PromptService } from '@/services/PromptService';
 
 export default function TestScreen() {
     const { id } = useParams<{ id: string }>();

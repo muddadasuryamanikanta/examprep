@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import api from '../lib/api';
-import { type Subject, type Topic, type ContentBlock, type ContentBlockType } from '../types/domain';
+import api from '@/lib/api';
+import { type Subject, type Topic, type ContentBlock, type ContentBlockType } from '@/types/domain';
 
 interface ContentState {
   subjects: Subject[];

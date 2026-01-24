@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { SingleSelectMcqBlock, MultiSelectMcqBlock } from '../../types/domain';
-import { Card } from '../common/Card';
-import { BlockFooter } from './BlockFooter';
-import { Button } from '../common/Button';
-import { cn } from '../../lib/utils';
+import type { SingleSelectMcqBlock, MultiSelectMcqBlock } from '@/types/domain';
+import { Card } from '@/components/common/Card';
+import { BlockFooter } from '@/components/content-blocks/BlockFooter';
+import { Button } from '@/components/common/Button';
+import { cn } from '@/lib/utils';
 import { CheckSquare, Square, CheckCircle2, XCircle, RotateCcw, Eye, Send } from 'lucide-react';
 
 interface McqBlockProps {

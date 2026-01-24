@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAnkiSession } from '../hooks/useAnkiSession';
-import { Button } from '../components/common/Button';
+import { useAnkiSession } from '@/hooks/useAnkiSession';
+import { Button } from '@/components/common/Button';
 import { Loader2 } from 'lucide-react';
-import { AnkiCardView } from '../components/anki/AnkiCardView';
+import { AnkiCardView } from '@/components/anki/AnkiCardView';
 
 export default function AnkiBoard() {
     const { type, id } = useParams(); // type: 'subject' | 'topic', id: slug or ID

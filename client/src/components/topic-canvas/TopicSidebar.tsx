@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Filter, Plus, Loader2, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
-import { Button } from '../common/Button';
-import type { ContentBlock, ContentBlockType } from '../../types/domain';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/common/Button';
+import type { ContentBlock, ContentBlockType } from '@/types/domain';
 import { useNavigate } from 'react-router-dom';
-import { TruncatedText } from '../common/TruncatedText';
+import { TruncatedText } from '@/components/common/TruncatedText';
 
 interface TopicSidebarProps {
   spaceName?: string;

@@ -1,5 +1,5 @@
 import { CheckCircle, Home } from 'lucide-react';
-import { Button } from '../common/Button';
+import { Button } from '@/components/common/Button';
 
 interface TestCompletedProps {
     score: number;

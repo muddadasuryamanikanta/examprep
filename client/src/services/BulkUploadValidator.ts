@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { type ContentBlockType, type ContentBlock } from '../types/domain';
+import { type ContentBlockType, type ContentBlock } from '@/types/domain';
 
 export interface ValidationError {
   row: number;

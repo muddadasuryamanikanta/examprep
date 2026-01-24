@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AnkiService } from '../services/AnkiService';
-import type { AnkiSessionItem, AnkiRating } from '../services/AnkiService';
+import { AnkiService } from '@/services/AnkiService';
+import type { AnkiSessionItem, AnkiRating } from '@/services/AnkiService';
 
 
 interface UseAnkiSessionProps {

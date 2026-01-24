@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PromptService } from '../../services/PromptService';
+import { PromptService } from '@/services/PromptService';
 import type {
   ContentBlockType,
   McqOption,
@@ -8,9 +8,9 @@ import type {
   MultiSelectMcqBlock,
   FillInTheBlankBlock,
   ContentBlock
-} from '../../types/domain';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
+} from '@/types/domain';
+import { Modal } from '@/components/common/Modal';
+import { Button } from '@/components/common/Button';
 import { Plus, Trash2 } from 'lucide-react';
 
 interface ContentBlockModalProps {

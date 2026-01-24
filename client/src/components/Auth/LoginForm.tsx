@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Input } from '../UI/Input';
-import { Button } from '../UI/Button';
-import { useAuthStore } from '../../store/authStore';
+import { Input } from '@/components/UI/Input';
+import { Button } from '@/components/UI/Button';
+import { useAuthStore } from '@/store/authStore';
 import axios from 'axios';
 
 export const LoginForm = () => {

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { TruncatedText } from './TruncatedText';
+import { cn } from '@/lib/utils';
+import { TruncatedText } from '@/components/common/TruncatedText';
 import { Fragment } from 'react';
 import type { ReactNode } from 'react';
 

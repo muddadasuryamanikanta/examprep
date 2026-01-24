@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
-import { ToastService } from '../services/ToastService';
-import { PromptService } from '../services/PromptService';
-import { type Subject } from '../types/domain';
-import { useContentStore } from '../store/contentStore';
-import { useTestStore } from '../store/testStore';
-import { useSpaceStore } from '../store/spaceStore';
-import { Button } from '../components/common/Button';
-import { Modal } from '../components/common/Modal';
-import { Tooltip } from '../components/common/Tooltip';
-import { EmptyState } from '../components/common/EmptyState';
-import { Breadcrumbs } from '../components/common/Breadcrumbs';
-import { DynamicIcon, getDeterministicColor } from '../components/UI/DynamicIcon';
-import { TruncatedText } from '../components/common/TruncatedText';
+import { ToastService } from '@/services/ToastService';
+import { PromptService } from '@/services/PromptService';
+import { type Subject } from '@/types/domain';
+import { useContentStore } from '@/store/contentStore';
+import { useTestStore } from '@/store/testStore';
+import { useSpaceStore } from '@/store/spaceStore';
+import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
+import { Tooltip } from '@/components/common/Tooltip';
+import { EmptyState } from '@/components/common/EmptyState';
+import { Breadcrumbs } from '@/components/common/Breadcrumbs';
+import { DynamicIcon, getDeterministicColor } from '@/components/UI/DynamicIcon';
+import { TruncatedText } from '@/components/common/TruncatedText';
 
 export default function SubjectLibrary() {
   const { spaceSlug } = useParams();

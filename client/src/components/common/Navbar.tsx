@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon, LogOut, User, GraduationCap, ChevronDown } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { useTheme } from '../../hooks/useTheme';
-import { Button } from './Button';
+import { useAuthStore } from '@/store/authStore';
+import { useTheme } from '@/hooks/useTheme';
+import { Button } from '@/components/common/Button';
 
 export function Navbar() {
   const { isAuthenticated, logout, user } = useAuthStore();

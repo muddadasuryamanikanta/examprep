@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { cn } from '../../lib/utils';
-import type { NoteBlock as NoteBlockType } from '../../types/domain';
-import { Card } from '../common/Card';
-import { BlockFooter } from './BlockFooter';
+import { cn } from '@/lib/utils';
+import type { NoteBlock as NoteBlockType } from '@/types/domain';
+import { Card } from '@/components/common/Card';
+import { BlockFooter } from '@/components/content-blocks/BlockFooter';
 
 interface NoteBlockProps {
   block: NoteBlockType;

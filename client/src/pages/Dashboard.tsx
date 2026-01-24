@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { TestsDueTable } from '../components/dashboard/TestsDueTable';
-import { MultiSelect } from '../components/UI/MultiSelect';
-import type { TestUnit } from '../types/dashboard';
-import api from '../lib/api';
-import { Modal } from '../components/common/Modal';
-import { useTakeTest } from '../hooks/useTakeTest';
+import { TestsDueTable } from '@/components/dashboard/TestsDueTable';
+import { MultiSelect } from '@/components/UI/MultiSelect';
+import type { TestUnit } from '@/types/dashboard';
+import api from '@/lib/api';
+import { Modal } from '@/components/common/Modal';
+import { useTakeTest } from '@/hooks/useTakeTest';
 import { Loader2, PlayCircle, Clock } from 'lucide-react';
 
 const Dashboard = () => {

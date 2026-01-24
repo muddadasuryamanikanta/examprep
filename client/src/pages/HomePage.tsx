@@ -1,6 +1,6 @@
-import { useAuthStore } from '../store/authStore';
-import { Button } from '../components/UI/Button';
-import { ThemeToggle } from '../components/UI/ThemeToggle';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/UI/Button';
+import { ThemeToggle } from '@/components/UI/ThemeToggle';
 import { motion } from 'framer-motion';
 
 export const HomePage = () => {

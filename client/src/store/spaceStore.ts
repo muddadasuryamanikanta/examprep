@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import api from '../lib/api';
-import { type Space } from '../types/domain';
+import api from '@/lib/api';
+import { type Space } from '@/types/domain';
 
 interface SpaceState {
   spaces: Space[];

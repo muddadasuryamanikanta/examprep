@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, Loader2, ArrowRight } from 'lucide-react';
-import { Button } from '../components/common/Button';
-import { useAuthStore } from '../store/authStore';
+import { Button } from '@/components/common/Button';
+import { useAuthStore } from '@/store/authStore';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),

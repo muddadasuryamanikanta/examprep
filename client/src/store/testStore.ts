@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import api from '../lib/api';
-import type { Test } from '../types/domain';
+import api from '@/lib/api';
+import type { Test } from '@/types/domain';
 
 interface TestState {
   tests: Test[];

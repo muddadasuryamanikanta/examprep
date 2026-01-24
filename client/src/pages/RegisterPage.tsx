@@ -1,5 +1,5 @@
-import { RegisterForm } from '../components/Auth/RegisterForm';
-import Squares from '../components/common/Squares';
+import { RegisterForm } from '@/components/Auth/RegisterForm';
+import Squares from '@/components/common/Squares';
 
 export const RegisterPage = () => {
   return (

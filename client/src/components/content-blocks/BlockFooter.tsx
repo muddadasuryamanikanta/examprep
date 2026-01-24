@@ -1,5 +1,5 @@
 
-import { Button } from '../common/Button';
+import { Button } from '@/components/common/Button';
 import { Lightbulb, Info } from 'lucide-react';
 
 interface BlockFooterProps {

@@ -1,5 +1,5 @@
 import { Zap } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 
 interface TestHeaderProps {
     title: string;

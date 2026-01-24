@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { PromptService, type PromptOptions } from '../../services/PromptService';
-import { Modal } from './Modal';
-import { Button } from './Button';
+import { PromptService, type PromptOptions } from '@/services/PromptService';
+import { Modal } from '@/components/common/Modal';
+import { Button } from '@/components/common/Button';
 import { AlertTriangle, Info, XCircle } from 'lucide-react';
 
 export function GlobalPrompt() {

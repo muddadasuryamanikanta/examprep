@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { type Space } from '../types/domain';
-import { useSpaceStore } from '../store/spaceStore';
-import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
-import { Modal } from '../components/common/Modal';
-import { EmptyState } from '../components/common/EmptyState';
-import { DynamicIcon, getDeterministicColor } from '../components/UI/DynamicIcon';
-import { TruncatedText } from '../components/common/TruncatedText';
+import { type Space } from '@/types/domain';
+import { useSpaceStore } from '@/store/spaceStore';
+import { Button } from '@/components/common/Button';
+import { Card } from '@/components/common/Card';
+import { Modal } from '@/components/common/Modal';
+import { EmptyState } from '@/components/common/EmptyState';
+import { DynamicIcon, getDeterministicColor } from '@/components/UI/DynamicIcon';
+import { TruncatedText } from '@/components/common/TruncatedText';
 
 export default function SpaceList() {
   const navigate = useNavigate();

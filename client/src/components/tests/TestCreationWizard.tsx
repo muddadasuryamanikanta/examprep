@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Check, Filter, Search } from 'lucide-react';
-import { useSpaceStore } from '../../store/spaceStore';
-import { useContentStore } from '../../store/contentStore';
-import { useTestStore } from '../../store/testStore';
-import { PromptService } from '../../services/PromptService';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
-import type { Subject, Topic } from '../../types/domain';
+import { useSpaceStore } from '@/store/spaceStore';
+import { useContentStore } from '@/store/contentStore';
+import { useTestStore } from '@/store/testStore';
+import { PromptService } from '@/services/PromptService';
+import { Modal } from '@/components/common/Modal';
+import { Button } from '@/components/common/Button';
+import type { Subject, Topic } from '@/types/domain';
 
 interface TestCreationWizardProps {
     isOpen: boolean;

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, History, PlayCircle, Loader2 } from 'lucide-react';
-import { useTestStore } from '../store/testStore';
-import { TestCreationWizard } from '../components/tests/TestCreationWizard';
+import { useTestStore } from '@/store/testStore';
+import { TestCreationWizard } from '@/components/tests/TestCreationWizard';
 
 const TestDashboard = () => {
     const { tests, isLoading, fetchTests } = useTestStore();

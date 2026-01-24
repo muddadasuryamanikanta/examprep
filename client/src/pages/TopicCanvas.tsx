@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
-import { PromptService } from '../services/PromptService';
+import { PromptService } from '@/services/PromptService';
 import { useParams } from 'react-router-dom';
-import { type ContentBlock, type ContentBlockType } from '../types/domain';
-import { useContentStore } from '../store/contentStore';
-import { useSpaceStore } from '../store/spaceStore';
-import { Button } from '../components/common/Button';
-import { Modal } from '../components/common/Modal';
-import { ContentBlockModal } from '../components/content-blocks/ContentBlockModal';
-import { TopicSidebar } from '../components/topic-canvas/TopicSidebar';
-import { TopicContentArea } from '../components/topic-canvas/TopicContentArea';
-import { MultiSelect } from '../components/common/MultiSelect';
-import { BulkUploadModal } from '../components/content-blocks/BulkUploadModal';
+import { type ContentBlock, type ContentBlockType } from '@/types/domain';
+import { useContentStore } from '@/store/contentStore';
+import { useSpaceStore } from '@/store/spaceStore';
+import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
+import { ContentBlockModal } from '@/components/content-blocks/ContentBlockModal';
+import { TopicSidebar } from '@/components/topic-canvas/TopicSidebar';
+import { TopicContentArea } from '@/components/topic-canvas/TopicContentArea';
+import { MultiSelect } from '@/components/common/MultiSelect';
+import { BulkUploadModal } from '@/components/content-blocks/BulkUploadModal';
 
 
 export default function TopicCanvas() {

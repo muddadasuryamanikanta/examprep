@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TestUnit } from '../../types/dashboard';
+import type { TestUnit } from '@/types/dashboard';
 import { CheckCircle, Clock, PauseCircle, PlayCircle, AlertCircle } from 'lucide-react';
 
 interface TestsDueTableProps {

@@ -1,5 +1,5 @@
-import api from '../lib/api';
-import type { ContentBlock } from '../types/domain';
+import api from '@/lib/api';
+import type { ContentBlock } from '@/types/domain';
 
 export interface AnkiSessionItem {
     _id: string | null; // Null if new

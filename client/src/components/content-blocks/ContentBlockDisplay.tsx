@@ -1,7 +1,7 @@
-import type { ContentBlock } from '../../types/domain';
-import { NoteBlock } from './NoteBlock';
-import { McqBlock } from './McqBlock';
-import { FillInTheBlankBlock } from './FillInTheBlankBlock';
+import type { ContentBlock } from '@/types/domain';
+import { NoteBlock } from '@/components/content-blocks/NoteBlock';
+import { McqBlock } from '@/components/content-blocks/McqBlock';
+import { FillInTheBlankBlock } from '@/components/content-blocks/FillInTheBlankBlock';
 
 interface ContentBlockDisplayProps {
     block: ContentBlock;

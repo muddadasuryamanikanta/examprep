@@ -4,9 +4,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '../components/common/Button';
-import Squares from '../components/common/Squares';
-import { useAuthStore } from '../store/authStore';
+import { Button } from '@/components/common/Button';
+import Squares from '@/components/common/Squares';
+import { useAuthStore } from '@/store/authStore';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),

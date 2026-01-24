@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import api from '../lib/api';
-import { useAuthStore } from '../store/authStore';
-import { Button } from '../components/common/Button';
+import api from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/common/Button';
 
 interface User {
   _id: string;
