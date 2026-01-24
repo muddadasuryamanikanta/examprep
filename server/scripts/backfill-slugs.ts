@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Space from '../src/models/Space.ts';
-import Subject from '../src/models/Subject.ts';
-import Topic from '../src/models/Topic.ts';
+import Space from '@/models/Space.ts';
+import Subject from '@/models/Subject.ts';
+import Topic from '@/models/Topic.ts';
 import { customAlphabet } from "nanoid";
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);

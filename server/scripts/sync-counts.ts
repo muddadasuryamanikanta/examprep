@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Subject from '../src/models/Subject.ts';
-import Topic from '../src/models/Topic.ts';
-import ContentBlock from '../src/models/ContentBlock.ts';
+import Subject from '@/models/Subject.ts';
+import Topic from '@/models/Topic.ts';
+import ContentBlock from '@/models/ContentBlock.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

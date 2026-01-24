@@ -5,10 +5,10 @@ import path from 'path';
 // Load environment variables from .env file
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-import Subject from '../src/models/Subject.ts';
-import Topic from '../src/models/Topic.ts';
-import ContentBlock from '../src/models/ContentBlock.ts';
-import { generateIconForSubject } from '../src/utils/common.ts';
+import Subject from '@/models/Subject.ts';
+import Topic from '@/models/Topic.ts';
+import ContentBlock from '@/models/ContentBlock.ts';
+import { generateIconForSubject } from '@/utils/common.ts';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/examprep';
 

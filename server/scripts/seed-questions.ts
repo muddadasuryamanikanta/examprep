@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
-import Topic from '../src/models/Topic.ts';
-import ContentBlock, { ContentBlockType } from '../src/models/ContentBlock.ts';
+import Topic from '@/models/Topic.ts';
+import ContentBlock, { ContentBlockType } from '@/models/ContentBlock.ts';
 
 // Load env vars
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });

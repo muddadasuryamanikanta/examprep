@@ -1,7 +1,7 @@
 
 import mongoose from 'mongoose';
-import SpacedRepetition from '../src/models/Anki.ts'; // Explicit extension for tsx
-import { AnkiController } from '../src/controllers/anki.controller.ts';
+import SpacedRepetition from '@/models/Anki.ts'; // Explicit extension for tsx
+import { AnkiController } from '@/controllers/anki.controller.ts';
 import type { Request, Response } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();

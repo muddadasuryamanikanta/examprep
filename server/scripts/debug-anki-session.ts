@@ -1,9 +1,9 @@
 
 import mongoose from 'mongoose';
-import { AnkiController } from '../src/controllers/anki.controller.ts';
-import ContentBlock from '../src/models/ContentBlock.ts';
-import Topic from '../src/models/Topic.ts';
-import User from '../src/models/User.ts';
+import { AnkiController } from '@/controllers/anki.controller.ts';
+import ContentBlock from '@/models/ContentBlock.ts';
+import Topic from '@/models/Topic.ts';
+import User from '@/models/User.ts';
 import type { Request } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();

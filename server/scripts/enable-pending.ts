@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Test from '../src/models/Test.js';
+import Test from '@/models/Test.js';
 
 // Load env vars
 const __filename = fileURLToPath(import.meta.url);

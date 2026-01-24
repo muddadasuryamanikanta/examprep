@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
-import User from '../src/models/User.ts';
-import Space from '../src/models/Space.ts';
-import Subject from '../src/models/Subject.ts';
-import Topic from '../src/models/Topic.ts';
-import ContentBlock, { ContentBlockType } from '../src/models/ContentBlock.ts';
-import SpacedRepetition from '../src/models/Anki.ts';
+import User from '@/models/User.ts';
+import Space from '@/models/Space.ts';
+import Subject from '@/models/Subject.ts';
+import Topic from '@/models/Topic.ts';
+import ContentBlock, { ContentBlockType } from '@/models/ContentBlock.ts';
+import SpacedRepetition from '@/models/Anki.ts';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 

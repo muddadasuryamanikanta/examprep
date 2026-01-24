@@ -6,8 +6,8 @@ import path from 'path';
 // Load environment variables from .env file
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-import Space from '../src/models/Space.ts';
-import Subject from '../src/models/Subject.ts';
+import Space from '@/models/Space.ts';
+import Subject from '@/models/Subject.ts';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/examprep';
 
