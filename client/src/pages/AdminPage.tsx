@@ -4,14 +4,9 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/common/Button';
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isApproved: boolean;
-  createdAt: string;
-}
+import type { SharedUser } from '@shared/index';
+
+type User = SharedUser;
 
 const AdminPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -27,7 +22,7 @@ const AdminPage: React.FC = () => {
     try {
       const res = await api.get('/admin/users');
       setUsers(res.data);
-    } catch (err) {
+    } catch {
       setError('Failed to fetch users');
     } finally {
       setLoading(false);
@@ -40,7 +35,7 @@ const AdminPage: React.FC = () => {
         isApproved: !currentStatus,
       });
       setUsers(users.map((u) => (u._id === id ? res.data : u)));
-    } catch (err) {
+    } catch {
       alert('Failed to update user status');
     }
   };
@@ -50,8 +45,8 @@ const AdminPage: React.FC = () => {
     try {
       await api.delete(`/admin/users/${id}`);
       setUsers(users.filter((u) => u._id !== id));
-    } catch (err) {
-        alert('Failed to delete user');
+    } catch {
+      alert('Failed to delete user');
     }
   };
 

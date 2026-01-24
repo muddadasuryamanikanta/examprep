@@ -10,7 +10,8 @@ export class AnkiController {
 
     static async getSession(req: Request, res: Response) {
         try {
-            const user = req.user as any;
+            const user = req.user;
+            if (!user) throw new Error('User not found');
             const userId = user._id;
             const { spaceId, subjectId, topicId, limit = 20 } = req.query;
 
@@ -116,7 +117,8 @@ export class AnkiController {
 
     static async submitReview(req: Request, res: Response) {
         try {
-            const user = req.user as any;
+            const user = req.user;
+            if (!user) throw new Error('User not found');
             const userId = user._id;
             const { questionId, rating } = req.body; // rating: 'Again' | 'Hard' | 'Good' | 'Easy'
 

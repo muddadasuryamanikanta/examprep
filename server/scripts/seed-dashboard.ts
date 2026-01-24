@@ -135,10 +135,10 @@ const seedDashboardData = async () => {
                     await SpacedRepetition.create({
                         userId: user._id,
                         questionId: block._id,
-                        spaceId: space._id,
-                        box: 1,
+                        // spaceId: space._id, // Not in schema
+                        // box: 1, // Not in schema
                         nextReviewAt: reviewDate,
-                        interval: 1,
+                        intervalDays: 1,
                         easeFactor: 2.5
                     });
                 }

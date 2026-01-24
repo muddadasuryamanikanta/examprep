@@ -1,20 +1,13 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role?: 'user' | 'admin';
-  isApproved?: boolean;
-}
+import type { SharedUser } from '@shared/index';
 
 interface AuthState {
-  user: User | null;
+  user: SharedUser | null;
   token: string | null;
   isAuthenticated: boolean;
-  setAuth: (user: User, token: string) => void;
+  setAuth: (user: SharedUser, token: string) => void;
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<unknown>;

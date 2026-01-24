@@ -1,16 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IUser extends Document {
-  email: string;
+import type { SharedUser } from '@shared/index.ts';
+
+export interface IUser extends Omit<SharedUser, '_id'>, Document {
   password?: string;
-  name: string;
-  googleId?: string;
-  avatar?: string;
   jwtSecureCode: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  role: 'user' | 'admin';
-  isApproved: boolean;
   createdAt: Date;
 }
 

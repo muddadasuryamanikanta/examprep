@@ -1,6 +1,7 @@
 
 import mongoose from 'mongoose';
 import { AnkiController } from '@/controllers/anki.controller.ts';
+import SpacedRepetition from '@/models/Anki.ts';
 import ContentBlock from '@/models/ContentBlock.ts';
 import Topic from '@/models/Topic.ts';
 import User from '@/models/User.ts';
@@ -58,6 +59,7 @@ async function runDebug() {
         }
         
         // Also check if any questionId is just an ID (populate failure fallback?)
+        const allReviews = await SpacedRepetition.find({}).lean();
         const idOnly = allReviews.filter((r: any) => r.questionId && !r.questionId.kind && mongoose.isValidObjectId(r.questionId));
         if (idOnly.length > 0) {
              console.log("FOUND ID ONLY ITEMS:", idOnly.map((i: any) => i._id));
