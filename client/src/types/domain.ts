@@ -31,6 +31,9 @@ export interface Topic extends BaseEntity {
   icon?: string;
   questionCount?: number;
   dueCount?: number;
+  newCount?: number;
+  learningCount?: number;
+  reviewCount?: number;
 }
 
 export type ContentBlockType = 'note' | 'single_select_mcq' | 'multi_select_mcq' | 'fill_in_the_blank';

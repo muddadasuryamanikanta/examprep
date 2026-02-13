@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, Play } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { PromptService } from '@/services/PromptService';
 import { type Topic } from '@/types/domain';
 import { useContentStore } from '@/store/contentStore';
@@ -222,9 +222,9 @@ export default function TopicList() {
                 <div
                   key={topic._id}
                   onClick={() => handleTopicClick(topic)}
-                  className="group flex items-center justify-between p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
+                  className="group grid grid-cols-12 gap-4 items-center p-4 rounded-lg border border-border bg-background hover:bg-accent/50 cursor-pointer transition-colors"
                 >
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="col-span-12 md:col-span-5 flex items-center gap-4 min-w-0">
                     <div className={`h-10 w-10 rounded-md flex items-center justify-center text-lg font-bold shrink-0 ${getDeterministicColor(topic._id)}`}>
                       <DynamicIcon name={topic.icon || 'Hash'} className="h-5 w-5" />
                     </div>
@@ -233,19 +233,31 @@ export default function TopicList() {
                     </TruncatedText>
                   </div>
 
-                  {/* Stats Block */}
-                  <div className="flex flex-col items-end mr-6 px-4 py-1.5 bg-muted/30 rounded-md border border-border/40 min-w-[100px]">
-                    <div className="flex items-baseline gap-1">
-                      <span className={cn("text-lg font-bold", (topic.dueCount || 0) > 0 ? "text-primary" : "text-muted-foreground")}>
-                        {topic.dueCount || 0}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        / {topic.questionCount || 0}
-                      </span>
-                    </div>
+                  {/* Stats Block (Centered with Labels) */}
+                  <div className="col-span-12 md:col-span-4 flex justify-center py-2 md:py-0">
+                     <div className="flex items-center gap-8 bg-muted/20 px-6 py-2 rounded-lg border border-border/40">
+                        <div className="flex flex-col items-center gap-0.5">
+                           <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">New</span>
+                           <span className="text-[#00aaff] font-bold text-lg leading-none">
+                              {topic.newCount || 0}
+                           </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-0.5">
+                           <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Lrn</span>
+                           <span className="text-[#da3e3e] font-bold text-lg leading-none">
+                              {topic.learningCount || 0}
+                           </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-0.5">
+                           <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Rev</span>
+                           <span className="text-[#25b845] font-bold text-lg leading-none">
+                              {topic.reviewCount || 0}
+                           </span>
+                        </div>
+                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="col-span-12 md:col-span-3 flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       className="h-8 px-4 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-sm font-semibold border-none transition-all transform hover:scale-105 active:scale-95"
                       onClick={(e) => {

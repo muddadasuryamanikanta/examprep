@@ -12,13 +12,6 @@ interface UseAnkiSessionProps {
 // ─── Constants ───
 const LEARN_AHEAD_LIMIT_MINS = 20;
 
-// ─── State Helpers ───
-const isLearningState = (i: AnkiSessionItem) =>
-    i.state === 1 || i.state === 3 || i.state === 'learning' || i.state === 'relearning';
-const isReviewState = (i: AnkiSessionItem) =>
-    i.state === 2 || i.state === 'review';
-// Everything else (state===0, state==='new', isNew===true, or no state) → NEW
-
 // ─── Heap Helpers (MinHeap by dueTime) ───
 function heapInsert(heap: AnkiSessionItem[], item: AnkiSessionItem): AnkiSessionItem[] {
     const dueTime = item.showAfter || 0;
@@ -105,6 +98,14 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
     // 1. Move due learning cards from heap → learningQueue
     // 2. learningQueue > reviewQueue > newQueue
     // 3. If only heap has cards → immediate reappearance (§6)
+    // State for mixing logic (2 Reviews : 1 New)
+    const [reviewsSinceNew, setReviewsSinceNew] = useState(0);
+
+    // ─── Core: Get Next Card (Priority Rule) ───
+    // 1. Move due learning cards from heap → learningQueue
+    // 2. learningQueue (IMMEDIATE PRIORITY)
+    // 3. Mix reviewQueue and newQueue (2:1 ratio)
+    // 4. If only heap has cards → immediate reappearance (§6)
     const getNextCard = useCallback((
         lQueue: AnkiSessionItem[],
         rQueue: AnkiSessionItem[],
@@ -132,25 +133,50 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
             }
         }
 
-        // Step 2: Priority selection — Learning > Review > New
+        // Step 2: STRICT Priority — Learning Queue
         if (updatedLQueue.length > 0) {
             const card = updatedLQueue.shift()!;
             return { card, lQueue: updatedLQueue, rQueue: [...rQueue], nQueue: [...nQueue], heap: updatedHeap, finished: false };
         }
 
-        if (rQueue.length > 0) {
-            const next = [...rQueue];
-            const card = next.shift()!;
-            return { card, lQueue: updatedLQueue, rQueue: next, nQueue: [...nQueue], heap: updatedHeap, finished: false };
+        // Step 3: Mixed Selection — Review vs New
+        // Ratio: 2 Reviews : 1 New (Anki standard-ish mix)
+        let nextCard: AnkiSessionItem | null = null;
+        let nextRQueue = [...rQueue];
+        let nextNQueue = [...nQueue];
+
+        // Try to respect ratio if both queues have cards
+        if (nextRQueue.length > 0 && nextNQueue.length > 0) {
+            if (reviewsSinceNew < 2) {
+                // Show Review
+                nextCard = nextRQueue.shift()!;
+                setReviewsSinceNew(prev => prev + 1);
+            } else {
+                // Show New
+                nextCard = nextNQueue.shift()!;
+                setReviewsSinceNew(0);
+            }
+        } 
+        // Fallback: If one queue is empty, just take from the other
+        else if (nextRQueue.length > 0) {
+            nextCard = nextRQueue.shift()!;
+        } 
+        else if (nextNQueue.length > 0) {
+            nextCard = nextNQueue.shift()!;
         }
 
-        if (nQueue.length > 0) {
-            const next = [...nQueue];
-            const card = next.shift()!;
-            return { card, lQueue: updatedLQueue, rQueue: [...rQueue], nQueue: next, heap: updatedHeap, finished: false };
+        if (nextCard) {
+            return { 
+                card: nextCard, 
+                lQueue: updatedLQueue, 
+                rQueue: nextRQueue, 
+                nQueue: nextNQueue, 
+                heap: updatedHeap, 
+                finished: false 
+            };
         }
 
-        // Step 3: All queues empty — check heap (§6 Immediate Reappearance)
+        // Step 4: All queues empty — check heap (§6 Immediate Reappearance)
         if (updatedHeap.length > 0) {
             const card = updatedHeap.shift()!;
             return { card, lQueue: updatedLQueue, rQueue: [...rQueue], nQueue: [...nQueue], heap: updatedHeap, finished: false };
@@ -158,7 +184,7 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
 
         // Nothing left
         return { card: null, lQueue: [], rQueue: [], nQueue: [], heap: [], finished: true };
-    }, []);
+    }, [reviewsSinceNew]); // Dependency on state for mixing
 
     // ─── Update all state from getNextCard result ───
     const applyResult = useCallback((
@@ -195,23 +221,12 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
         try {
             const data = await AnkiService.getSession({ spaceId, subjectId, topicId, limit: 50 });
 
-            const items = data.items as AnkiSessionItem[];
             setActivePreset(data.preset || undefined);
 
-            // Split items into three queues based on state
-            const learning: AnkiSessionItem[] = [];
-            const review: AnkiSessionItem[] = [];
-            const newCards: AnkiSessionItem[] = [];
-
-            for (const item of items) {
-                if (isLearningState(item)) {
-                    learning.push(item);
-                } else if (isReviewState(item)) {
-                    review.push(item);
-                } else {
-                    newCards.push(item);
-                }
-            }
+            // Use arrays directly from backend (already separated)
+            const learning = data.learningItems || [];
+            const review = data.reviewItems || [];
+            const newCards = data.newItems || [];
 
             // Reset answered count
             answeredRef.current = 0;

@@ -45,7 +45,13 @@ export const AnkiService = {
         if (context.topicId) params.append('topicId', context.topicId);
         if (context.limit) params.append('limit', context.limit.toString());
 
-        const response = await api.get<{ items: AnkiSessionItem[], total: number, preset?: any }>(`/anki/session?${params.toString()}`);
+        const response = await api.get<{ 
+            learningItems: AnkiSessionItem[];
+            reviewItems: AnkiSessionItem[]; 
+            newItems: AnkiSessionItem[];
+            total: number; 
+            preset?: any 
+        }>(`/anki/session?${params.toString()}`);
         return response.data; // { items, total }
     },
 
