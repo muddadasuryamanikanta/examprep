@@ -25,6 +25,41 @@ function formatMs(ms: number): string {
     return `${months}mo`;
 }
 
+// Helper to calculate and format next intervals with UX fixes
+function calculateNextIntervals(card: Card, fsrs: FSRS, now: Date) {
+    try {
+        const scheduling = fsrs.repeat(card, now);
+        
+        const times = {
+            Again: scheduling[Rating.Again].card.due.getTime() - now.getTime(),
+            Hard:  scheduling[Rating.Hard].card.due.getTime()  - now.getTime(),
+            Good:  scheduling[Rating.Good].card.due.getTime()  - now.getTime(),
+            Easy:  scheduling[Rating.Easy].card.due.getTime()  - now.getTime()
+        };
+
+        // UX FIX: Ensure Easy > Good visually
+        // If both are >= 1 day and format to the same string, bump Easy
+        const goodDays = Math.floor(times.Good / 86400000);
+        const easyDays = Math.floor(times.Easy / 86400000);
+
+        if (goodDays >= 1 && easyDays <= goodDays) {
+            // Force Easy to be at least Good + 1 day
+             times.Easy = (goodDays + 1) * 86400000;
+        }
+
+        return {
+            Again: formatMs(times.Again),
+            Hard:  formatMs(times.Hard),
+            Good:  formatMs(times.Good),
+            Easy:  formatMs(times.Easy)
+        };
+    } catch (err) {
+        console.warn('FSRS interval calc failed, using fallback:', err);
+        return { Again: '1m', Hard: '6m', Good: '10m', Easy: '2d' };
+    }
+}
+
+
 export class AnkiController {
 
     static async getSession(req: Request, res: Response) {
@@ -102,128 +137,72 @@ export class AnkiController {
                 lapses: 0
             }));
 
-            // 5. Card Mixing (Anki Pattern): Learning > Review > New
+            // 6. Card Mixing (Anki Pattern): Learning > Review > New
+            // Learning cards bypass ALL limits (critical for Anki accuracy!)
             const learningCards = dueReviews.filter((r: any) => r.state === 'learning' || r.state === 'relearning');
             const reviewCards = dueReviews.filter((r: any) => r.state === 'review');
+            
+            // Limit reviews and new cards based on request limit (since user wants unlimited daily, just paginate)
+            const remainingReviewCards = reviewCards.slice(0, limitNum);
+            const remainingNewCards = newItemsMapped.slice(0, limitNum);
 
-            const mixedQueue: any[] = [];
-            let newIndex = 0;
-            let reviewIndex = 0;
-
-            // Learning/relearning first (highest priority)
-            mixedQueue.push(...learningCards);
-
-            // Interleave review and new (2 reviews : 1 new)
-            while (mixedQueue.length < limitNum && (reviewIndex < reviewCards.length || newIndex < newItemsMapped.length)) {
-                if (reviewIndex < reviewCards.length) {
-                    mixedQueue.push(reviewCards[reviewIndex++]);
-                }
-                if (reviewIndex < reviewCards.length && mixedQueue.length < limitNum) {
-                    mixedQueue.push(reviewCards[reviewIndex++]);
-                }
-                if (newIndex < newItemsMapped.length && mixedQueue.length < limitNum) {
-                    mixedQueue.push(newItemsMapped[newIndex++]);
-                }
-            }
-
-            const responseItems = mixedQueue.slice(0, limitNum);
-
-            // 6. Calculate interval previews for each item using FSRS
+            // 7. Calculate intervals for ALL cards
             const fsrs = new FSRS(params);
 
             const calculateAnkiIntervals = (item: any) => {
-                try {
-                    const card = createEmptyCard(now);
+                const card = createEmptyCard(now);
 
-                    // CRITICAL FIX #1: For interval preview, ALWAYS set card.due = now
-                    // Using past due dates can cause issues with FSRS calculations
-                    card.due = now;
-                    if (item.lastReviewedAt) {
-                        card.last_review = new Date(item.lastReviewedAt);
-                    }
-                    card.reps            = item.repetitions || 0;
-                    card.stability       = item.stability || 0;
-                    card.difficulty      = item.difficulty || 0;
-                    card.elapsed_days    = item.elapsedDays || 0;
-                    card.scheduled_days  = item.scheduledDays || 0;
-                    card.lapses          = item.lapses || 0;
-
-                    // CRITICAL FIX #2: Determine state BEFORE setting learning_steps
-                    const isNew        = item.isNew || !item.state || item.state === 'new' || item.state === 0;
-                    const isLearning   = item.state === 'learning' || item.state === 1;
-                    const isRelearning = item.state === 'relearning' || item.state === 3;
-                    const isReview     = item.state === 'review' || item.state === 2;
-
-                    // CRITICAL FIX #3: For Learning state, ensure learning_steps >= 1
-                    // FSRS returns NaN if learning_steps=0 in Learning state!
-                    if (isLearning || isRelearning) {
-                        // If card is in learning but learning_steps is 0, fix it to 1
-                        card.learning_steps = Math.max(1, item.learningSteps || 1);
-                    } else {
-                        card.learning_steps = item.learningSteps || 0;
-                    }
-
-                    // Set state AFTER all data is populated
-                    if (isNew) {
-                        card.state = State.New;
-                    } else if (isLearning) {
-                        card.state = State.Learning;
-                    } else if (isRelearning) {
-                        card.state = State.Relearning;
-                    } else if (isReview) {
-                        card.state = State.Review;
-                    }
-
-                    const scheduling = fsrs.repeat(card, now);
-
-                    return {
-                        Again: formatMs(scheduling[Rating.Again].card.due.getTime() - now.getTime()),
-                        Hard:  formatMs(scheduling[Rating.Hard].card.due.getTime()  - now.getTime()),
-                        Good:  formatMs(scheduling[Rating.Good].card.due.getTime()  - now.getTime()),
-                        Easy:  formatMs(scheduling[Rating.Easy].card.due.getTime()  - now.getTime())
-                    };
-                } catch (err) {
-                    console.warn('FSRS interval calc failed, using fallback:', err);
-                    return { Again: '1m', Hard: '6m', Good: '10m', Easy: '4d' };
+                // CRITICAL FIX #1: For interval preview, ALWAYS set card.due = now
+                card.due = now;
+                if (item.lastReviewedAt) {
+                    card.last_review = new Date(item.lastReviewedAt);
                 }
+                card.reps            = item.repetitions || 0;
+                card.stability       = item.stability || 0;
+                card.difficulty      = item.difficulty || 0;
+                card.elapsed_days    = item.elapsedDays || 0;
+                card.scheduled_days  = item.scheduledDays || 0;
+                card.lapses          = item.lapses || 0;
+
+                const isNew        = item.isNew || !item.state || item.state === 'new' || item.state === 0;
+                const isLearning   = item.state === 'learning' || item.state === 1;
+                const isRelearning = item.state === 'relearning' || item.state === 3;
+                const isReview     = item.state === 'review' || item.state === 2;
+
+                card.learning_steps = item.learningSteps || 0;
+
+                // Set state AFTER all data is populated
+                if (isNew) {
+                    card.state = State.New;
+                } else if (isLearning) {
+                    card.state = State.Learning;
+                } else if (isRelearning) {
+                    card.state = State.Relearning;
+                } else if (isReview) {
+                    card.state = State.Review;
+                }
+
+                return calculateNextIntervals(card, fsrs, now);
             };
 
-            const itemsWithIntervals = responseItems.map((item: any) => {
-                const intervals = calculateAnkiIntervals(item);
-
-                let cardType: 'new' | 'learning' | 'review' = 'new';
-                if (item.state === 'review' || item.state === 2) {
-                    cardType = 'review';
-                } else if (item.state === 'learning' || item.state === 1 || item.state === 'relearning' || item.state === 3) {
-                    cardType = 'learning';
-                }
-
-                return {
+            const processItems = (items: any[], type: 'new' | 'learning' | 'review') => {
+                return items.map(item => ({
                     ...item,
-                    nextIntervals: intervals,
-                    cardType
-                };
-            });
+                    nextIntervals: calculateAnkiIntervals(item),
+                    cardType: type
+                }));
+            };
 
-            // 7. Calculate Total Counts for UI
-            const totalDueCount = await SpacedRepetition.countDocuments({
-                userId,
-                questionId: { $in: candidateIds },
-                nextReviewAt: { $lte: cutoff }
-            });
-
-            const totalCandidateCount = candidateIds.length;
-            const totalReviewedCount = await SpacedRepetition.countDocuments({
-                userId,
-                questionId: { $in: candidateIds }
-            });
-            const totalNewCount = Math.max(0, totalCandidateCount - totalReviewedCount);
-            const totalCount = totalDueCount + totalNewCount;
+            // Calculate total count (approximate)
+            const totalCount = learningCards.length + reviewCards.length + newItemsMapped.length;
 
             return res.json({
-                items: itemsWithIntervals,
+                learningItems: processItems(learningCards, 'learning'),
+                reviewItems: processItems(remainingReviewCards, 'review'),
+                newItems: processItems(remainingNewCards, 'new'),
                 total: totalCount
             });
+
 
         } catch (error) {
             console.error('Anki Session Error:', error);
@@ -333,8 +312,35 @@ export class AnkiController {
 
             await sr.save();
 
-            // 5. Return updated record (NO preview calculation — frontend uses getSession intervals)
-            res.status(200).json(sr.toObject());
+            // 5. Calculate NEXT intervals for the updated card (for frontend immediate re-queue)
+            // We need to simulate what the intervals would be if we showed this card again NOW
+            let nextIntervals = { Again: '1m', Hard: '1m', Good: '1m', Easy: '1m' };
+            
+            const previewCard = createEmptyCard(now);
+            // Use the NEW values we just saved
+            previewCard.due = newCard.due;
+            if (newCard.last_review) {
+                previewCard.last_review = newCard.last_review;
+            }
+            previewCard.reps = newCard.reps;
+            previewCard.stability = newCard.stability;
+            previewCard.difficulty = newCard.difficulty;
+            previewCard.elapsed_days = newCard.elapsed_days;
+            previewCard.scheduled_days = newCard.scheduled_days;
+            previewCard.lapses = newCard.lapses;
+            
+            // CRITICAL: Allow learning_steps to be 0 for correct FSRS scheduling
+            previewCard.learning_steps = newCard.learning_steps;
+            
+            previewCard.state = newCard.state;
+
+            nextIntervals = calculateNextIntervals(previewCard, fsrs, now);
+
+            // 6. Return updated record with formatted intervals
+            res.status(200).json({
+                ...sr.toObject(),
+                nextIntervals
+            });
 
         } catch (error) {
             console.error('Review Submit Error:', error);

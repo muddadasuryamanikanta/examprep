@@ -61,14 +61,12 @@ export class TopicService {
     ]);
 
     // Aggregate DUE counts from Anki (SpacedRepetition)
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
+    const now = new Date();
 
-    const dueAgg = await Anki.aggregate([
+    const ankiAgg = await Anki.aggregate([
       {
         $match: {
-          userId: new Types.ObjectId(userId),
-          nextReviewAt: { $lte: today }
+          userId: new Types.ObjectId(userId)
         }
       },
       {
@@ -85,17 +83,48 @@ export class TopicService {
           'block.topicId': { $in: topicIds }
         }
       },
-      { $group: { _id: '$block.topicId', total: { $sum: 1 } } }
+      { 
+        $group: { 
+          _id: '$block.topicId', 
+          learningCount: { 
+            $sum: { 
+              $cond: [{ $in: ['$state', ['learning', 'relearning']] }, 1, 0] 
+            } 
+          },
+          reviewDueCount: { 
+            $sum: { 
+              $cond: [
+                { $and: [
+                    { $eq: ['$state', 'review'] },
+                    { $lte: ['$nextReviewAt', now] } 
+                  ] 
+                }, 1, 0] 
+            } 
+          },
+          startedCount: { $sum: 1 } // Total cards that have an SR record
+        } 
+      }
     ]);
 
     const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
-    const dueMap = new Map(dueAgg.map((a: any) => [a._id.toString(), a.total]));
+    const ankiMap = new Map(ankiAgg.map((a: any) => [a._id.toString(), a]));
 
-    return topics.map(t => ({
-      ...t.toObject(),
-      questionCount: countMap.get((t._id as any).toString()) || 0,
-      dueCount: dueMap.get((t._id as any).toString()) || 0
-    }));
+    return topics.map(t => {
+      const tId = (t._id as any).toString();
+      const totalQuestions = countMap.get(tId) || 0;
+      const ankiData = ankiMap.get(tId) || { learningCount: 0, reviewDueCount: 0, startedCount: 0 };
+      
+      const newCount = Math.max(0, totalQuestions - ankiData.startedCount);
+
+      return {
+        ...t.toObject(),
+        questionCount: totalQuestions,
+        // Anki Dashboard Counts
+        newCount,
+        learningCount: ankiData.learningCount,
+        reviewCount: ankiData.reviewDueCount
+      };
+    });
   }
 
   static async findOne(userId: string, identifier: string): Promise<ITopic | null> {
