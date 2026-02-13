@@ -15,15 +15,23 @@ import { generatorParameters } from 'ts-fsrs';
  * - request_retention: 0.9 (90% retention rate - good balance of retention/workload)
  * - maximum_interval: 36500 days (100 years)
  * - enable_fuzz: true (adds randomization to prevent pattern formation)
- * - enable_short_term: false (uses default FSRS short-term scheduling)
+ * - enable_short_term: true (uses standard FSRS short-term handling)
  */
 export function getFSRSParams(): FSRSParameters {
-  return generatorParameters({
-    request_retention: 0.9,      // 90% target retention rate
+  const params = generatorParameters({
+    request_retention: 0.85,     // 85% target retention rate (Widened intervals)
     maximum_interval: 36500,     // 100 years in days
     enable_fuzz: true,           // Enable interval randomization
     enable_short_term: true,    // Use standard FSRS short-term handling
   });
+
+  // Explicitly set steps (minutes)
+  // ts-fsrs uses these for Short Term scheduling. They must be strings like "1m", "10m".
+  // We use 'as any' casting to bypass potential type mismatch if FSRSParameters strict type doesn't include these fields explicitly in the installed version.
+  (params as any).learning_steps = DEFAULT_LEARNING_STEPS.map(s => `${s}m`);
+  (params as any).relearning_steps = DEFAULT_RELEARNING_STEPS.map(s => `${s}m`);
+  
+  return params;
 }
 
 /**

@@ -14,8 +14,6 @@ interface QuestionAreaProps {
     isReview?: boolean;
     timeSpent?: number;
     isAnswerCorrect?: boolean;
-    onCognitiveRating?: (isRecognizable: boolean) => void;
-    isPending?: boolean;
 }
 
 export function QuestionArea({
@@ -29,9 +27,7 @@ export function QuestionArea({
     isLastQuestion = false,
     isReview = false,
     timeSpent = 0,
-    isAnswerCorrect,
-    onCognitiveRating,
-    isPending
+    isAnswerCorrect
 }: QuestionAreaProps & { isAnswerCorrect?: boolean }) {
     if (!questionBlock) return <div className="p-8 text-center text-muted-foreground">Question not found</div>;
 
@@ -151,32 +147,15 @@ export function QuestionArea({
                             </Button>
                         </div>
 
-                        {/* Cognitive Grading / Save Actions */}
-                        {isPending && onCognitiveRating ? (
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={() => onCognitiveRating(false)}
-                                    className="bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 shadow-sm min-w-[120px] h-11"
-                                >
-                                    Unrecognizable
-                                </Button>
-                                <Button
-                                    onClick={() => onCognitiveRating(true)}
-                                    className="bg-success/10 text-success hover:bg-success/20 border border-success/20 shadow-sm min-w-[120px] h-11"
-                                >
-                                    Recognizable
-                                </Button>
-                            </div>
-                        ) : (
-                            <Button
-                                onClick={onSaveAndNext}
-                                className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px] h-11 text-base shadow-lg shadow-primary/20 gap-2"
-                            >
-                                <Save className="w-4 h-4" />
-                                {isLastQuestion ? 'Save' : 'Save & Next'}
-                                {!isLastQuestion && <ArrowRight className="w-4 h-4 opacity-70" />}
-                            </Button>
-                        )}
+                        {/* Save / Next Actions */}
+                        <Button
+                            onClick={onSaveAndNext}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px] h-11 text-base shadow-lg shadow-primary/20 gap-2"
+                        >
+                            <Save className="w-4 h-4" />
+                            {isLastQuestion ? 'Save' : 'Save & Next'}
+                            {!isLastQuestion && <ArrowRight className="w-4 h-4 opacity-70" />}
+                        </Button>
                     </>
                 ) : (
                     <>

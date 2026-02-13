@@ -29,6 +29,18 @@ export interface ISpacedRepetition extends Document {
     nextReviewAt: Date;
     createdAt: Date;
     updatedAt: Date;
+    
+    // Consolidated History
+    history: Array<{
+        rating: number;
+        state: string;
+        reviewedAt: Date;
+        elapsedDays: number;
+        scheduledDays: number;
+        stability: number;
+        difficulty: number;
+        reviewDuration: number;
+    }>;
 }
 
 const SpacedRepetitionSchema = new Schema(
@@ -56,7 +68,19 @@ const SpacedRepetitionSchema = new Schema(
     lapses: { type: Number, default: 0 },
 
     lastReviewedAt: { type: Date },
-    nextReviewAt: { type: Date, default: () => { const d = new Date(); d.setDate(d.getDate() + 1); return d; } }
+    nextReviewAt: { type: Date, default: () => { const d = new Date(); d.setDate(d.getDate() + 1); return d; } },
+    
+    // NEW: Review History (Consolidated Storage)
+    history: [{
+        rating: { type: Number, required: true }, // 1-4
+        state: { type: String, required: true },  // New/Learning/Review/Relearning
+        reviewedAt: { type: Date, default: Date.now },
+        elapsedDays: { type: Number, default: 0 },
+        scheduledDays: { type: Number, default: 0 },
+        stability: { type: Number, default: 0 },
+        difficulty: { type: Number, default: 0 },
+        reviewDuration: { type: Number, default: 0 }
+    }]
   },
   { timestamps: true }
 );

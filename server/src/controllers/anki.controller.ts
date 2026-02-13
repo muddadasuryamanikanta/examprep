@@ -265,13 +265,10 @@ export class AnkiController {
                 card.scheduled_days  = sr.scheduledDays || 0;
                 card.lapses          = sr.lapses || 0;
                 
-                // CRITICAL FIX: For Learning/Relearning state, ensure learning_steps >= 1
-                // FSRS returns NaN if learning_steps=0 in Learning state!
-                if (state === State.Learning || state === State.Relearning) {
-                    card.learning_steps = Math.max(1, sr.learningSteps || 1);
-                } else {
-                    card.learning_steps = sr.learningSteps || 0;
-                }
+                // Correctly map learning steps from DB
+                // If DB has 0 (Step 1), keep it 0. If it has 1 (Step 2), keep it 1.
+                card.learning_steps = sr.learningSteps || 0;
+
                 
                 card.state           = state;
             }
@@ -299,6 +296,8 @@ export class AnkiController {
             sr.difficulty     = newCard.difficulty;
             sr.elapsedDays    = newCard.elapsed_days;
             sr.scheduledDays  = newCard.scheduled_days;
+            // CRITICAL: Persist intervalDays (fractional) for debugging/stats
+            sr.intervalDays   = Math.max(0, (newCard.due.getTime() - now.getTime()) / 86400000);
             sr.learningSteps  = newCard.learning_steps;
             sr.lapses         = newCard.lapses;
 
@@ -310,7 +309,28 @@ export class AnkiController {
                 case State.Relearning: sr.state = 'relearning'; break;
             }
 
+            // 5. CRITICAL: Save Review Log for History & Optimization (Consolidated)
+            // We record the state *before* the review
+            let stateStr = 'new';
+            if (card.state === State.Learning) stateStr = 'learning';
+            if (card.state === State.Review)   stateStr = 'review';
+            if (card.state === State.Relearning) stateStr = 'relearning';
+
+            if (!sr.history) sr.history = [];
+            sr.history.push({
+                rating: fsrsRating, // 1-4
+                state: stateStr,
+                elapsedDays: card.elapsed_days,
+                scheduledDays: card.scheduled_days,
+                stability: newCard.stability,
+                difficulty: newCard.difficulty,
+                reviewedAt: now,
+                reviewDuration: 0 // Default for now
+            });
+
             await sr.save();
+
+
 
             // 5. Calculate NEXT intervals for the updated card (for frontend immediate re-queue)
             // We need to simulate what the intervals would be if we showed this card again NOW

@@ -13,18 +13,29 @@ export class SpaceService {
     const spaces = await Space.find({ userId }, '_id name description slug icon subjectCount').sort({ createdAt: -1 });
 
     // Aggregate question counts for these spaces
+    // Aggregate question counts and subject counts for these spaces
     const spaceIds = spaces.map(s => s._id);
     const agg = await Subject.aggregate([
       { $match: { spaceId: { $in: spaceIds } } },
-      { $group: { _id: '$spaceId', total: { $sum: '$questionCount' } } }
+      { 
+        $group: { 
+          _id: '$spaceId', 
+          questionTotal: { $sum: '$questionCount' },
+          subjectTotal: { $sum: 1 }
+        } 
+      }
     ]);
 
-    const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
+    const countMap = new Map(agg.map((a: any) => [a._id.toString(), a]));
 
-    return spaces.map(s => ({
-      ...s.toObject(),
-      questionCount: countMap.get((s._id as any).toString()) || 0
-    }));
+    return spaces.map(s => {
+      const stats = countMap.get((s._id as any).toString()) || { questionTotal: 0, subjectTotal: 0 };
+      return {
+        ...s.toObject(),
+        questionCount: stats.questionTotal,
+        subjectCount: stats.subjectTotal // Override stored count with actual count
+      };
+    });
   }
 
   static async findOne(userId: string, identifier: string): Promise<ISpace | null> {

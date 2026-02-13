@@ -284,7 +284,7 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
             const nextNQueue = [...newQueue];
             let nextHeap = [...learningDueHeap];
 
-            if (updatedItem.nextReviewAt && diffMins > 0 && diffMins <= LEARN_AHEAD_LIMIT_MINS) {
+            if (updatedItem.nextReviewAt && diffMins <= LEARN_AHEAD_LIMIT_MINS) {
                 // ─── Learning card reinsertion ───
                 // Card goes ONLY into learningDueHeap with a future showAfter
 

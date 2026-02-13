@@ -110,23 +110,6 @@ export default function TestScreen() {
         return finalTimes;
     }, [test, currentQuestionIndex, questionTimes]);
 
-    // --- Cognitive Grading ---
-    const [cognitiveRatings, setCognitiveRatings] = useState<Record<string, boolean>>({});
-
-    const handleCognitiveRating = async (isRecognizable: boolean) => {
-        if (!test) return;
-        const currentQ = test.questions[currentQuestionIndex];
-        if (!currentQ) return;
-
-        // --- TEST TAKING MODE: Defer Update ---
-        setCognitiveRatings(prev => ({
-            ...prev,
-            [currentQ.blockId]: isRecognizable
-        }));
-
-        // Auto advance
-        handleSaveAndNext();
-    };
 
     const handleSubmitTest = useCallback(async (finalWarnings = focusWarnings, finalTimeSpent = questionTimes) => {
         if (!id) return;
@@ -141,7 +124,7 @@ export default function TestScreen() {
                 answers,
                 warnings: finalWarnings,
                 timeSpent: finalTimeSpent,
-                cognitiveRatings // <--- Send this to backend
+                // cognitiveRatings removed
             });
             // setShowTestCompleted(true);
         } catch (error: any) {
@@ -149,7 +132,7 @@ export default function TestScreen() {
             PromptService.alert('Submission Failed', `Error: ${error.message || 'Unknown error'}`);
             setSubmitting(false); // Re-enable if failed
         }
-    }, [id, focusWarnings, answers, questionTimes, submitting, cognitiveRatings, submitTest]);
+    }, [id, focusWarnings, answers, questionTimes, submitting, submitTest]);
 
     const handlePause = useCallback(async () => {
         if (submitting || !id) return;
@@ -381,8 +364,8 @@ export default function TestScreen() {
                     isReview={isReviewMode}
                     timeSpent={questionTimes[currentQuestion.blockId] || 0}
                     isAnswerCorrect={currentQuestion.isCorrect}
-                    onCognitiveRating={handleCognitiveRating}
-                    isPending={test.config?.isPending}
+                    // onCognitiveRating removed
+                    // isPending removed
                 />
 
                 <TestSidebar

@@ -41,13 +41,29 @@ export class SubjectService {
     return savedSubject;
   }
 
-  static async findAll(userId: string, spaceIdentifier: string): Promise<ISubject[]> {
+  static async findAll(userId: string, spaceIdentifier: string): Promise<any[]> {
     const space = await SpaceService.findOne(userId, spaceIdentifier);
     if (!space) {
       throw new Error('Access denied or Space not found');
     }
 
-    return await Subject.find({ spaceId: space._id }, '_id title spaceId position slug topicCount questionCount icon').sort({ position: 1, createdAt: 1 });
+    const subjects = await Subject.find({ spaceId: space._id }, '_id title spaceId position slug topicCount questionCount icon').sort({ position: 1, createdAt: 1 });
+    
+    // Aggregation to get real-time Topic Counts
+    const subjectIds = subjects.map(s => s._id);
+    const Topic = (await import('@/models/Topic.ts')).default; // Dynamic import to avoid circular dependency if any
+    
+    const agg = await Topic.aggregate([
+        { $match: { subjectId: { $in: subjectIds } } },
+        { $group: { _id: '$subjectId', total: { $sum: 1 } } }
+    ]);
+
+    const countMap = new Map(agg.map((a: any) => [a._id.toString(), a.total]));
+
+    return subjects.map(s => ({
+        ...s.toObject(),
+        topicCount: countMap.get((s._id as any).toString()) || 0 // Override stored count
+    }));
   }
 
   static async findOne(userId: string, identifier: string): Promise<ISubject | null> {

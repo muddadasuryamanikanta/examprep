@@ -190,7 +190,7 @@ export class TestService {
   /**
    * Submit test and calculate score
    */
-  async submitTest(testId: string, userId: string, answers: Record<string, any>, warnings: any[], timeSpent?: Record<string, number>, cognitiveRatings?: Record<string, boolean>): Promise<ITest> {
+  async submitTest(testId: string, userId: string, answers: Record<string, any>, warnings: any[], timeSpent?: Record<string, number>): Promise<ITest> {
     const test = await Test.findOne({ _id: testId, userId });
     if (!test) throw new Error('Test not found');
 
@@ -276,26 +276,12 @@ export class TestService {
       }
 
       // --- Cognitive Grading / Anki Update ---
-      // Force Update: If cognitiveRatings are provided (Matrix), use them.
-      // If NOT provided (Standard Test), infer from correctness (Correct=Good, Wrong=Again)
+      // Standard Logic (No self-report)
+      // Correct=Good, Wrong=Again
 
       let rating: 'Again' | 'Hard' | 'Good' | 'Easy' | null = null;
-
-      if (cognitiveRatings && cognitiveRatings[qId] !== undefined) {
-        const isRecognizable = cognitiveRatings[qId];
-        // Matrix Logic
-        if (isCorrect) {
-          if (isRecognizable) rating = 'Good';
-          else rating = 'Hard';
-        } else {
-          if (isRecognizable) rating = 'Hard';
-          else rating = 'Again';
-        }
-      } else {
-        // Standard Logic (No self-report)
-        if (isCorrect) rating = 'Good';
-        else rating = 'Again';
-      }
+      if (isCorrect) rating = 'Good';
+      else rating = 'Again';
 
       // Queue the update if we have a rating
       if (rating) {

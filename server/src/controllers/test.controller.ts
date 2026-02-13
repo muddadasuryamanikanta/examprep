@@ -77,13 +77,13 @@ export const getTestById = async (req: Request, res: Response) => {
 export const submitTest = async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)._id;
-    const { answers, warnings, timeSpent, cognitiveRatings } = req.body;
+    const { answers, warnings, timeSpent } = req.body;
 
     const id = req.params.id;
     if (!id) {
       return res.status(400).json({ message: 'Test ID is required' });
     }
-    const test = await TestService.submitTest(id, userId, answers, warnings, timeSpent, cognitiveRatings);
+    const test = await TestService.submitTest(id, userId, answers, warnings, timeSpent);
     res.json(test);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
