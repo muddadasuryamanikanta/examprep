@@ -12,7 +12,7 @@ export default function AnkiBoard() {
         subjectId: type === 'subject' ? id : undefined
     };
 
-    const { currentItem, currentIndex, queueLength, isLoading, isFinished, handleRating, refresh, stats } = useAnkiSession(context);
+    const { currentItem, queueLength, isLoading, isFinished, handleRating, refresh, stats } = useAnkiSession(context);
     const navigate = useNavigate();
 
     if (isLoading) {
@@ -51,12 +51,12 @@ export default function AnkiBoard() {
 
     return (
         <AnkiCardView
-            key={currentItem.questionId._id}
+            key={`${currentItem.questionId._id}-${stats.reviewedCount}`}
             currentItem={currentItem}
-            questionsLeft={Math.max(queueLength, stats?.total || 0) - currentIndex}
+            questionsLeft={queueLength}
             onRating={handleRating}
             onExit={() => navigate(-1)}
+            stats={stats}
         />
     );
 }
-

@@ -86,10 +86,40 @@ export class SubjectService {
       throw new Error('Access denied');
     }
 
+    // CASCADE DELETE: Import necessary models
+    const Topic = (await import('@/models/Topic.ts')).default;
+    const ContentBlock = (await import('@/models/ContentBlock.ts')).default;
+    const Anki = (await import('@/models/Anki.ts')).default;
+
+    // Find all topics in this subject
+    const topics = await Topic.find({ subjectId: subjectId });
+    const topicIds = topics.map(t => t._id);
+
+    if (topicIds.length > 0) {
+      // Find all questions for these topics
+      const questions = await ContentBlock.find({ topicId: { $in: topicIds } });
+      const questionIds = questions.map(q => q._id);
+
+      // Delete Anki records
+      if (questionIds.length > 0) {
+        await Anki.deleteMany({ questionId: { $in: questionIds } });
+      }
+
+      // Delete all questions
+      await ContentBlock.deleteMany({ topicId: { $in: topicIds } });
+
+      // Delete all topics
+      await Topic.deleteMany({ subjectId: subjectId });
+    }
+
+    // Delete the subject
     const deletedSubject = await Subject.findByIdAndDelete(subjectId);
+    
+    // Update space's subjectCount
     if (deletedSubject) {
       await Space.findByIdAndUpdate(deletedSubject.spaceId, { $inc: { subjectCount: -1 } });
     }
+
     return deletedSubject;
   }
 

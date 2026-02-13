@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnkiService } from '@/services/AnkiService';
 import type { AnkiSessionItem, AnkiRating } from '@/services/AnkiService';
 
@@ -9,132 +9,313 @@ interface UseAnkiSessionProps {
     topicId?: string;
 }
 
+// ─── Constants ───
+const LEARN_AHEAD_LIMIT_MINS = 20;
+
+// ─── State Helpers ───
+const isLearningState = (i: AnkiSessionItem) =>
+    i.state === 1 || i.state === 3 || i.state === 'learning' || i.state === 'relearning';
+const isReviewState = (i: AnkiSessionItem) =>
+    i.state === 2 || i.state === 'review';
+// Everything else (state===0, state==='new', isNew===true, or no state) → NEW
+
+// ─── Heap Helpers (MinHeap by dueTime) ───
+function heapInsert(heap: AnkiSessionItem[], item: AnkiSessionItem): AnkiSessionItem[] {
+    const dueTime = item.showAfter || 0;
+    const next = [...heap];
+    let insertIdx = next.length;
+    for (let i = 0; i < next.length; i++) {
+        if (dueTime < (next[i].showAfter || 0)) {
+            insertIdx = i;
+            break;
+        }
+    }
+    next.splice(insertIdx, 0, item);
+    return next;
+}
+
+// ─── Stats Helpers ───
+// In real Anki:
+//   blue  = NEW cards remaining (including current if current is new)
+//   red   = LEARNING cards remaining (in queue + heap + current if learning)
+//   green = REVIEW cards remaining (including current if review)
+// Counters decrement AFTER you answer, not when the card is shown.
+function computeStats(
+    nQueue: AnkiSessionItem[],
+    rQueue: AnkiSessionItem[],
+    lQueue: AnkiSessionItem[],
+    heap: AnkiSessionItem[],
+    currentCard: AnkiSessionItem | null,
+    answeredCount: number
+) {
+    let newCount = nQueue.length;
+    let learningCount = lQueue.length + heap.length;
+    let reviewCount = rQueue.length;
+
+    // Current card counts in its type (Anki shows it in the counter until answered)
+    if (currentCard) {
+        const ct = currentCard.cardType;
+        if (ct === 'learning') learningCount++;
+        else if (ct === 'review') reviewCount++;
+        else newCount++; // 'new' or undefined
+    }
+
+    return { newCount, learningCount, reviewCount, reviewedCount: answeredCount };
+}
+
 export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionProps) {
-    const [queue, setQueue] = useState<AnkiSessionItem[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    // ─── Three Separate Queues ───
+    const [newQueue, setNewQueue] = useState<AnkiSessionItem[]>([]);
+    const [reviewQueue, setReviewQueue] = useState<AnkiSessionItem[]>([]);
+    const [learningQueue, setLearningQueue] = useState<AnkiSessionItem[]>([]);
+
+    // Learning cards with future due times (sorted by due ascending)
+    const [learningDueHeap, setLearningDueHeap] = useState<AnkiSessionItem[]>([]);
+
+    // The card currently being shown
+    const [currentItem, setCurrentItem] = useState<AnkiSessionItem | null>(null);
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isFinished, setIsFinished] = useState(false);
+
+    // Single source of truth for how many cards have been answered
+    const answeredRef = useRef(0);
+
+    // Timer for waiting learning cards
+    const waitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [sessionStats, setSessionStats] = useState({
         totalReview: 0,
         totalNew: 0,
         reviewedCount: 0,
-        total: 0 // Global total
+        total: 0,
+        newCount: 0,
+        learningCount: 0,
+        reviewCount: 0
     });
 
+    const [activePreset, setActivePreset] = useState<{
+        id: string;
+        name: string;
+        description?: string;
+    } | undefined>(undefined);
+
+    // ─── Core: Get Next Card (Priority Rule) ───
+    // 1. Move due learning cards from heap → learningQueue
+    // 2. learningQueue > reviewQueue > newQueue
+    // 3. If only heap has cards → immediate reappearance (§6)
+    const getNextCard = useCallback((
+        lQueue: AnkiSessionItem[],
+        rQueue: AnkiSessionItem[],
+        nQueue: AnkiSessionItem[],
+        heap: AnkiSessionItem[]
+    ): {
+        card: AnkiSessionItem | null;
+        lQueue: AnkiSessionItem[];
+        rQueue: AnkiSessionItem[];
+        nQueue: AnkiSessionItem[];
+        heap: AnkiSessionItem[];
+        finished: boolean;
+    } => {
+        // Step 1: Move due items from heap → learningQueue
+        const now = Date.now();
+        const updatedHeap = [...heap];
+        const updatedLQueue = [...lQueue];
+
+        while (updatedHeap.length > 0) {
+            const top = updatedHeap[0];
+            if (top.showAfter && top.showAfter <= now) {
+                updatedLQueue.push(updatedHeap.shift()!);
+            } else {
+                break; // sorted, so rest are also not due
+            }
+        }
+
+        // Step 2: Priority selection — Learning > Review > New
+        if (updatedLQueue.length > 0) {
+            const card = updatedLQueue.shift()!;
+            return { card, lQueue: updatedLQueue, rQueue: [...rQueue], nQueue: [...nQueue], heap: updatedHeap, finished: false };
+        }
+
+        if (rQueue.length > 0) {
+            const next = [...rQueue];
+            const card = next.shift()!;
+            return { card, lQueue: updatedLQueue, rQueue: next, nQueue: [...nQueue], heap: updatedHeap, finished: false };
+        }
+
+        if (nQueue.length > 0) {
+            const next = [...nQueue];
+            const card = next.shift()!;
+            return { card, lQueue: updatedLQueue, rQueue: [...rQueue], nQueue: next, heap: updatedHeap, finished: false };
+        }
+
+        // Step 3: All queues empty — check heap (§6 Immediate Reappearance)
+        if (updatedHeap.length > 0) {
+            const card = updatedHeap.shift()!;
+            return { card, lQueue: updatedLQueue, rQueue: [...rQueue], nQueue: [...nQueue], heap: updatedHeap, finished: false };
+        }
+
+        // Nothing left
+        return { card: null, lQueue: [], rQueue: [], nQueue: [], heap: [], finished: true };
+    }, []);
+
+    // ─── Update all state from getNextCard result ───
+    const applyResult = useCallback((
+        result: ReturnType<typeof getNextCard>,
+        answered: number
+    ) => {
+        setLearningQueue(result.lQueue);
+        setReviewQueue(result.rQueue);
+        setNewQueue(result.nQueue);
+        setLearningDueHeap(result.heap);
+        setCurrentItem(result.card);
+
+        if (result.finished) {
+            setIsFinished(true);
+        }
+
+        // Compute stats with current card included (Anki behavior)
+        const stats = computeStats(
+            result.nQueue, result.rQueue, result.lQueue, result.heap,
+            result.card, answered
+        );
+
+        setSessionStats(prev => ({
+            ...prev,
+            ...stats
+        }));
+    }, []);
+
+    // ─── Fetch Session ───
     const fetchSession = useCallback(async () => {
         setIsLoading(true);
         setError(null);
+        setIsFinished(false);
         try {
-            const data = await AnkiService.getSession({ spaceId, subjectId, topicId, limit: 20 });
-            // Handle both old array format (safety) and new object format
-            const items = Array.isArray(data) ? data : data.items;
-            const total = Array.isArray(data) ? data.length : data.total;
+            const data = await AnkiService.getSession({ spaceId, subjectId, topicId, limit: 50 });
 
-            setQueue(items);
-            setSessionStats({
-                totalReview: items.filter((i: AnkiSessionItem) => !i.isNew).length,
-                totalNew: items.filter((i: AnkiSessionItem) => i.isNew).length,
-                reviewedCount: 0,
-                total: total
-            });
-            setCurrentIndex(0);
+            const items = data.items as AnkiSessionItem[];
+            setActivePreset(data.preset || undefined);
+
+            // Split items into three queues based on state
+            const learning: AnkiSessionItem[] = [];
+            const review: AnkiSessionItem[] = [];
+            const newCards: AnkiSessionItem[] = [];
+
+            for (const item of items) {
+                if (isLearningState(item)) {
+                    learning.push(item);
+                } else if (isReviewState(item)) {
+                    review.push(item);
+                } else {
+                    newCards.push(item);
+                }
+            }
+
+            // Reset answered count
+            answeredRef.current = 0;
+
+            // Set initial totals (these don't change during session)
+            setSessionStats(prev => ({
+                ...prev,
+                totalReview: review.length,
+                totalNew: newCards.length,
+                total: data.total
+            }));
+
+            // Get first card using priority rule & set all state
+            const result = getNextCard(learning, review, newCards, []);
+            applyResult(result, 0);
+
         } catch (err) {
             console.error(err);
             setError('Failed to load session');
         } finally {
             setIsLoading(false);
         }
-    }, [spaceId, subjectId, topicId]);
+    }, [spaceId, subjectId, topicId, getNextCard, applyResult]);
 
     useEffect(() => {
         fetchSession();
     }, [fetchSession]);
 
-    const currentItem = queue[currentIndex];
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (waitTimerRef.current) clearTimeout(waitTimerRef.current);
+        };
+    }, []);
 
+    // ─── Handle Rating ───
     const handleRating = async (rating: AnkiRating) => {
-        if (!currentItem || !currentItem.questionId?._id) return; // check types
+        if (!currentItem || !currentItem.questionId?._id) return;
 
         try {
             // 1. Submit to backend
             const updatedItem = await AnkiService.submitReview(currentItem.questionId._id, rating);
-            
-            // 2. Logic for Queue - FSRS Aware
-            const nextQueue = [...queue];
-            
-            // Check if we should re-queue in this session
-            // Criteria: 
-            // - It's "Again" (always re-queue for short term)
-            // - OR it's in Learning/Relearning state AND due very soon (e.g. < 20 mins)
-            
+
+            // 2. Increment answered count
+            answeredRef.current += 1;
+
+            // 3. Determine if card should be re-queued
             const now = Date.now();
             const nextReview = updatedItem.nextReviewAt ? new Date(updatedItem.nextReviewAt).getTime() : 0;
             const diffMins = (nextReview - now) / 60000;
-            
-            // FSRS States: 0=New, 1=Learning, 2=Review, 3=Relearning
-            // We re-queue if it's due within the "Learn Ahead" window (e.g. 20 mins)
-            // This covers "Again" (usually 1m) and next learning steps (e.g. 10m)
-            
-            if (updatedItem.nextReviewAt && diffMins <= 20) {
-                // Determine insertion point roughly based on due time
-                // Simple: if < 1 min, insert near front (offset 1-2)
-                // if > 1 min (e.g. 10m), insert further back or append
-                
-                const showAfter = nextReview; // Absolute time
-                
-                const itemToRequeue = {
-                    ...currentItem, // Keep original data (question, etc)
-                    ...updatedItem, // Update stats
+
+            // Current queue state (copy)
+            const nextLQueue = [...learningQueue];
+            const nextRQueue = [...reviewQueue];
+            const nextNQueue = [...newQueue];
+            let nextHeap = [...learningDueHeap];
+
+            if (updatedItem.nextReviewAt && diffMins > 0 && diffMins <= LEARN_AHEAD_LIMIT_MINS) {
+                // ─── Learning card reinsertion ───
+                // Card goes ONLY into learningDueHeap with a future showAfter
+
+                let newCardType: 'new' | 'learning' | 'review' = 'learning';
+                if (updatedItem.state === 'review' || updatedItem.state === 2) {
+                    newCardType = 'review';
+                }
+
+                const itemToRequeue: AnkiSessionItem = {
+                    ...updatedItem,
+                    questionId: currentItem.questionId, // Keep populated question
                     isRetry: true,
-                    showAfter
+                    isNew: false,
+                    cardType: newCardType,
+                    showAfter: nextReview,
+                    nextIntervals: updatedItem.nextIntervals || currentItem.nextIntervals
                 };
 
-                // Remove the current item from head (it will be shifted by setCurrentIndex below effectively? No, we handle index.)
-                // Actually we just append/splice.
-                // Current item is at currentIndex. We are moving past it.
-                // So we insert into nextQueue which ALREADY contains currentItem at currentIndex.
-                // WE SHOULD NOT MODIFY index or removed items yet.
-                // Ideally, we move currentIndex forward. Re-queued item appears LATER.
-                
-                if (diffMins <= 1.5) {
-                    // Insert shortly after
-                    const reinsertOffset = 3;
-                    const insertIndex = Math.min(nextQueue.length, currentIndex + 1 + reinsertOffset);
-                    nextQueue.splice(insertIndex, 0, itemToRequeue);
-                } else {
-                    // Append to end (or simple queue logic)
-                    // If queue is huge, appending might be too late? 
-                    // But usually session is limited (20 items). Appending is fine.
-                    nextQueue.push(itemToRequeue);
-                }
+                nextHeap = heapInsert(nextHeap, itemToRequeue);
             }
+            // If interval > 20 min or ≤ 0, card does NOT re-queue this session
 
-            setQueue(nextQueue);
-
-            // Move to next
-            setCurrentIndex(prev => prev + 1);
-            setSessionStats(prev => ({
-                ...prev,
-                reviewedCount: prev.reviewedCount + 1
-            }));
+            // 4. Advance to next card
+            const result = getNextCard(nextLQueue, nextRQueue, nextNQueue, nextHeap);
+            applyResult(result, answeredRef.current);
 
         } catch (err) {
             console.error('Failed to submit review', err);
         }
     };
 
-    const isFinished = currentIndex >= queue.length && queue.length > 0;
+    // ─── Return values ───
+    // questionsLeft = all remaining (queues + heap + current card being shown)
+    // In Anki, the card you're looking at is still "remaining" until you answer it
+    const questionsRemaining = newQueue.length + reviewQueue.length + learningQueue.length + learningDueHeap.length + (currentItem ? 1 : 0);
 
     return {
         currentItem,
-        queueLength: queue.length,
-        currentIndex,
+        queueLength: questionsRemaining,
+        currentIndex: answeredRef.current,
         isLoading,
         error,
         isFinished,
         handleRating,
         refresh: fetchSession,
-        stats: sessionStats
+        stats: sessionStats,
+        activePreset
     };
 }

@@ -10,6 +10,7 @@ export interface ITopic extends Document {
   subjectId: mongoose.Types.ObjectId;
   position: number;
   icon: string;
+  fsrsPresetId?: mongoose.Types.ObjectId;  // Optional FSRS preset override
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +21,7 @@ const TopicSchema: Schema = new Schema({
   subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true, index: true },
   position: { type: Number, default: 0 },
   icon: { type: String, default: 'Hash' }, // Default to Hash icon for topics
+  fsrsPresetId: { type: Schema.Types.ObjectId, ref: 'FSRSPreset' }
 }, { timestamps: true });
 
 TopicSchema.pre("validate", async function () {

@@ -133,7 +133,27 @@ export class TopicService {
       throw new Error('Access denied');
     }
 
-    return await Topic.findByIdAndDelete(topicId);
+    // CASCADE DELETE: Find all questions for this topic
+    const questions = await ContentBlock.find({ topicId: topicId });
+    const questionIds = questions.map(q => q._id);
+
+    // Delete Anki records for these questions
+    if (questionIds.length > 0) {
+      await Anki.deleteMany({ questionId: { $in: questionIds } });
+    }
+
+    // Delete all questions
+    await ContentBlock.deleteMany({ topicId: topicId });
+
+    // Delete the topic
+    const deletedTopic = await Topic.findByIdAndDelete(topicId);
+    
+    // Update subject's topicCount
+    if (deletedTopic) {
+      await Subject.findByIdAndUpdate(deletedTopic.subjectId, { $inc: { topicCount: -1 } });
+    }
+
+    return deletedTopic;
   }
 
   static async checkOwnership(userId: string, topicId: string): Promise<boolean> {

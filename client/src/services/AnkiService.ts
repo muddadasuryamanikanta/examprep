@@ -12,7 +12,7 @@ export interface AnkiSessionItem {
     nextReviewAt?: string;
     lastReviewedAt?: string;
     // FSRS Fields
-    state?: number; // 0=New, 1=Learning, 2=Review, 3=Relearning
+    state?: number | string; // 0=New, 1=Learning, 2=Review, 3=Relearning OR 'new'|'learning'|'review'|'relearning'
     stability?: number;
     difficulty?: number;
     elapsedDays?: number;
@@ -22,6 +22,17 @@ export interface AnkiSessionItem {
     // Local state for queue management
     isRetry?: boolean;
     showAfter?: number;
+    
+    // Backend-calculated interval predictions
+    nextIntervals?: {
+        Again: string;
+        Hard: string;
+        Good: string;
+        Easy: string;
+    };
+    
+    // Card type for visual highlighting
+    cardType?: 'new' | 'learning' | 'review';
 }
 
 export type AnkiRating = 'Again' | 'Hard' | 'Good' | 'Easy';
@@ -34,7 +45,7 @@ export const AnkiService = {
         if (context.topicId) params.append('topicId', context.topicId);
         if (context.limit) params.append('limit', context.limit.toString());
 
-        const response = await api.get<{ items: AnkiSessionItem[], total: number }>(`/anki/session?${params.toString()}`);
+        const response = await api.get<{ items: AnkiSessionItem[], total: number, preset?: any }>(`/anki/session?${params.toString()}`);
         return response.data; // { items, total }
     },
 

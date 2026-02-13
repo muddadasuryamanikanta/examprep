@@ -43,6 +43,42 @@ export class SpaceService {
   }
 
   static async delete(userId: string, spaceId: string): Promise<ISpace | null> {
+    // CASCADE DELETE: Import necessary models
+    const Topic = (await import('@/models/Topic.ts')).default;
+    const ContentBlock = (await import('@/models/ContentBlock.ts')).default;
+    const Anki = (await import('@/models/Anki.ts')).default;
+
+    // Find all subjects in this space
+    const subjects = await Subject.find({ spaceId: spaceId });
+    const subjectIds = subjects.map(s => s._id);
+
+    if (subjectIds.length > 0) {
+      // Find all topics in these subjects
+      const topics = await Topic.find({ subjectId: { $in: subjectIds } });
+      const topicIds = topics.map(t => t._id);
+
+      if (topicIds.length > 0) {
+        // Find all questions for these topics
+        const questions = await ContentBlock.find({ topicId: { $in: topicIds } });
+        const questionIds = questions.map(q => q._id);
+
+        // Delete Anki records
+        if (questionIds.length > 0) {
+          await Anki.deleteMany({ questionId: { $in: questionIds } });
+        }
+
+        // Delete all questions
+        await ContentBlock.deleteMany({ topicId: { $in: topicIds } });
+
+        // Delete all topics
+        await Topic.deleteMany({ subjectId: { $in: subjectIds } });
+      }
+
+      // Delete all subjects
+      await Subject.deleteMany({ spaceId: spaceId });
+    }
+
+    // Delete the space
     return await Space.findOneAndDelete({ _id: spaceId, userId });
   }
 

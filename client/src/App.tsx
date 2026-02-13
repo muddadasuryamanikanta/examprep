@@ -14,6 +14,7 @@ import TestDashboard from '@/pages/TestDashboard';
 import Dashboard from '@/pages/Dashboard';
 import TestScreen from '@/pages/TestScreen';
 import AnkiBoard from '@/pages/AnkiBoard';
+import FSRSPresetSettings from '@/pages/settings/FSRSPresetSettings';
 import AdminPage from '@/pages/AdminPage';
 import PendingApprovalPage from '@/pages/PendingApprovalPage';
 import { Navbar } from '@/components/common/Navbar';
@@ -118,6 +119,11 @@ const AppContent = () => {
         <Route path="/recall/:type/:id" element={
           <RequireAuth>
             <AnkiBoard />
+          </RequireAuth>
+        } />
+        <Route path="/settings/presets" element={
+          <RequireAuth>
+            <FSRSPresetSettings />
           </RequireAuth>
         } />
         <Route path="/admin" element={

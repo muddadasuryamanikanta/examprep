@@ -4,8 +4,17 @@ export interface ISpacedRepetition extends Document {
     userId: mongoose.Types.ObjectId;
     questionId: mongoose.Types.ObjectId;
     state: 'new' | 'learning' | 'review' | 'relearning';
+    
+    /**
+     * @deprecated Legacy SM-2 field, not used by FSRS. Kept for backward compatibility only.
+     */
     easeFactor: number;
+    
+    /**
+     * @deprecated Legacy SM-2 field, not used by FSRS. Kept for backward compatibility only.
+     */
     intervalDays: number;
+    
     repetitions: number;
     
     // FSRS Fields
@@ -13,6 +22,7 @@ export interface ISpacedRepetition extends Document {
     difficulty: number;
     elapsedDays: number;
     scheduledDays: number;
+    learningSteps: number; // Tracks current step in learning/relearning sequence
     lapses: number;
 
     lastReviewedAt?: Date;
@@ -30,8 +40,11 @@ const SpacedRepetitionSchema = new Schema(
       enum: ['new', 'learning', 'review', 'relearning'], 
       default: 'new' 
     },
-    easeFactor: { type: Number, default: 2.5, min: 1.3, max: 3.0 }, // Keep for legacy/SM-2 compat
-    intervalDays: { type: Number, default: 0 }, // Allow fractional days (0 allowed)
+    
+    // Legacy SM-2 fields (not used by FSRS, kept for backward compatibility)
+    easeFactor: { type: Number, default: 2.5, min: 1.3, max: 3.0 },
+    intervalDays: { type: Number, default: 0 },
+    
     repetitions: { type: Number, default: 0, min: 0 },
     
     // FSRS Fields
@@ -39,6 +52,7 @@ const SpacedRepetitionSchema = new Schema(
     difficulty: { type: Number, default: 0 },
     elapsedDays: { type: Number, default: 0 },
     scheduledDays: { type: Number, default: 0 },
+    learningSteps: { type: Number, default: 0 }, // Current step in learning sequence
     lapses: { type: Number, default: 0 },
 
     lastReviewedAt: { type: Date },
