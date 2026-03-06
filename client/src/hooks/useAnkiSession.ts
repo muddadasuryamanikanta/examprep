@@ -75,8 +75,6 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
     // Single source of truth for how many cards have been answered
     const answeredRef = useRef(0);
 
-    // Timer for waiting learning cards
-    const waitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [sessionStats, setSessionStats] = useState({
         totalReview: 0,
@@ -99,7 +97,7 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
     // 2. learningQueue > reviewQueue > newQueue
     // 3. If only heap has cards → immediate reappearance (§6)
     // State for mixing logic (2 Reviews : 1 New)
-    const [reviewsSinceNew, setReviewsSinceNew] = useState(0);
+    const reviewsSinceNewRef = useRef(0);
 
     // ─── Core: Get Next Card (Priority Rule) ───
     // 1. Move due learning cards from heap → learningQueue
@@ -142,19 +140,19 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
         // Step 3: Mixed Selection — Review vs New
         // Ratio: 2 Reviews : 1 New (Anki standard-ish mix)
         let nextCard: AnkiSessionItem | null = null;
-        let nextRQueue = [...rQueue];
-        let nextNQueue = [...nQueue];
+        const nextRQueue = [...rQueue];
+        const nextNQueue = [...nQueue];
 
         // Try to respect ratio if both queues have cards
         if (nextRQueue.length > 0 && nextNQueue.length > 0) {
-            if (reviewsSinceNew < 2) {
+            if (reviewsSinceNewRef.current < 2) {
                 // Show Review
                 nextCard = nextRQueue.shift()!;
-                setReviewsSinceNew(prev => prev + 1);
+                reviewsSinceNewRef.current += 1;
             } else {
                 // Show New
                 nextCard = nextNQueue.shift()!;
-                setReviewsSinceNew(0);
+                reviewsSinceNewRef.current = 0;
             }
         } 
         // Fallback: If one queue is empty, just take from the other
@@ -184,7 +182,7 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
 
         // Nothing left
         return { card: null, lQueue: [], rQueue: [], nQueue: [], heap: [], finished: true };
-    }, [reviewsSinceNew]); // Dependency on state for mixing
+    }, []); // Removed reviewsSinceNew dependency
 
     // ─── Update all state from getNextCard result ───
     const applyResult = useCallback((
@@ -254,13 +252,6 @@ export function useAnkiSession({ spaceId, subjectId, topicId }: UseAnkiSessionPr
     useEffect(() => {
         fetchSession();
     }, [fetchSession]);
-
-    // Cleanup timer on unmount
-    useEffect(() => {
-        return () => {
-            if (waitTimerRef.current) clearTimeout(waitTimerRef.current);
-        };
-    }, []);
 
     // ─── Handle Rating ───
     const handleRating = async (rating: AnkiRating) => {
