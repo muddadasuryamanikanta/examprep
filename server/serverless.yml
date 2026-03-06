@@ -62,6 +62,6 @@ custom:
     platform: 'node'
     concurrency: 10
     resolveExtensions: ['.ts', '.js', '.json', '.mjs']
-    external: ['@aws-sdk/client-lambda']
+    external: ['@aws-sdk/client-lambda', 'mongodb-client-encryption', 'kerberos']
     watch:
       pattern: ['src/**/*.ts']
